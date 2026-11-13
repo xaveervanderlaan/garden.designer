@@ -1,7 +1,10 @@
 import { act, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import App from './App'
+
+// jsdom has no real <canvas>; the plan itself is covered by the Playwright tests.
+vi.mock('./features/editor/canvas/GardenCanvas', () => ({ default: () => null }))
 import { LANGUAGE_STORAGE_KEY } from './i18n'
 import { createProject } from './persistence/projects'
 

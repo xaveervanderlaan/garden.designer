@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import sampleFixture from '../../tests/e2e/fixtures/sample.garden.json?raw'
 import { SCHEMA_VERSION } from '../model/schema'
 import { sampleProjectWithAsset } from '../test/fixtures'
 import { db } from './db'
@@ -118,6 +119,12 @@ describe('parseGardenFile', () => {
     file.assets[assetId!] = { mimeType: 'image/png', dataUrl: 'data:image/png;base64,@@' }
     await expect(importGardenFile(JSON.stringify(file))).rejects.toMatchObject({ code: 'invalid' })
     expect(await listProjects()).toHaveLength(0) // nothing half-imported
+  })
+})
+
+describe('e2e fixture', () => {
+  it('is a valid garden file', () => {
+    expect(codeOf(() => parseGardenFile(sampleFixture))).toBe('no error')
   })
 })
 

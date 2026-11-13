@@ -1,13 +1,22 @@
-import { useEffect, useState } from 'react'
+import { Suspense, lazy, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
-import { normaliseName } from '../../model/defaults'
-import { PROJECT_NAME_MAX_LENGTH } from '../../model/schema'
+import type { Project } from '../../model/schema'
 import { hrefFor } from '../../routing'
 import { useProjectStore } from '../../store/projectStore'
+import { useUiStore } from '../../store/uiStore'
 import controls from '../../styles/controls.module.css'
-import { cx } from '../../styles/cx'
 import page from '../../styles/page.module.css'
+import { EditorToolbar } from './EditorToolbar'
 import styles from './EditorPage.module.css'
+import { LayersPanel } from './panels/LayersPanel'
+import { LibraryPanel } from './panels/LibraryPanel'
+import { PropertiesPanel } from './panels/PropertiesPanel'
+import { ShortcutHelp } from './panels/ShortcutHelp'
+import { StatusBar } from './panels/StatusBar'
+import { useEditorShortcuts } from './shortcuts'
+
+// Konva is large: load the canvas only when a design is opened.
+const GardenCanvas = lazy(() => import('./canvas/GardenCanvas'))
 
 type Props = { projectId: string }
 
@@ -15,11 +24,10 @@ export function EditorPage({ projectId }: Props) {
   const { t } = useTranslation()
   const project = useProjectStore((s) => s.project)
   const loadState = useProjectStore((s) => s.loadState)
-  const saveState = useProjectStore((s) => s.saveState)
-  const update = useProjectStore((s) => s.update)
 
   useEffect(() => {
     const { open, close } = useProjectStore.getState()
+    useUiStore.getState().reset()
     void open(projectId)
     return () => void close()
   }, [projectId])
@@ -36,12 +44,6 @@ export function EditorPage({ projectId }: Props) {
     }
   }, [])
 
-  const backLink = (
-    <a className={page.link} href={hrefFor({ name: 'projects' })}>
-      {t('editor.back')}
-    </a>
-  )
-
   if (loadState !== 'ready' || !project) {
     const text =
       loadState === 'notFound'
@@ -52,54 +54,41 @@ export function EditorPage({ projectId }: Props) {
     return (
       <section className={page.page}>
         <p className={loadState === 'error' ? controls.error : page.muted}>{text}</p>
-        {(loadState === 'notFound' || loadState === 'error') && backLink}
+        {(loadState === 'notFound' || loadState === 'error') && (
+          <a className={page.link} href={hrefFor({ name: 'projects' })}>
+            {t('editor.back')}
+          </a>
+        )}
       </section>
     )
   }
 
-  return (
-    <section className={page.page}>
-      <div className={styles.topBar}>{backLink}</div>
-      <div className={styles.header}>
-        <h1 className={controls.visuallyHidden}>{project.name}</h1>
-        <ProjectNameField
-          key={project.id}
-          name={project.name}
-          onChange={(name) => update((p) => ({ ...p, name }))}
-        />
-        <span
-          className={cx(styles.saveState, saveState === 'error' && styles.saveError)}
-          role="status"
-          data-state={saveState}
-        >
-          {t(`editor.saveState.${saveState}`)}
-        </span>
-      </div>
-      <div className={page.card}>
-        <p className={page.muted}>{t('editor.canvasComingSoon')}</p>
-      </div>
-    </section>
-  )
+  return <Workspace project={project} />
 }
 
-function ProjectNameField({ name, onChange }: { name: string; onChange: (name: string) => void }) {
+function Workspace({ project }: { project: Project }) {
   const { t } = useTranslation()
-  const [draft, setDraft] = useState(name)
+  useEditorShortcuts()
 
   return (
-    <input
-      className={cx(controls.input, styles.nameInput)}
-      aria-label={t('editor.nameLabel')}
-      value={draft}
-      maxLength={PROJECT_NAME_MAX_LENGTH}
-      onChange={(e) => {
-        setDraft(e.target.value)
-        const clean = normaliseName(e.target.value)
-        if (clean && clean !== name) onChange(clean)
-      }}
-      // Show the cleaned-up name again; an emptied field falls back to the last valid name.
-      onBlur={() => setDraft(name)}
-      onKeyDown={(e) => e.key === 'Enter' && e.currentTarget.blur()}
-    />
+    <div className={styles.editor}>
+      <EditorToolbar project={project} />
+      <aside className={styles.left}>
+        <LibraryPanel />
+      </aside>
+      <div className={styles.canvasArea}>
+        <Suspense fallback={<p className={styles.canvasLoading}>{t('editor.loading')}</p>}>
+          <GardenCanvas />
+        </Suspense>
+      </div>
+      <aside className={styles.right}>
+        <PropertiesPanel project={project} />
+        <LayersPanel project={project} />
+      </aside>
+      <div className={styles.status}>
+        <StatusBar project={project} />
+      </div>
+      <ShortcutHelp />
+    </div>
   )
 }

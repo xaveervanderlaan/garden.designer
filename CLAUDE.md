@@ -42,8 +42,27 @@ npx playwright test tests/e2e/smoke.spec.ts -g "Dutch browser"
 - **No hard-coded UI text:** the local oxlint plugin `scripts/oxlint-plugin-i18n.js` (rule `garden-i18n/no-literal-jsx-text`) flags letters in JSX text, static strings in JSX children, and user-facing attributes (`title`, `alt`, `placeholder`, `aria-label`, …). It is off for tests. Don't switch back to `eslint-plugin-i18next`: under oxlint it silently does nothing.
 - **Data model** (`src/model/`): the zod schemas in `schema.ts` are the single source of truth; TS types are inferred from them. Changing stored data shape means bumping `SCHEMA_VERSION` and adding a step to `MIGRATIONS` in `migrations.ts` (`MIGRATIONS[n]` upgrades n → n+1). Units are metres; timestamps are epoch ms.
 - **Persistence** (`src/persistence/`): Dexie/IndexedDB with tables `projects` and `assets` (binary files as `ArrayBuffer`, kept out of the project record). Always read projects through `loadProject()`, which migrates and validates. `.garden.json` export/import lives in `gardenFile.ts`: an import always creates a new project (new project and asset ids), and failures surface as `ImportError` codes that map to i18n messages. The project list reads via `useLiveQuery`, so it updates by itself after writes.
-- **Editor state** (`src/store/projectStore.ts`): a zustand store holding the open project. Every edit goes through `update(change)`, which bumps `updatedAt` and autosaves after `AUTOSAVE_DELAY_MS` (debounced). `open`/`close` flush pending saves and use a generation counter, so overlapping calls (React StrictMode's double effects) can't clobber each other. UI-only state must not go in this store (it gets undo/redo in M2).
-- **Tests:** `src/test/setup.ts` loads `fake-indexeddb/auto` first, then resets IndexedDB, localStorage, the URL hash and the language (`en`) before each test. `src/test/fixtures.ts` has a sample project/asset/plant. When faking timers, fake only `setTimeout`/`clearTimeout`: fake-indexeddb runs on `setImmediate`. Vitest only picks up `src/**/*.test.{ts,tsx}`; e2e specs live in `tests/e2e/` (each test gets a fresh browser context, so a fresh IndexedDB).
+- **Design state** (`src/store/projectStore.ts`): a zustand store holding the open project plus its undo history (`past`/`future`). Every edit goes through `update(change, { history?, coalesce? })`. It bumps `updatedAt`, records an undo step, and autosaves after `AUTOSAVE_DELAY_MS` (debounced).
+  - Updates sharing a `coalesce` key within 1 s merge into one undo step: text fields, nudges.
+  - `history: false` keeps view-ish changes (layer show/lock) out of undo, and undo keeps the current layer state.
+  - Commit continuous gestures (drags, transforms) once, on release.
+  - `open`/`close` flush pending saves and use a generation counter, so overlapping calls (React StrictMode's double effects) can't clobber each other.
+- **Editor** (`src/features/editor/`):
+  - **View state** (viewport, selection, tool, cursor, help) is in `src/store/uiStore.ts` and never in the project store.
+  - **Commands** (`actions.ts` → `editorActions`) are shared by the toolbar, panels and shortcuts. They read stores via `getState()` and prune the selection to editable items after undo/delete/locking.
+  - **Shortcuts:** `shortcuts.ts` `SHORTCUTS` is the single source for key handling and the help dialog. Shortcuts are ignored while typing in form fields.
+  - **Canvas:** the Konva canvas (`canvas/GardenCanvas.tsx`) is lazy-loaded. Its world group is transformed by the viewport (`screen = world × scale + offset`; metres in, pixels out).
+    - Each item is a group at (0, 0). A drag or Transformer rotate/resize is baked into the item's coordinates on release via the pure ops in `src/model/edit.ts`, then the group is reset.
+    - Copy Konva's `getTransform().getMatrix()` before resetting a node: it is reused and mutated in place.
+    - Use `strokeScaleEnabled={false}` for pixel-width strokes.
+  - **Pure maths** is in `src/geometry/` (viewport, grid, bounds, transform). Number display and parsing go through `src/i18n/units.ts` (decimal comma in NL, NBSP before units).
+- **Tests:**
+  - **Setup:** `src/test/setup.ts` loads `fake-indexeddb/auto` first, then resets IndexedDB, localStorage, the URL hash and the language (`en`) before each test. `src/test/fixtures.ts` has a sample project/asset/plant.
+  - **Fake timers:** fake only `setTimeout`/`clearTimeout`/`Date`, never `setImmediate`: fake-indexeddb runs on it.
+  - **Canvas in jsdom:** jsdom has no canvas, so component tests that render the editor `vi.mock` the `GardenCanvas` module. The canvas is covered by Playwright.
+  - **Locations:** Vitest only picks up `src/**/*.test.{ts,tsx}`. E2E specs live in `tests/e2e/`; each test gets a fresh browser context, so a fresh IndexedDB.
+  - **e2e fixture:** the editor e2e tests import `tests/e2e/fixtures/sample.garden.json` and compute screen positions from the zoom-to-fit maths (padding 48 px). Text with units contains NBSP, so regexes need `\s`.
+  - **Konva hit map:** it refreshes on the next animation frame, so a click immediately after a state change can miss. Retry with `expect.poll`.
 - **Deploy:** `.github/workflows/ci.yml` runs verify (lint/typecheck/unit/build) and e2e on every push; on `main` a deploy job publishes `dist/` to GitHub Pages (https://xaveervanderlaan.github.io/garden.designer/). Vite `base` is `/garden.designer/`, so runtime asset URLs must use `import.meta.env.BASE_URL`, not `/`.
 
 ## Constraints from the spec

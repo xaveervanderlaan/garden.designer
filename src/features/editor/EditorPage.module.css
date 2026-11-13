@@ -1,22 +1,96 @@
-.topBar {
-  margin-bottom: 1rem;
+.editor {
+  display: grid;
+  flex: 1;
+  min-height: 0;
+  grid-template-areas:
+    'toolbar toolbar toolbar'
+    'left canvas right'
+    'status status status';
+  grid-template-columns: 14rem minmax(0, 1fr) 17rem;
+  grid-template-rows: auto minmax(0, 1fr) auto;
 }
 
-.header {
+.toolbar {
   display: flex;
   flex-wrap: wrap;
+  grid-area: toolbar;
   align-items: center;
-  gap: 0.5rem 1rem;
-  margin-bottom: 1.25rem;
+  gap: 0.5rem 0.75rem;
+  padding: 0.375rem 0.75rem;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-surface);
+}
+
+.left,
+.right {
+  overflow-y: auto;
+  background: var(--color-surface);
+}
+
+.left {
+  grid-area: left;
+  border-right: 1px solid var(--color-border);
+}
+
+.right {
+  grid-area: right;
+  border-left: 1px solid var(--color-border);
+}
+
+.canvasArea {
+  position: relative;
+  grid-area: canvas;
+  min-width: 0;
+  min-height: 0;
+}
+
+.canvasLoading {
+  margin: 1rem;
+  color: var(--color-text-muted);
+}
+
+.status {
+  grid-area: status;
+}
+
+/* Below this width the plan gets all the room; editing on phones is out of scope (view-only, M17). */
+@media (max-width: 56rem) {
+  .editor {
+    grid-template-areas: 'toolbar' 'canvas' 'status';
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .left,
+  .right {
+    display: none;
+  }
+}
+
+/* Toolbar contents */
+.backLink {
+  display: inline-grid;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 8px;
+  color: var(--color-text);
+}
+
+.backLink:hover {
+  background: var(--color-hover);
+}
+
+.backLink:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 1px;
 }
 
 .nameInput {
-  flex: 1 1 16rem;
-  min-width: 0;
-  max-width: 32rem;
+  flex: 0 1 16rem;
+  min-width: 8rem;
   border-color: transparent;
   background: transparent;
-  font-size: 1.5rem;
+  font-size: 1.0625rem;
   font-weight: 650;
 }
 
@@ -29,9 +103,68 @@
   background: var(--color-surface);
 }
 
-.saveState {
-  color: var(--color-text-muted);
+.toolGroups {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem 0.75rem;
+}
+
+.toolGroup {
+  display: flex;
+  align-items: center;
+  gap: 0.125rem;
+}
+
+.toolGroup + .toolGroup {
+  padding-left: 0.75rem;
+  border-left: 1px solid var(--color-border);
+}
+
+.toolButton {
+  display: inline-grid;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--color-text);
+  cursor: pointer;
+}
+
+.toolButton:hover:not(:disabled) {
+  background: var(--color-hover);
+}
+
+.toolButton[aria-pressed='true'] {
+  background: var(--color-notice-bg);
+  color: var(--color-primary);
+  box-shadow: inset 0 0 0 1px var(--color-notice-border);
+}
+
+.toolButton:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.toolButton:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 1px;
+}
+
+.zoomLevel {
+  min-width: 3.25rem;
   font-size: 0.875rem;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
+.saveState {
+  margin-left: auto;
+  color: var(--color-text-muted);
+  font-size: 0.8125rem;
+  white-space: nowrap;
 }
 
 .saveError {
