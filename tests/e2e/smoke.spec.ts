@@ -34,19 +34,13 @@ test.describe('app shell', () => {
     expect(errors).toEqual([])
   })
 
-  test('navigates to the editor placeholder and back', async ({ page }) => {
+  test('explains when a design does not exist', async ({ page }) => {
     const errors = collectErrors(page)
-    await page.goto('./')
+    await page.goto('./#/p/unknown-design')
 
-    await page.getByRole('link', { name: 'Preview the editor' }).click()
-    await expect(page).toHaveURL(/#\/p\/demo$/)
-    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Garden editor')
-
+    await expect(page.getByText('This design doesn’t exist (any more).')).toBeVisible()
     await page.getByRole('link', { name: 'Back to your designs' }).click()
     await expect(page.getByRole('heading', { level: 1 })).toHaveText('Your garden designs')
-
-    await page.goBack()
-    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Garden editor')
     expect(errors).toEqual([])
   })
 

@@ -10,16 +10,63 @@
       "nl": "Nederlands"
     }
   },
+  "common": {
+    "cancel": "Annuleren",
+    "save": "Opslaan",
+    "dismiss": "Sluiten"
+  },
   "projects": {
     "title": "Jouw tuinontwerpen",
+    "new": "Nieuw ontwerp",
+    "import": "Bestand importeren",
+    "loading": "Je ontwerpen worden geladen…",
     "empty": "Nog geen ontwerpen.",
-    "comingSoon": "Ontwerpen maken, openen en beheren komt in de volgende mijlpaal.",
-    "previewEditor": "Bekijk de editor"
+    "emptyHint": "Maak een nieuw ontwerp, of importeer een .garden.json-bestand.",
+    "storageError": "Je ontwerpen konden niet worden geladen. Deze browser blokkeert mogelijk lokale opslag, bijvoorbeeld in een privévenster.",
+    "changed": "Gewijzigd {{date}}",
+    "listLabel": "Ontwerpen",
+    "copyName": "{{name}} (kopie)",
+    "newForm": {
+      "label": "Naam van het nieuwe ontwerp",
+      "defaultName": "Mijn tuin",
+      "create": "Aanmaken"
+    },
+    "nameRequired": "Vul een naam in.",
+    "actions": {
+      "rename": "Naam wijzigen",
+      "duplicate": "Dupliceren",
+      "export": "Exporteren",
+      "delete": "Verwijderen"
+    },
+    "renameLabel": "Nieuwe naam voor ‘{{name}}’",
+    "deleteConfirm": "‘{{name}}’ verwijderen? Dit kan niet ongedaan worden gemaakt.",
+    "notices": {
+      "duplicated": "Kopie gemaakt: ‘{{name}}’.",
+      "deleted": "‘{{name}}’ is verwijderd.",
+      "exported": "‘{{name}}’ is geëxporteerd als {{file}}.",
+      "imported": "‘{{name}}’ is geïmporteerd."
+    },
+    "errors": {
+      "generic": "Er ging iets mis en de wijziging is niet doorgevoerd. Probeer het opnieuw.",
+      "importNotJson": "Dit bestand kon niet worden gelezen als tuinontwerp.",
+      "importNotGardenFile": "Dit bestand is geen ontwerp van de Tuinontwerper (.garden.json).",
+      "importNewerVersion": "Dit ontwerp is gemaakt met een nieuwere versie van de app. Herlaad de pagina om de app bij te werken en probeer het opnieuw.",
+      "importInvalid": "Dit ontwerpbestand is beschadigd of onvolledig."
+    }
   },
   "editor": {
-    "title": "Tuineditor",
-    "placeholder": "Ontwerp ‘{{id}}’. Het tekenvlak komt in een latere mijlpaal.",
-    "back": "Terug naar je ontwerpen"
+    "back": "Terug naar je ontwerpen",
+    "loading": "Ontwerp wordt geopend…",
+    "notFound": "Dit ontwerp bestaat niet (meer).",
+    "loadError": "Dit ontwerp kon niet worden geopend.",
+    "nameLabel": "Naam van het ontwerp",
+    "canvasComingSoon": "Het tekenvlak komt in de volgende mijlpaal.",
+    "saveState": {
+      "saved": "Alle wijzigingen opgeslagen",
+      "pending": "Niet-opgeslagen wijzigingen",
+      "saving": "Opslaan…",
+      "error": "Je wijzigingen konden niet worden opgeslagen"
+    }
   },
   "notFound": {
     "title": "Pagina niet gevonden",

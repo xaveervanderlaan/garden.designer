@@ -33,6 +33,10 @@ export function hrefFor(route: Exclude<Route, { name: 'notFound' }>): string {
   }
 }
 
+export function navigate(route: Exclude<Route, { name: 'notFound' }>): void {
+  window.location.hash = hrefFor(route)
+}
+
 function subscribe(onChange: () => void): () => void {
   window.addEventListener('hashchange', onChange)
   return () => window.removeEventListener('hashchange', onChange)

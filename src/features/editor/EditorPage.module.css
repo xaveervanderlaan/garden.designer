@@ -1,0 +1,40 @@
+.topBar {
+  margin-bottom: 1rem;
+}
+
+.header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.nameInput {
+  flex: 1 1 16rem;
+  min-width: 0;
+  max-width: 32rem;
+  border-color: transparent;
+  background: transparent;
+  font-size: 1.5rem;
+  font-weight: 650;
+}
+
+.nameInput:hover {
+  border-color: var(--color-border-strong);
+}
+
+.nameInput:focus {
+  border-color: var(--color-border-strong);
+  background: var(--color-surface);
+}
+
+.saveState {
+  color: var(--color-text-muted);
+  font-size: 0.875rem;
+}
+
+.saveError {
+  color: var(--color-danger-text);
+  font-weight: 600;
+}

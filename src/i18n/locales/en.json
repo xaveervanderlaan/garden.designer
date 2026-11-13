@@ -10,16 +10,63 @@
       "nl": "Nederlands"
     }
   },
+  "common": {
+    "cancel": "Cancel",
+    "save": "Save",
+    "dismiss": "Dismiss"
+  },
   "projects": {
     "title": "Your garden designs",
+    "new": "New design",
+    "import": "Import file",
+    "loading": "Loading your designs…",
     "empty": "No designs yet.",
-    "comingSoon": "Creating, opening and managing designs arrives in the next milestone.",
-    "previewEditor": "Preview the editor"
+    "emptyHint": "Create a new design, or import a .garden.json file.",
+    "storageError": "Your designs couldn't be loaded. This browser may be blocking local storage, for example in a private window.",
+    "changed": "Changed {{date}}",
+    "listLabel": "Designs",
+    "copyName": "{{name}} (copy)",
+    "newForm": {
+      "label": "Name of the new design",
+      "defaultName": "My garden",
+      "create": "Create"
+    },
+    "nameRequired": "Please enter a name.",
+    "actions": {
+      "rename": "Rename",
+      "duplicate": "Duplicate",
+      "export": "Export",
+      "delete": "Delete"
+    },
+    "renameLabel": "New name for “{{name}}”",
+    "deleteConfirm": "Delete “{{name}}”? This can’t be undone.",
+    "notices": {
+      "duplicated": "Created a copy: “{{name}}”.",
+      "deleted": "Deleted “{{name}}”.",
+      "exported": "Exported “{{name}}” as {{file}}.",
+      "imported": "Imported “{{name}}”."
+    },
+    "errors": {
+      "generic": "Something went wrong and the change wasn’t made. Please try again.",
+      "importNotJson": "This file couldn’t be read as a garden design.",
+      "importNotGardenFile": "This file isn’t a Garden Designer design (.garden.json).",
+      "importNewerVersion": "This design was made with a newer version of the app. Reload the page to update the app, then try again.",
+      "importInvalid": "This design file is damaged or incomplete."
+    }
   },
   "editor": {
-    "title": "Garden editor",
-    "placeholder": "Design “{{id}}”. The drawing canvas arrives in a later milestone.",
-    "back": "Back to your designs"
+    "back": "Back to your designs",
+    "loading": "Opening design…",
+    "notFound": "This design doesn’t exist (any more).",
+    "loadError": "This design couldn’t be opened.",
+    "nameLabel": "Design name",
+    "canvasComingSoon": "The drawing canvas arrives in the next milestone.",
+    "saveState": {
+      "saved": "All changes saved",
+      "pending": "Unsaved changes",
+      "saving": "Saving…",
+      "error": "Couldn’t save your changes"
+    }
   },
   "notFound": {
     "title": "Page not found",

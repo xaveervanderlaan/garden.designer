@@ -6,8 +6,17 @@
   --color-border: #dde3d8;
   --color-border-strong: #b9c4b3;
   --color-primary: #2f6b3a;
+  --color-primary-hover: #275a31;
   --color-on-primary: #ffffff;
   --color-focus: #3f8fd6;
+  --color-hover: #eef2ea;
+  --color-danger: #b3261e;
+  --color-danger-hover: #951f19;
+  --color-danger-bg: #fdf0ef;
+  --color-danger-border: #f0c4c0;
+  --color-danger-text: #8c1d18;
+  --color-notice-bg: #eef6ec;
+  --color-notice-border: #c5dfc0;
 
   color-scheme: light;
   font-family:
