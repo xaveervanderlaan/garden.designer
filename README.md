@@ -5,8 +5,7 @@ from a built-in library, see sun and shade, and plan the vegetable garden. Engli
 Everything is stored locally in the browser; nothing is sent to a server.
 
 - **Live app:** https://xaveervanderlaan.github.io/garden.designer/
-- **What we're building:** [SPEC.md](SPEC.md)
-- **How and in what order:** [PLAN.md](PLAN.md) (milestones with checklists)
+- The specification and implementation plan are kept in a separate private repository.
 
 ## Development
 

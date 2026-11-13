@@ -4,10 +4,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project documents — read these first
 
-- **SPEC.md** — what we're building (requirements, decisions, decision log). Items marked *(proposed)* are not yet confirmed by the user.
-- **PLAN.md** — how and in what order: milestones M0–M18 with checklists, architecture decisions (§2.3) and "as built" notes (§2.1). Follow §2.3 when implementing new milestones.
+The spec and plan are **private**: `docs/` is a separate git repo (remote `garden.designer-docs`, private on GitHub) that this public repo ignores. Never copy them into the public repo or quote them in public commit messages. Commit doc changes in the docs repo itself (`git -C docs add … && git -C docs commit … && git -C docs push`).
 
-Workflow agreed with the user: work through PLAN.md milestone by milestone, commit directly on `main` at the end of a milestone, push (CI deploys), tick the PLAN.md checkboxes, then **stop for the user to try the app** before starting the next milestone. If a decision changes, update SPEC.md/PLAN.md too.
+- **docs/SPEC.md** — what we're building (requirements, decisions, decision log). Items marked *(proposed)* are not yet confirmed by the user.
+- **docs/PLAN.md** — how and in what order: milestones M0–M18 with checklists, architecture decisions (§2.3) and "as built" notes (§2.1). Follow §2.3 when implementing new milestones.
+
+Workflow agreed with the user: work through PLAN.md milestone by milestone. At the end of a milestone, commit directly on `main` and push (CI deploys); tick the PLAN.md checkboxes and commit and push the docs repo; then **stop for the user to try the app** before starting the next milestone. If a decision changes, update SPEC.md/PLAN.md too.
 
 ## Commands
 
