@@ -23,6 +23,7 @@ export type ShortcutId =
   | 'toolPan'
   | 'drawPlot'
   | 'rectanglePlot'
+  | 'snapToGrid'
   | 'help'
 
 export type Shortcut = { id: ShortcutId; combos: KeyCombo[] }
@@ -54,6 +55,7 @@ export const SHORTCUTS: readonly Shortcut[] = [
   { id: 'toolPan', combos: [{ key: 'h' }] },
   { id: 'drawPlot', combos: [{ key: 'p' }] },
   { id: 'rectanglePlot', combos: [{ key: 'r' }] },
+  { id: 'snapToGrid', combos: [{ key: 'g' }] },
   { id: 'help', combos: [{ key: '?' }] },
 ]
 
@@ -144,6 +146,7 @@ const HANDLERS: Record<ShortcutId, (event: KeyboardEvent) => void> = {
   toolPan: () => editorActions.setTool('pan'),
   drawPlot: () => editorActions.setTool('draw-plot'),
   rectanglePlot: () => useUiStore.getState().setRectangleDialogOpen(true),
+  snapToGrid: () => editorActions.toggleSnapToGrid(),
   help: () => useUiStore.getState().setHelpOpen(true),
 }
 
@@ -152,10 +155,12 @@ export function useEditorShortcuts(): void {
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
       if (event.defaultPrevented || isTypingTarget(event.target)) return
-      const { helpOpen, rectangleDialogOpen } = useUiStore.getState()
-      if (helpOpen || rectangleDialogOpen) return // dialogs handle their own keys
-      // While drawing, digits are lengths for the drawing panel, not shortcuts (e.g. 0 = zoom to fit).
-      if (useUiStore.getState().drawing && /^[0-9.,]$/.test(event.key)) return
+      const { helpOpen, rectangleDialogOpen, sitePlanDialogOpen, drawing, calibration } =
+        useUiStore.getState()
+      if (helpOpen || rectangleDialogOpen || sitePlanDialogOpen) return // dialogs handle their keys
+      // While drawing or calibrating, digits are lengths for the panel below the plan, not
+      // shortcuts (e.g. 0 = zoom to fit).
+      if ((drawing || calibration) && /^[0-9.,]$/.test(event.key)) return
       const id = findShortcut(event)
       if (!id) return
       event.preventDefault() // e.g. keep Ctrl+D from bookmarking and arrows from scrolling

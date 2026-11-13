@@ -9,7 +9,18 @@ export type Migration = (project: ProjectData) => ProjectData
  * MIGRATIONS[n] upgrades a project from version n to n + 1. When the data model changes:
  * bump SCHEMA_VERSION in schema.ts and add the step here, with a test.
  */
-export const MIGRATIONS: Readonly<Record<number, Migration>> = {}
+export const MIGRATIONS: Readonly<Record<number, Migration>> = {
+  /**
+   * v2 (M4): the background got its pixel size and calibration, and is shown/locked through the
+   * "background" layer instead of its own flags. Version 1 of the app had no way to add a
+   * background, and its pixel size can't be recovered here, so a v1 background is dropped (its
+   * image is cleaned up when the project is next opened).
+   */
+  1: (project) => {
+    const { background: _, ...rest } = project
+    return rest
+  },
+}
 
 export type MigrationErrorReason = 'missing-version' | 'newer-version' | 'missing-migration'
 

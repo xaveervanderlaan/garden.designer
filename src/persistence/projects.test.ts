@@ -3,12 +3,15 @@ import { SCHEMA_VERSION } from '../model/schema'
 import { sampleProjectWithAsset } from '../test/fixtures'
 import { db } from './db'
 import {
+  addAsset,
   createProject,
   deleteProject,
   duplicateProject,
+  getAsset,
   listAssets,
   listProjects,
   loadProject,
+  pruneUnusedAssets,
   renameProject,
   saveProject,
 } from './projects'
@@ -97,5 +100,21 @@ describe('project repository', () => {
     expect(await listAssets(first.project.id)).toHaveLength(0)
     expect(await loadProject(second.project.id)).toEqual(second.project)
     expect(await listAssets(second.project.id)).toHaveLength(1)
+  })
+
+  it('stores assets and removes the ones a project no longer uses', async () => {
+    const { project, asset } = await storeSample('Garden')
+    const replaced = await addAsset(project.id, 'image/jpeg', new Uint8Array([1, 2, 3]).buffer)
+    expect((await getAsset(replaced))?.mimeType).toBe('image/jpeg')
+    expect(await listAssets(project.id)).toHaveLength(2)
+
+    // Still using the original image: the new one goes.
+    expect(await pruneUnusedAssets(project)).toBe(1)
+    expect((await listAssets(project.id)).map((a) => a.id)).toEqual([asset.id])
+
+    // Without a site plan, nothing is kept.
+    const { background: _, ...withoutBackground } = project
+    expect(await pruneUnusedAssets(withoutBackground)).toBe(1)
+    expect(await listAssets(project.id)).toHaveLength(0)
   })
 })

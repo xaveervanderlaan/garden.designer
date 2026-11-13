@@ -65,6 +65,19 @@ describe('snapPoint', () => {
     expect(snapPoint({ x: 7.3, y: 0.1 }, ctx).kind).toBe('vertex')
   })
 
+  it('can leave out the grid, also for lengths along a snapped angle', () => {
+    const off = { ...base, snapToGrid: false }
+    expect(snapPoint({ x: 3.3, y: 7.8 }, off)).toEqual({ point: { x: 3.3, y: 7.8 }, kind: null })
+    const right = snapPoint({ x: 7.3, y: 0.4 }, { ...off, anchor: { x: 0, y: 0 } })
+    expect(right.kind).toBe('angle')
+    expect(right.point.x).toBeCloseTo(7.3)
+    expect(right.point.y).toBeCloseTo(0)
+    // Corners still snap.
+    expect(snapPoint({ x: 4.6, y: 4.5 }, { ...off, vertices: [{ x: 4.1, y: 4.1 }] }).kind).toBe(
+      'vertex',
+    )
+  })
+
   it('uses a tolerance in pixels, so it tightens when zooming in', () => {
     const ctx = { ...base, vertices: [{ x: 5, y: 5 }] }
     expect(snapPoint({ x: 5.5, y: 5 }, ctx).kind).toBe('vertex') // 5 px at 10 px/m

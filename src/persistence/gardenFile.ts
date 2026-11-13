@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { assetIdsInUse } from '../model/background'
 import { newId } from '../model/ids'
 import { MigrationError, migrateProject } from '../model/migrations'
 import { type Project, SCHEMA_VERSION, projectSchema } from '../model/schema'
@@ -70,7 +71,10 @@ export function gardenFileName(projectName: string): string {
 export async function exportProject(id: string): Promise<{ fileName: string; json: string }> {
   const project = await loadProject(id)
   if (!project) throw new Error(`Project ${id} not found`)
-  const file = buildGardenFile(project, await listAssets(id))
+  // Only the files in use: replaced site plans may still be stored until the next clean-up.
+  const inUse = assetIdsInUse(project)
+  const assets = (await listAssets(id)).filter((asset) => inUse.has(asset.id))
+  const file = buildGardenFile(project, assets)
   return { fileName: gardenFileName(project.name), json: JSON.stringify(file) }
 }
 

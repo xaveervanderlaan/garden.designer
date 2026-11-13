@@ -1,8 +1,7 @@
 import { PenTool, RectangleHorizontal, Trash2 } from 'lucide-react'
-import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { edgeLengths, isSelfIntersecting, perimeter, polygonArea } from '../../../geometry/polygon'
-import { formatArea, formatLength, formatNumber, parseNumber } from '../../../i18n/units'
+import { formatArea, formatLength } from '../../../i18n/units'
 import { isLayerEditable } from '../../../model/edit'
 import {
   MIN_PLOT_CORNERS,
@@ -18,6 +17,8 @@ import controls from '../../../styles/controls.module.css'
 import { cx } from '../../../styles/cx'
 import { editorActions } from '../actions'
 import { shortcutLabel } from '../shortcuts'
+import { NumberField } from './NumberField'
+import { SitePlanStart } from './SitePlanProperties'
 import styles from './panels.module.css'
 
 /** Nothing selected: a hint, plus the way to start (or edit) the plot outline. */
@@ -62,6 +63,7 @@ export function NothingSelected({ project }: { project: Project }) {
           )}
         </div>
       )}
+      <SitePlanStart project={project} />
     </>
   )
 }
@@ -101,9 +103,10 @@ export function PlotProperties({ project }: { project: Project }) {
           return (
             <li key={i} className={styles.edgeRow}>
               <span className={styles.edgeName}>{t('editor.plot.edge', { from, to })}</span>
-              <EdgeLengthInput
-                length={length}
+              <NumberField
+                value={length}
                 label={t('editor.plot.edgeLength', { from, to })}
+                accept={(value) => value > 0}
                 onCommit={(value) =>
                   useProjectStore.getState().update((p) => setPlotEdgeLength(p, i, value))
                 }
@@ -131,70 +134,5 @@ export function PlotProperties({ project }: { project: Project }) {
         <p className={styles.hint}>{t('editor.plot.cornerHint')}</p>
       )}
     </>
-  )
-}
-
-/** A length field that applies its value on Enter or when leaving the field. */
-function EdgeLengthInput({
-  length,
-  label,
-  onCommit,
-}: {
-  length: number
-  label: string
-  onCommit: (metres: number) => void
-}) {
-  const formatted = formatNumber(length, 2)
-  const [text, setText] = useState(formatted)
-  const [invalid, setInvalid] = useState(false)
-  const input = useRef<HTMLInputElement>(null)
-  /** Set by Escape: the blur that follows must not apply the typed value. */
-  const cancelled = useRef(false)
-
-  // Follow outside changes (dragging corners, undo) unless the user is typing here.
-  useEffect(() => {
-    if (document.activeElement !== input.current) setText(formatted)
-  }, [formatted])
-
-  function apply() {
-    if (cancelled.current) {
-      cancelled.current = false
-      setText(formatted)
-      setInvalid(false)
-      return
-    }
-    const value = parseNumber(text)
-    if (value === undefined || value <= 0) {
-      setInvalid(true)
-      return
-    }
-    setInvalid(false)
-    if (formatNumber(value, 2) !== formatted) onCommit(value)
-    else setText(formatted)
-  }
-
-  return (
-    <input
-      ref={input}
-      className={cx(controls.input, styles.edgeInput)}
-      aria-label={label}
-      aria-invalid={invalid}
-      inputMode="decimal"
-      value={text}
-      onChange={(e) => {
-        setText(e.target.value)
-        setInvalid(false)
-      }}
-      onBlur={apply}
-      // Leaving the field applies the value; Enter leaves it, Escape leaves it without applying.
-      onKeyDown={(e) => {
-        if (e.key === 'Enter') {
-          e.currentTarget.blur()
-        } else if (e.key === 'Escape') {
-          cancelled.current = true
-          e.currentTarget.blur()
-        }
-      }}
-    />
   )
 }

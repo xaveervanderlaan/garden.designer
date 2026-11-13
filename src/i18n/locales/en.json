@@ -78,12 +78,14 @@
       "zoomLevel": "{{percent}}%",
       "help": "Keyboard shortcuts",
       "drawPlot": "Draw plot outline",
-      "rectanglePlot": "Rectangular plot"
+      "rectanglePlot": "Rectangular plot",
+      "snapToGrid": "Snap to grid"
     },
     "canvas": {
       "label": "Garden plan",
-      "emptyHint": "Start with the plot: draw its outline (P) or create a rectangle (R).",
-      "scaleBar": "Scale bar: {{length}}"
+      "emptyHint": "Start with the plot: import a site plan to trace over, draw the outline (P) or create a rectangle (R).",
+      "scaleBar": "Scale bar: {{length}}",
+      "traceHint": "Trace the plot over the site plan: press P and click its corners."
     },
     "status": {
       "position": "x {{x}} · y {{y}}",
@@ -119,7 +121,7 @@
       "lock": "Lock {{layer}}",
       "unlock": "Unlock {{layer}}",
       "names": {
-        "background": "Background image",
+        "background": "Site plan",
         "existing": "Existing situation",
         "hardscape": "Hardscape & structures",
         "plants": "Beds & plants",
@@ -164,7 +166,7 @@
       "duplicate": "Duplicate",
       "selectAll": "Select all",
       "delete": "Delete selection",
-      "clearSelection": "Clear selection / stop drawing",
+      "clearSelection": "Clear selection / stop drawing or calibrating",
       "nudge": "Move selection by 10 cm",
       "nudgeLarge": "Move selection by 1 m",
       "zoomIn": "Zoom in",
@@ -187,7 +189,8 @@
         "shiftClick": "Shift + click"
       },
       "drawPlot": "Draw plot outline",
-      "rectanglePlot": "Rectangular plot"
+      "rectanglePlot": "Rectangular plot",
+      "snapToGrid": "Snap to grid on/off"
     },
     "drawing": {
       "hintStart": "Click on the plan to place the first corner.",
@@ -225,6 +228,57 @@
       "invalid": "Enter a width and depth greater than 0.",
       "note": "You can move and add corners afterwards.",
       "replaces": "Replaces the current plot outline (undo with Ctrl+Z)."
+    },
+    "calibration": {
+      "hintStart": "Calibrate the scale: click the start of a distance you know, such as a dimensioned edge on the site plan.",
+      "hintEnd": "Now click the other end.",
+      "hintDistance": "Type the real distance and press Enter.",
+      "distance": "Real distance",
+      "apply": "Apply",
+      "measured": "Now {{length}} on the plan",
+      "keys": "Zoom in to click precisely. Clicking again starts a new line; Backspace removes the last point, Esc cancels.",
+      "invalidDistance": "Enter a distance greater than 0, e.g. 12,5.",
+      "needPoints": "First click both ends of the distance on the plan.",
+      "tooShort": "The two points are too close together. Zoom in and click them again."
+    },
+    "sitePlan": {
+      "title": "Site plan",
+      "import": "Import site plan",
+      "importHint": "Trace your plot over a site plan, cadastral map or aerial photo (PDF, PNG or JPG).",
+      "edit": "Edit site plan",
+      "choosePage": "Choose a page",
+      "pagesHint": "{{file}} has {{count}} pages. Which one shows the site plan?",
+      "page": "Page {{page}}",
+      "reading": "Reading {{file}}…",
+      "rendering": "Rendering page {{page}} of {{file}}…",
+      "chooseAnother": "Choose another file",
+      "close": "Close",
+      "errors": {
+        "unsupported": "This type of file can’t be used. Choose a PDF, PNG, JPG or WebP file.",
+        "tooLarge": "This file is too large. Use a file of at most 100 MB, or save the page as an image first.",
+        "unreadable": "This file couldn’t be read. It may be damaged; try saving the page as a PNG or JPG.",
+        "pdfPassword": "This PDF is protected with a password. Save a copy without a password, or as an image.",
+        "pdfEmpty": "This PDF has no pages.",
+        "saveFailed": "The image couldn’t be saved in the browser. The storage may be full."
+      },
+      "file": "File",
+      "fileAndPage": "{{file}}, page {{page}}",
+      "size": "Size",
+      "sizeValue": "{{width}} × {{depth}}",
+      "calibratedWith": "Calibration line",
+      "notCalibrated": "Not calibrated yet, so its size is a guess. Calibrate the scale before you trace.",
+      "calibrate": "Calibrate scale",
+      "recalibrate": "Calibrate again",
+      "alignTitle": "Align",
+      "rotation": "Rotation",
+      "rotationLabel": "Rotation in degrees",
+      "opacity": "Opacity",
+      "alignHint": "Drag the image to move it (arrow keys for small steps) and turn it with the round handle. A positive angle turns anticlockwise.",
+      "lock": "Lock in place",
+      "lockHint": "So it can’t move by accident while you trace",
+      "hide": "Hide",
+      "replace": "Replace image…",
+      "remove": "Remove"
     }
   },
   "notFound": {

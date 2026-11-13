@@ -61,7 +61,7 @@ test('design lifecycle: create, edit, rename, duplicate, export, delete, import'
   await download.saveAs(exportPath)
   expect(JSON.parse(await readFile(exportPath, 'utf8'))).toMatchObject({
     format: 'garden-designer',
-    schemaVersion: 1,
+    schemaVersion: 2,
     project: { name: 'Voortuin', settings: { soil: 'sand' } },
   })
 

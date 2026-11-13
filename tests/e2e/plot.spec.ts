@@ -1,4 +1,4 @@
-import { type Locator, type Page, expect, test } from '@playwright/test'
+import { type Page, expect, test } from '@playwright/test'
 
 /** Must match fitBounds' default padding and DEFAULT_VIEW_BOUNDS (30 × 20 m) in the app. */
 const FIT_PADDING = 48
@@ -11,16 +11,29 @@ function collectErrors(page: Page): string[] {
   return errors
 }
 
-/** Screen mapping after "zoom to fit" of `bounds`. */
-async function fitted(canvas: Locator, bounds: Bounds) {
-  const box = (await canvas.boundingBox())!
+/** Waits two frames, so a re-fit after the plan area changed size has been drawn. */
+async function settled(page: Page) {
+  await page.evaluate(
+    () => new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done))),
+  )
+}
+
+/**
+ * Screen mapping after "zoom to fit" of `bounds`. A fitted view re-fits when a panel below the plan
+ * opens or closes, so call this once the panels are as they will be while clicking.
+ */
+async function fitted(page: Page, bounds: Bounds) {
+  await settled(page)
+  const box = (await page.getByTestId('plan-area').boundingBox())!
+  const width = Math.floor(box.width)
+  const height = Math.floor(box.height)
   const w = bounds.maxX - bounds.minX
   const h = bounds.maxY - bounds.minY
-  const scale = Math.min((box.width - 2 * FIT_PADDING) / w, (box.height - 2 * FIT_PADDING) / h)
+  const scale = Math.min((width - 2 * FIT_PADDING) / w, (height - 2 * FIT_PADDING) / h)
   const centre = { x: (bounds.minX + bounds.maxX) / 2, y: (bounds.minY + bounds.maxY) / 2 }
   const at = (x: number, y: number) => ({
-    x: box.x + box.width / 2 + (x - centre.x) * scale,
-    y: box.y + box.height / 2 + (y - centre.y) * scale,
+    x: box.x + width / 2 + (x - centre.x) * scale,
+    y: box.y + height / 2 + (y - centre.y) * scale,
   })
   return { box, scale, at }
 }
@@ -45,10 +58,11 @@ const area = (page: Page) => page.getByTestId('plot-area')
 
 test('draws a 20 × 15 m plot from typed lengths', async ({ page }) => {
   const errors = collectErrors(page)
-  const canvas = await newDesign(page)
-  const { at, scale } = await fitted(canvas, { minX: 0, minY: 0, maxX: 30, maxY: 20 })
+  await newDesign(page)
 
   await page.getByRole('toolbar').getByRole('button', { name: 'Draw plot outline' }).click()
+  await expect(page.getByTestId('drawing-panel')).toBeVisible()
+  const { at, scale } = await fitted(page, { minX: 0, minY: 0, maxX: 30, maxY: 20 })
   const length = page.getByRole('textbox', { name: 'Length' })
   const angle = page.getByRole('textbox', { name: 'Angle' })
 
@@ -93,9 +107,10 @@ test('draws a 20 × 15 m plot from typed lengths', async ({ page }) => {
 test('draws by clicking, removes a corner with Backspace and cancels with Escape', async ({
   page,
 }) => {
-  const canvas = await newDesign(page)
-  const { at } = await fitted(canvas, { minX: 0, minY: 0, maxX: 30, maxY: 20 })
+  await newDesign(page)
   await page.keyboard.press('p')
+  await expect(page.getByTestId('drawing-panel')).toBeVisible()
+  const { at } = await fitted(page, { minX: 0, minY: 0, maxX: 30, maxY: 20 })
   for (const [x, y] of [
     [2, 2],
     [12, 2],
@@ -112,6 +127,8 @@ test('draws by clicking, removes a corner with Backspace and cancels with Escape
 
   // Escape while drawing leaves the plot as it was.
   await page.keyboard.press('p')
+  await expect(page.getByTestId('drawing-panel')).toBeVisible()
+  await settled(page)
   const p = at(20, 15)
   await page.mouse.click(p.x, p.y)
   await page.keyboard.press('Escape')
@@ -122,7 +139,7 @@ test('draws by clicking, removes a corner with Backspace and cancels with Escape
 
 test('creates a rectangle and edits the outline', async ({ page }) => {
   const errors = collectErrors(page)
-  const canvas = await newDesign(page)
+  await newDesign(page)
 
   await page.keyboard.press('r')
   const dialog = page.getByRole('dialog', { name: 'Rectangular plot' })
@@ -131,7 +148,7 @@ test('creates a rectangle and edits the outline', async ({ page }) => {
   await dialog.getByRole('button', { name: 'Create' }).click()
   await expect(dialog).toBeHidden()
   await expect(area(page)).toHaveText('100.00 m²')
-  const { at, scale } = await fitted(canvas, { minX: 0, minY: 0, maxX: 12.5, maxY: 8 })
+  const { at, scale } = await fitted(page, { minX: 0, minY: 0, maxX: 12.5, maxY: 8 })
 
   // Edge length in the panel: A→B from 12.5 to 15 m moves corner B → a trapezoid.
   const ab = page.getByRole('textbox', { name: 'Length of edge A → B' })

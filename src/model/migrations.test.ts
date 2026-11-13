@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
+import { newProject } from './defaults'
 import { MIGRATIONS, type Migration, MigrationError, migrateProject } from './migrations'
-import { SCHEMA_VERSION } from './schema'
+import { SCHEMA_VERSION, projectSchema } from './schema'
 
 const reasonOf = (fn: () => unknown) => {
   try {
@@ -53,5 +54,27 @@ describe('migrateProject', () => {
 
   it('has a migration for every version below the current one', () => {
     for (let v = 1; v < SCHEMA_VERSION; v++) expect(MIGRATIONS[v], `v${v}`).toBeDefined()
+  })
+})
+
+describe('migration steps', () => {
+  it('1 → 2: drops a version-1 background (no pixel size; v1 could not create one)', () => {
+    const v1 = {
+      ...newProject('Old', 1_700_000_000_000),
+      schemaVersion: 1,
+      background: {
+        assetId: 'a',
+        metresPerPixel: 0.02,
+        offset: { x: 0, y: 0 },
+        rotationDeg: 0,
+        opacity: 0.6,
+        visible: true,
+        locked: false,
+      },
+    }
+    const migrated = projectSchema.parse(migrateProject(v1, 2))
+    expect(migrated.schemaVersion).toBe(2)
+    expect(migrated.background).toBeUndefined()
+    expect(migrated.name).toBe('Old')
   })
 })

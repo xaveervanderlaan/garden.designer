@@ -20,6 +20,13 @@ export function formatArea(squareMetres: number, digits = 2, lang?: string): str
   return `${formatNumber(squareMetres, digits, lang)}${NBSP}m²`
 }
 
+/** "60%" / "60%" (0.6 → 60 %, in the language's own style). */
+export function formatPercent(fraction: number, lang: string = currentLanguage()): string {
+  return new Intl.NumberFormat(lang, { style: 'percent', maximumFractionDigits: 0 }).format(
+    fraction,
+  )
+}
+
 /** Short label for a round length, as on a scale bar: "50 cm", "1 m", "2,5 m". */
 export function formatRoundLength(metres: number, lang?: string): string {
   if (metres < 1) return `${formatNumber(Math.round(metres * 100), 0, lang)}${NBSP}cm`

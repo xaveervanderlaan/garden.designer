@@ -33,8 +33,8 @@ export function rotationOf(m: Matrix): number {
   return (Math.atan2(m[1], m[0]) * 180) / Math.PI
 }
 
-/** Normalises an angle to [0, 360). */
+/** Normalises an angle to [0, 360) (never -0). */
 export function normaliseDegrees(degrees: number): number {
   const d = degrees % 360
-  return d < 0 ? d + 360 : d
+  return d < 0 ? d + 360 : d + 0
 }

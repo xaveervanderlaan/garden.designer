@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import type { Project } from '../model/schema'
-import { loadProject, saveProject } from '../persistence/projects'
+import { loadProject, pruneUnusedAssets, saveProject } from '../persistence/projects'
 
 export const AUTOSAVE_DELAY_MS = 1000
 /** Undo steps kept in memory. Snapshots share unchanged parts, so this is cheap. */
@@ -97,6 +97,7 @@ export const useProjectStore = create<ProjectStore>()((set, get) => {
         const project = await loadProject(id)
         if (generation !== myGeneration) return
         set(project ? { project, loadState: 'ready' } : { loadState: 'notFound' })
+        if (project) void pruneUnusedAssets(project).catch(() => {}) // tidy-up only
       } catch (error) {
         console.error('Could not open project', error)
         if (generation === myGeneration) set({ loadState: 'error' })

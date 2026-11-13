@@ -5,6 +5,8 @@ import type { Point, Project } from '../../../model/schema'
 
 type Options = {
   scale: number
+  /** Whether to snap to the grid (the toolbar toggle). */
+  snapToGrid: boolean
   /** The previous corner while drawing (enables angle snapping). */
   anchor?: Point
   /** Corners of an outline being drawn (an open polyline). */
@@ -48,6 +50,7 @@ export function snapContext(project: Project, options: Options): SnapContext {
     vertices,
     edges,
     gridSize: project.settings.gridSizeM,
+    snapToGrid: options.snapToGrid,
     scale: options.scale,
     anchor: options.anchor,
   }

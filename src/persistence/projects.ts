@@ -1,3 +1,4 @@
+import { assetIdsInUse } from '../model/background'
 import { newProject, normaliseName } from '../model/defaults'
 import { newId } from '../model/ids'
 import { migrateProject } from '../model/migrations'
@@ -88,6 +89,36 @@ export async function deleteProject(id: string): Promise<void> {
 
 export async function listAssets(projectId: string): Promise<AssetRecord[]> {
   return db.assets.where('projectId').equals(projectId).toArray()
+}
+
+/** Stores a file (e.g. the site-plan image) for a project and returns its new id. */
+export async function addAsset(
+  projectId: string,
+  mimeType: string,
+  data: ArrayBuffer,
+): Promise<string> {
+  const id = newId()
+  await db.assets.add({ id, projectId, mimeType, data, createdAt: Date.now() })
+  void requestPersistentStorage()
+  return id
+}
+
+export async function getAsset(id: string): Promise<AssetRecord | undefined> {
+  return db.assets.get(id)
+}
+
+/**
+ * Deletes the project's files it no longer uses, e.g. a replaced or removed site plan. They are
+ * kept while the design is open, so undo can bring them back; this runs when a design is opened,
+ * before there is any undo history.
+ */
+export async function pruneUnusedAssets(project: Project): Promise<number> {
+  const inUse = assetIdsInUse(project)
+  return db.assets
+    .where('projectId')
+    .equals(project.id)
+    .filter((asset) => !inUse.has(asset.id))
+    .delete()
 }
 
 /**

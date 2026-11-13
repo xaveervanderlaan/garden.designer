@@ -13,7 +13,7 @@ import {
   importGardenFile,
   parseGardenFile,
 } from './gardenFile'
-import { listAssets, listProjects, loadProject } from './projects'
+import { addAsset, listAssets, listProjects, loadProject } from './projects'
 
 async function storeSample() {
   const { project, asset } = sampleProjectWithAsset('Achtertuin – versie 2')
@@ -56,6 +56,13 @@ describe('export → import', () => {
     expect(new Uint8Array(assets[0]!.data)).toEqual(new Uint8Array(asset.data))
 
     expect(await loadProject(imported.id)).toEqual(imported)
+  })
+
+  it('exports only the assets the project uses', async () => {
+    const { project } = await storeSample()
+    await addAsset(project.id, 'image/png', new Uint8Array([9]).buffer) // e.g. a replaced plan
+    const file = JSON.parse((await exportProject(project.id)).json)
+    expect(Object.keys(file.assets)).toEqual([project.background!.assetId])
   })
 
   it('imports the same file twice as two separate projects', async () => {

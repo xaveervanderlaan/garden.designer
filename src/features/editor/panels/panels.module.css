@@ -267,3 +267,105 @@
   gap: 0.375rem;
   margin-top: 0.75rem;
 }
+
+/* Long labels (in Dutch, say) wrap instead of running out of the narrow side panel. */
+.buttonColumn > button {
+  max-width: 100%;
+  white-space: normal;
+  text-align: left;
+}
+
+.notice {
+  margin: 0 0 0.75rem;
+  padding: 0.5rem 0.625rem;
+  border: 1px solid var(--color-notice-border);
+  border-radius: 8px;
+  background: var(--color-notice-bg);
+  font-size: 0.8125rem;
+}
+
+.sectionTitle {
+  margin: 1.25rem 0 0.375rem;
+  color: var(--color-text-muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* Site plan properties */
+.inlineField {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.625rem;
+  font-size: 0.875rem;
+}
+
+.range {
+  flex: 1.4;
+  min-width: 0;
+  accent-color: var(--color-primary);
+}
+
+.rangeValue {
+  width: 3rem;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Choosing a PDF page */
+.pageGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(7.5rem, 1fr));
+  gap: 0.75rem;
+  margin: 0.75rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.pageButton {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.375rem;
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+
+.pageButton:hover {
+  border-color: var(--color-primary);
+  background: var(--color-hover);
+}
+
+.pageButton:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+.pageThumbnail {
+  display: block;
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg);
+  object-fit: contain;
+}
+
+.inlineLabel {
+  flex: 1;
+  color: var(--color-text-muted);
+}
+
+.fileName {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

@@ -44,12 +44,15 @@ export function sampleProjectWithAsset(name = 'Back garden'): {
   ]
   project.background = {
     assetId: asset.id,
+    widthPx: 1200,
+    heightPx: 800,
+    fileName: 'site-plan.pdf',
+    page: 1,
     metresPerPixel: 0.02,
     offset: { x: -1, y: -2 },
     rotationDeg: 3,
     opacity: 0.6,
-    visible: true,
-    locked: false,
+    calibration: { a: { x: 100, y: 700 }, b: { x: 600, y: 700 }, distanceM: 10 },
   }
   project.objects = [
     {

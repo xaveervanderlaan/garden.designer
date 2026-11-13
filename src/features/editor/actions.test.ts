@@ -3,6 +3,8 @@ import { db } from '../../persistence/db'
 import { useProjectStore } from '../../store/projectStore'
 import { useUiStore } from '../../store/uiStore'
 import { sampleProjectWithAsset } from '../../test/fixtures'
+import { imageToWorld } from '../../geometry/calibration'
+import { BACKGROUND_ID, removeBackground } from '../../model/background'
 import { PLOT_ID } from '../../model/plot'
 import { NUDGE_SMALL_M, PASTE_OFFSET_M, editorActions } from './actions'
 
@@ -200,6 +202,140 @@ describe('editorActions', () => {
       useUiStore.getState().setActiveCorner(0)
       editorActions.deleteSelection()
       expect(outline()).toHaveLength(3)
+    })
+  })
+  describe('the site plan', () => {
+    const background = () => project().background!
+    const calibration = () => useUiStore.getState().calibration
+    const image = { assetId: 'new-image', widthPx: 400, heightPx: 300, fileName: 'plan.png' }
+
+    beforeEach(() => {
+      useUiStore.getState().setCanvasSize({ width: 800, height: 600 })
+      editorActions.zoomToFit()
+    })
+
+    it('places an imported image, shows it and starts calibrating', () => {
+      editorActions.hideSitePlan()
+      editorActions.placeSitePlan(image)
+      expect(background().assetId).toBe('new-image')
+      expect(project().layers.background).toEqual({ visible: true, locked: false })
+      expect(useUiStore.getState().tool).toBe('calibrate')
+      expect(useUiStore.getState().snapToGrid).toBe(false) // corners go where you click
+      expect(calibration()).toEqual({ points: [] })
+
+      editorActions.undo() // the previous site plan comes back
+      expect(background().assetId).not.toBe('new-image')
+    })
+
+    it('calibrates from two clicked points and a typed distance (one undo step)', () => {
+      editorActions.placeSitePlan(image)
+      // A line of 100 image pixels, clicked on the plan.
+      const a = imageToWorld(background(), { x: 50, y: 280 })
+      const b = imageToWorld(background(), { x: 150, y: 280 })
+      expect(editorActions.applyCalibration(10)).toBe(false) // no points yet
+      editorActions.addCalibrationPoint(a)
+      editorActions.addCalibrationPoint(b)
+      expect(editorActions.applyCalibration(10)).toBe(true)
+
+      expect(background().metresPerPixel).toBeCloseTo(0.1)
+      expect(background().calibration?.distanceM).toBe(10)
+      expect(useUiStore.getState().tool).toBe('select')
+      expect(selection()).toEqual([BACKGROUND_ID])
+
+      editorActions.undo()
+      expect(background().calibration).toBeUndefined()
+    })
+
+    it('stops calibrating when the site plan is undone or hidden', () => {
+      const tool = () => useUiStore.getState().tool
+      useProjectStore.getState().update(removeBackground) // a design without a site plan
+      editorActions.placeSitePlan(image)
+      expect(tool()).toBe('calibrate')
+      editorActions.undo() // the import
+      expect(project().background).toBeUndefined()
+      expect(tool()).toBe('select')
+
+      editorActions.redo()
+      editorActions.startCalibration()
+      expect(tool()).toBe('calibrate')
+      editorActions.hideSitePlan()
+      expect(tool()).toBe('select')
+    })
+
+    it('starts a new line on a third click, and steps back with Backspace', () => {
+      editorActions.startCalibration()
+      editorActions.addCalibrationPoint({ x: 0, y: 0 })
+      editorActions.addCalibrationPoint({ x: 5, y: 0 })
+      editorActions.addCalibrationPoint({ x: 1, y: 1 })
+      expect(calibration()?.points).toEqual([{ x: 1, y: 1 }])
+      editorActions.removeLastCalibrationPoint()
+      expect(calibration()?.points).toEqual([])
+      editorActions.escape()
+      expect(calibration()).toBeNull()
+      expect(useUiStore.getState().tool).toBe('select')
+    })
+
+    it('refuses a line that is too short', () => {
+      editorActions.startCalibration()
+      editorActions.addCalibrationPoint({ x: 3, y: 3 })
+      editorActions.addCalibrationPoint({ x: 3, y: 3 })
+      expect(editorActions.applyCalibration(10)).toBe(false)
+      expect(background().calibration?.distanceM).toBe(10) // the sample's calibration is kept
+    })
+
+    it('moves with the arrow keys, turns, fades and is removed with Delete', () => {
+      editorActions.selectSitePlan()
+      expect(selection()).toEqual([BACKGROUND_ID])
+      const { x, y } = background().offset
+      editorActions.nudge(NUDGE_SMALL_M, 0)
+      editorActions.nudge(NUDGE_SMALL_M, 0)
+      expect(background().offset.x).toBeCloseTo(x + 2 * NUDGE_SMALL_M)
+      expect(background().offset.y).toBeCloseTo(y)
+      editorActions.undo() // both nudges were one step
+      expect(background().offset.x).toBeCloseTo(x)
+
+      editorActions.rotateSitePlan(90)
+      expect(background().rotationDeg).toBe(270)
+
+      editorActions.setSitePlanOpacity(0.25)
+      expect(background().opacity).toBe(0.25)
+
+      editorActions.deleteSelection()
+      expect(project().background).toBeUndefined()
+      expect(selection()).toEqual([])
+      editorActions.undo()
+      expect(project().background).toBeDefined()
+    })
+
+    it('can be locked, and "edit" unlocks it again', () => {
+      editorActions.selectSitePlan()
+      editorActions.lockSitePlan()
+      expect(project().layers.background.locked).toBe(true)
+      expect(selection()).toEqual([])
+      editorActions.selectSitePlan()
+      expect(project().layers.background.locked).toBe(false)
+      expect(selection()).toEqual([BACKGROUND_ID])
+    })
+
+    it('only counts for zoom to fit when the design has nothing else', () => {
+      editorActions.zoomToFit()
+      const withPlot = useUiStore.getState().viewport
+      useProjectStore
+        .getState()
+        .update((p) => ({ ...p, plot: { outline: [] }, objects: [], plantings: [] }))
+      editorActions.zoomToFit()
+      // The 24 × 16 m image is larger than the 20 × 15 m plot: zoomed out further.
+      expect(useUiStore.getState().viewport.scale).toBeLessThan(withPlot.scale)
+    })
+
+    it('turns grid snapping off when a design with a site plan opens, and toggles it', () => {
+      editorActions.designOpened()
+      expect(useUiStore.getState().snapToGrid).toBe(false)
+      editorActions.toggleSnapToGrid()
+      expect(useUiStore.getState().snapToGrid).toBe(true)
+      editorActions.hideSitePlan()
+      editorActions.designOpened()
+      expect(useUiStore.getState().snapToGrid).toBe(true)
     })
   })
 })

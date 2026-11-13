@@ -119,7 +119,11 @@ export function PlotOverlay({
       ? { point: raw, kind: null }
       : snapPoint(
           raw,
-          snapContext(project, { scale: viewport.scale, excludePlotCorner: excludeCorner }),
+          snapContext(project, {
+            scale: viewport.scale,
+            snapToGrid: useUiStore.getState().snapToGrid,
+            excludePlotCorner: excludeCorner,
+          }),
         )
     lastSnap.current = snap.point
     const at = worldToScreen(snap.point, viewport)

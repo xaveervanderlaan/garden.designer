@@ -78,12 +78,14 @@
       "zoomLevel": "{{percent}}%",
       "help": "Sneltoetsen",
       "drawPlot": "Perceelgrens tekenen",
-      "rectanglePlot": "Rechthoekig perceel"
+      "rectanglePlot": "Rechthoekig perceel",
+      "snapToGrid": "Uitlijnen op raster"
     },
     "canvas": {
       "label": "Tuinplattegrond",
-      "emptyHint": "Begin met het perceel: teken de grens (P) of maak een rechthoek (R).",
-      "scaleBar": "Schaalbalk: {{length}}"
+      "emptyHint": "Begin met het perceel: importeer een situatietekening om over te tekenen, teken de grens (P) of maak een rechthoek (R).",
+      "scaleBar": "Schaalbalk: {{length}}",
+      "traceHint": "Teken het perceel over de situatietekening: druk op P en klik de hoeken aan."
     },
     "status": {
       "position": "x {{x}} · y {{y}}",
@@ -119,7 +121,7 @@
       "lock": "{{layer}} vergrendelen",
       "unlock": "{{layer}} ontgrendelen",
       "names": {
-        "background": "Achtergrondafbeelding",
+        "background": "Situatietekening",
         "existing": "Bestaande situatie",
         "hardscape": "Verharding & bouwwerken",
         "plants": "Borders & planten",
@@ -164,7 +166,7 @@
       "duplicate": "Dupliceren",
       "selectAll": "Alles selecteren",
       "delete": "Selectie verwijderen",
-      "clearSelection": "Selectie opheffen / tekenen stoppen",
+      "clearSelection": "Selectie opheffen / tekenen of kalibreren stoppen",
       "nudge": "Selectie 10 cm verplaatsen",
       "nudgeLarge": "Selectie 1 m verplaatsen",
       "zoomIn": "Inzoomen",
@@ -187,7 +189,8 @@
         "shiftClick": "Shift + klik"
       },
       "drawPlot": "Perceelgrens tekenen",
-      "rectanglePlot": "Rechthoekig perceel"
+      "rectanglePlot": "Rechthoekig perceel",
+      "snapToGrid": "Uitlijnen op raster aan/uit"
     },
     "drawing": {
       "hintStart": "Klik op de plattegrond om de eerste hoek te plaatsen.",
@@ -225,6 +228,57 @@
       "invalid": "Vul een breedte en diepte groter dan 0 in.",
       "note": "Je kunt daarna hoeken verplaatsen en toevoegen.",
       "replaces": "Vervangt de huidige perceelgrens (ongedaan maken met Ctrl+Z)."
+    },
+    "calibration": {
+      "hintStart": "Schaal kalibreren: klik op het begin van een afstand die je kent, zoals een bemaatte zijde op de situatietekening.",
+      "hintEnd": "Klik nu op het andere eind.",
+      "hintDistance": "Typ de werkelijke afstand en druk op Enter.",
+      "distance": "Werkelijke afstand",
+      "apply": "Toepassen",
+      "measured": "Nu {{length}} op de tekening",
+      "keys": "Zoom in om precies te klikken. Opnieuw klikken begint een nieuwe lijn; Backspace haalt het laatste punt weg, Esc annuleert.",
+      "invalidDistance": "Vul een afstand groter dan 0 in, bijv. 12,5.",
+      "needPoints": "Klik eerst beide uiteinden van de afstand aan op de tekening.",
+      "tooShort": "De twee punten liggen te dicht bij elkaar. Zoom in en klik ze opnieuw aan."
+    },
+    "sitePlan": {
+      "title": "Situatietekening",
+      "import": "Situatietekening importeren",
+      "importHint": "Teken je perceel over op een situatietekening, kadasterkaart of luchtfoto (PDF, PNG of JPG).",
+      "edit": "Situatietekening bewerken",
+      "choosePage": "Kies een pagina",
+      "pagesHint": "{{file}} heeft {{count}} pagina’s. Op welke staat de situatietekening?",
+      "page": "Pagina {{page}}",
+      "reading": "{{file}} wordt gelezen…",
+      "rendering": "Pagina {{page}} van {{file}} wordt omgezet…",
+      "chooseAnother": "Ander bestand kiezen",
+      "close": "Sluiten",
+      "errors": {
+        "unsupported": "Dit soort bestand kan niet worden gebruikt. Kies een PDF-, PNG-, JPG- of WebP-bestand.",
+        "tooLarge": "Dit bestand is te groot. Gebruik een bestand van hoogstens 100 MB, of sla de pagina eerst op als afbeelding.",
+        "unreadable": "Dit bestand kon niet worden gelezen. Misschien is het beschadigd; probeer de pagina op te slaan als PNG of JPG.",
+        "pdfPassword": "Deze PDF is beveiligd met een wachtwoord. Sla een kopie op zonder wachtwoord, of als afbeelding.",
+        "pdfEmpty": "Deze PDF heeft geen pagina’s.",
+        "saveFailed": "De afbeelding kon niet in de browser worden opgeslagen. Misschien is de opslag vol."
+      },
+      "file": "Bestand",
+      "fileAndPage": "{{file}}, pagina {{page}}",
+      "size": "Afmeting",
+      "sizeValue": "{{width}} × {{depth}}",
+      "calibratedWith": "Kalibratielijn",
+      "notCalibrated": "Nog niet gekalibreerd, dus de afmeting is een schatting. Kalibreer de schaal voordat je gaat overtekenen.",
+      "calibrate": "Schaal kalibreren",
+      "recalibrate": "Opnieuw kalibreren",
+      "alignTitle": "Uitlijnen",
+      "rotation": "Draaiing",
+      "rotationLabel": "Draaiing in graden",
+      "opacity": "Dekking",
+      "alignHint": "Sleep de afbeelding om haar te verplaatsen (pijltjestoetsen voor kleine stapjes) en draai haar met het ronde handvat. Een positieve hoek draait tegen de klok in.",
+      "lock": "Vastzetten",
+      "lockHint": "Zodat ze niet per ongeluk verschuift tijdens het overtekenen",
+      "hide": "Verbergen",
+      "replace": "Andere afbeelding…",
+      "remove": "Verwijderen"
     }
   },
   "notFound": {

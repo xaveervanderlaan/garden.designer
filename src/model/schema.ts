@@ -7,7 +7,7 @@ import { z } from 'zod'
  *
  * Changing the shape of stored data? Bump SCHEMA_VERSION and add a migration (see migrations.ts).
  */
-export const SCHEMA_VERSION = 1
+export const SCHEMA_VERSION = 2
 
 export const idSchema = z.string().min(1).max(100)
 
@@ -100,15 +100,26 @@ export const plotSchema = z.object({
   outline: z.array(pointSchema),
 })
 
-/** Site plan / aerial image to trace over. The image bytes live in the assets table. */
+/**
+ * The site plan (or aerial image) to trace over. The image bytes live in the assets table; a PDF
+ * is stored as the rendered page. Showing and locking it is done with the "background" layer.
+ * Pixels map to metres as described in geometry/calibration.ts.
+ */
 export const backgroundSchema = z.object({
   assetId: idSchema,
+  widthPx: z.number().int().positive(),
+  heightPx: z.number().int().positive(),
+  /** Name of the imported file, and the page for a PDF: shown in the properties panel. */
+  fileName: z.string().max(255).optional(),
+  page: z.number().int().positive().optional(),
   metresPerPixel: z.number().positive(),
+  /** World position of the image's top-left corner. */
   offset: pointSchema,
-  rotationDeg: z.number(),
+  /** Clockwise on screen (y points down), about the top-left corner, in [0, 360). */
+  rotationDeg: z.number().min(0).lt(360),
   opacity: z.number().min(0).max(1),
-  visible: z.boolean(),
-  locked: z.boolean(),
+  /** The last calibration: two points on the image (pixels) and their real distance. */
+  calibration: z.object({ a: pointSchema, b: pointSchema, distanceM: positiveLength }).optional(),
 })
 export type Background = z.infer<typeof backgroundSchema>
 

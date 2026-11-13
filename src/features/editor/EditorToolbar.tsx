@@ -1,11 +1,14 @@
 import {
   ArrowLeft,
   Hand,
+  ImagePlus,
   Keyboard,
+  Magnet,
   MousePointer2,
   PenTool,
   RectangleHorizontal,
   Redo2,
+  Ruler,
   Scan,
   Undo2,
   ZoomIn,
@@ -58,6 +61,7 @@ export function EditorToolbar({ project }: { project: Project }) {
   const saveState = useProjectStore((s) => s.saveState)
   const update = useProjectStore((s) => s.update)
   const tool = useUiStore((s) => s.tool)
+  const snapToGrid = useUiStore((s) => s.snapToGrid)
   const scale = useUiStore((s) => s.viewport.scale)
   const icon = { size: 18, 'aria-hidden': true } as const
 
@@ -126,6 +130,27 @@ export function EditorToolbar({ project }: { project: Project }) {
             onClick={() => useUiStore.getState().setRectangleDialogOpen(true)}
           >
             <RectangleHorizontal {...icon} />
+          </ToolButton>
+          <ToolButton
+            label={t('editor.toolbar.snapToGrid')}
+            shortcut="snapToGrid"
+            pressed={snapToGrid}
+            onClick={editorActions.toggleSnapToGrid}
+          >
+            <Magnet {...icon} />
+          </ToolButton>
+        </div>
+        <div className={styles.toolGroup}>
+          <ToolButton label={t('editor.sitePlan.import')} onClick={editorActions.importSitePlan}>
+            <ImagePlus {...icon} />
+          </ToolButton>
+          <ToolButton
+            label={t('editor.sitePlan.calibrate')}
+            pressed={tool === 'calibrate'}
+            disabled={!project.background}
+            onClick={() => editorActions.setTool('calibrate')}
+          >
+            <Ruler {...icon} />
           </ToolButton>
         </div>
         <div className={styles.toolGroup}>

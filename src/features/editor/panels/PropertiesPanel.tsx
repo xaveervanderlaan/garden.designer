@@ -6,6 +6,7 @@ import { currentLanguage } from '../../../i18n'
 import { formatLength } from '../../../i18n/units'
 import { updateObject, updatePlanting, validSelection } from '../../../model/edit'
 import { findPlant } from '../../../model/plants'
+import { BACKGROUND_ID } from '../../../model/background'
 import { PLOT_ID } from '../../../model/plot'
 import type { GardenObject, Planting, Point, Project } from '../../../model/schema'
 import { useProjectStore } from '../../../store/projectStore'
@@ -14,6 +15,7 @@ import controls from '../../../styles/controls.module.css'
 import { cx } from '../../../styles/cx'
 import { editorActions } from '../actions'
 import { NothingSelected, PlotProperties } from './PlotProperties'
+import { SitePlanProperties } from './SitePlanProperties'
 import styles from './panels.module.css'
 
 export function PropertiesPanel({ project }: { project: Project }) {
@@ -35,9 +37,12 @@ export function PropertiesPanel({ project }: { project: Project }) {
         <p className={styles.text}>{t('editor.properties.multiple', { count: ids.length })}</p>
       )}
       {ids.length === 1 && ids[0] === PLOT_ID && <PlotProperties project={project} />}
+      {ids.length === 1 && ids[0] === BACKGROUND_ID && project.background && (
+        <SitePlanProperties background={project.background} />
+      )}
       {object && <ObjectProperties object={object} />}
       {planting && <PlantingProperties project={project} planting={planting} />}
-      {ids.some((id) => id !== PLOT_ID) && (
+      {ids.some((id) => id !== PLOT_ID && id !== BACKGROUND_ID) && (
         <button
           type="button"
           className={cx(controls.button, controls.small, styles.deleteButton)}

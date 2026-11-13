@@ -5,6 +5,7 @@ import {
   rotationOf,
   translation,
 } from '../geometry/transform'
+import { BACKGROUND_ID, BACKGROUND_LAYER, hasBackground } from './background'
 import { newId } from './ids'
 import { plantingLayer } from './plants'
 import { PLOT_ID, PLOT_LAYER, hasPlot } from './plot'
@@ -44,12 +45,37 @@ export function editableItemIds(project: Project): string[] {
 
 /**
  * Keeps only ids that still exist and are editable (e.g. after undo or locking a layer). The plot
- * (PLOT_ID) counts when it has an outline and its layer is editable.
+ * (PLOT_ID) counts when it has an outline and its layer is editable; the site plan
+ * (BACKGROUND_ID) when there is one and its layer is editable.
  */
 export function validSelection(project: Project, ids: readonly string[]): string[] {
   const editable = new Set(editableItemIds(project))
   if (hasPlot(project) && isLayerEditable(project, PLOT_LAYER)) editable.add(PLOT_ID)
+  if (hasBackground(project) && isLayerEditable(project, BACKGROUND_LAYER)) {
+    editable.add(BACKGROUND_ID)
+  }
   return ids.filter((id) => editable.has(id))
+}
+
+/** True when the site plan is the only thing selected. */
+export function isBackgroundSelected(project: Project, ids: readonly string[]): boolean {
+  const valid = validSelection(project, ids)
+  return valid.length === 1 && valid[0] === BACKGROUND_ID
+}
+
+/** Shows/hides or (un)locks a layer. */
+export function setLayerState(
+  project: Project,
+  layer: LayerId,
+  state: Partial<Project['layers'][LayerId]>,
+): Project {
+  const current = project.layers[layer]
+  if (
+    Object.entries(state).every(([key, value]) => current[key as keyof typeof current] === value)
+  ) {
+    return project
+  }
+  return { ...project, layers: { ...project.layers, [layer]: { ...current, ...state } } }
 }
 
 /** True when the plot is the only thing selected: then its corners can be edited. */

@@ -15,7 +15,7 @@ export type SnapKind = 'vertex' | 'angle' | 'edge' | 'grid'
 
 export type Snap = {
   point: Point
-  /** What was snapped to, or null when snapping is off. */
+  /** What was snapped to, or null when nothing was (or snapping is off). */
   kind: SnapKind | null
   /** For angle snaps: the snapped direction in degrees. */
   angle?: number
@@ -27,6 +27,11 @@ export type SnapContext = {
   /** Existing edges to snap to. */
   edges: ReadonlyArray<readonly [Point, Point]>
   gridSize: number
+  /**
+   * false: no snapping to the grid, and lengths along a snapped angle aren't rounded to it (for
+   * tracing over the site plan). Default true.
+   */
+  snapToGrid?: boolean
   /** Pixels per metre, to convert the tolerance. */
   scale: number
   /** The previous corner while drawing: enables angle snapping. */
@@ -35,6 +40,7 @@ export type SnapContext = {
 
 export function snapPoint(raw: Point, ctx: SnapContext): Snap {
   const tolerance = SNAP_TOLERANCE_PX / ctx.scale
+  const gridOn = ctx.snapToGrid ?? true
 
   // 1. Existing corners.
   let nearestVertex: Point | undefined
@@ -48,8 +54,8 @@ export function snapPoint(raw: Point, ctx: SnapContext): Snap {
   }
   if (nearestVertex) return { point: nearestVertex, kind: 'vertex' }
 
-  // 2. Angles from the previous corner, with the length rounded to the grid. Right angles are
-  //    tried first, with a wider tolerance; then the nearest 15° step.
+  // 2. Angles from the previous corner, with the length rounded to the grid (if on). Right angles
+  //    are tried first, with a wider tolerance; then the nearest 15° step.
   if (ctx.anchor) {
     const anchor = ctx.anchor
     const length = distance(anchor, raw)
@@ -64,7 +70,7 @@ export function snapPoint(raw: Point, ctx: SnapContext): Snap {
         const offAngle = (((angle - snapped + 540) % 360) - 180) * (Math.PI / 180)
         if (Math.abs(length * Math.sin(offAngle)) > limit) continue
         const along = length * Math.cos(offAngle)
-        const rounded = Math.round(along / ctx.gridSize) * ctx.gridSize
+        const rounded = gridOn ? Math.round(along / ctx.gridSize) * ctx.gridSize : along
         const snappedLength = rounded > 0 ? rounded : along
         const d = direction(snapped)
         return {
@@ -89,6 +95,7 @@ export function snapPoint(raw: Point, ctx: SnapContext): Snap {
   if (nearestEdgePoint) return { point: nearestEdgePoint, kind: 'edge' }
 
   // 4. The grid.
+  if (!gridOn) return { point: raw, kind: null }
   const g = ctx.gridSize
   return { point: { x: Math.round(raw.x / g) * g, y: Math.round(raw.y / g) * g }, kind: 'grid' }
 }

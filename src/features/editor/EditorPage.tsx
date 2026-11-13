@@ -15,6 +15,7 @@ import { RectangleDialog } from './panels/RectangleDialog'
 import { ShortcutHelp } from './panels/ShortcutHelp'
 import { StatusBar } from './panels/StatusBar'
 import { useEditorShortcuts } from './shortcuts'
+import { SitePlanImport } from './siteplan/SitePlanImport'
 
 // Konva is large: load the canvas only when a design is opened.
 const GardenCanvas = lazy(() => import('./canvas/GardenCanvas'))
@@ -91,6 +92,7 @@ function Workspace({ project }: { project: Project }) {
       </div>
       <ShortcutHelp />
       <RectangleDialog />
+      <SitePlanImport />
     </div>
   )
 }

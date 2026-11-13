@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { formatArea, formatLength, formatRoundLength, parseNumber } from './units'
+import { formatArea, formatLength, formatPercent, formatRoundLength, parseNumber } from './units'
 
 const nbsp = ' '
 
@@ -9,6 +9,11 @@ describe('formatting', () => {
     expect(formatLength(12.5, 2, 'nl')).toBe(`12,50${nbsp}m`)
     expect(formatArea(300, 2, 'en')).toBe(`300.00${nbsp}m²`)
     expect(formatArea(300, 2, 'nl')).toBe(`300,00${nbsp}m²`)
+  })
+
+  it('formats percentages', () => {
+    expect(formatPercent(0.6, 'en')).toBe('60%')
+    expect(formatPercent(0.35, 'nl')).toMatch(/^35\s?%$/)
   })
 
   it('formats round lengths for the scale bar', () => {

@@ -8,6 +8,8 @@ export type ElementStyle = { fill: string; stroke: string }
 
 export const SELECTION_COLOR = '#2f80d1'
 export const WARNING_COLOR = '#b3261e'
+/** The line measured to calibrate the site plan's scale. */
+export const CALIBRATION_COLOR = '#c25400'
 export const PLOT_STYLE = { stroke: '#253325', fill: 'rgba(255, 255, 255, 0.6)' }
 export const PLANTING_STYLE: ElementStyle = { fill: 'rgba(110, 168, 90, 0.85)', stroke: '#3f6f33' }
 
