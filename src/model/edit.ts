@@ -7,6 +7,7 @@ import {
 } from '../geometry/transform'
 import { newId } from './ids'
 import { plantingLayer } from './plants'
+import { PLOT_ID, PLOT_LAYER, hasPlot } from './plot'
 import type { GardenObject, LayerId, Planting, Project, Shape } from './schema'
 
 /**
@@ -41,10 +42,20 @@ export function editableItemIds(project: Project): string[] {
   ]
 }
 
-/** Keeps only ids that still exist and are editable (e.g. after undo or locking a layer). */
+/**
+ * Keeps only ids that still exist and are editable (e.g. after undo or locking a layer). The plot
+ * (PLOT_ID) counts when it has an outline and its layer is editable.
+ */
 export function validSelection(project: Project, ids: readonly string[]): string[] {
   const editable = new Set(editableItemIds(project))
+  if (hasPlot(project) && isLayerEditable(project, PLOT_LAYER)) editable.add(PLOT_ID)
   return ids.filter((id) => editable.has(id))
+}
+
+/** True when the plot is the only thing selected: then its corners can be edited. */
+export function isPlotSelected(project: Project, ids: readonly string[]): boolean {
+  const valid = validSelection(project, ids)
+  return valid.length === 1 && valid[0] === PLOT_ID
 }
 
 // --- Geometry ---------------------------------------------------------------------------------

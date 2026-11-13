@@ -3,6 +3,8 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Group, Layer, Stage, Transformer } from 'react-konva'
 import { scaleBarLength } from '../../../geometry/grid'
+import { isSelfIntersecting } from '../../../geometry/polygon'
+import { type Snap, snapPoint } from '../../../geometry/snap'
 import type { Matrix } from '../../../geometry/transform'
 import {
   isTrackpadPan,
@@ -13,14 +15,27 @@ import {
   zoomAt,
 } from '../../../geometry/viewport'
 import { formatRoundLength } from '../../../i18n/units'
-import { moveItems, transformObjects } from '../../../model/edit'
+import {
+  isLayerEditable,
+  isLayerVisible,
+  isPlotSelected,
+  moveItems,
+  transformObjects,
+} from '../../../model/edit'
+import { PLOT_ID, PLOT_LAYER, hasPlot } from '../../../model/plot'
+import type { Point } from '../../../model/schema'
 import { useProjectStore } from '../../../store/projectStore'
 import { useUiStore } from '../../../store/uiStore'
 import { SELECTION_COLOR } from '../../../styles/elementStyles'
 import { currentSelection, editorActions } from '../actions'
+import { DrawingOverlay } from './DrawingOverlay'
+import { DrawingPanel } from './DrawingPanel'
 import styles from './GardenCanvas.module.css'
 import { Grid } from './Grid'
-import { type ItemHandlers, Items, PlotOutline } from './Items'
+import { type ItemHandlers, Items } from './Items'
+import { PlotOverlay, PlotShape } from './Plot'
+import { snapContext } from './snapTargets'
+import { useAltKey } from './useAltKey'
 import { useElementSize } from './useElementSize'
 import { useSpaceKey } from './useSpaceKey'
 
@@ -35,14 +50,22 @@ export default function GardenCanvas() {
   const viewport = useUiStore((s) => s.viewport)
   const selectionIds = useUiStore((s) => s.selection)
   const tool = useUiStore((s) => s.tool)
+  const drawing = useUiStore((s) => s.drawing)
   const spaceHeld = useSpaceKey()
+  const altHeld = useAltKey()
   const [panning, setPanning] = useState(false)
   const [hovered, setHovered] = useState<string | null>(null)
+  /** The plot outline while a corner is being dragged (committed on release). */
+  const [plotDraft, setPlotDraft] = useState<Point[] | null>(null)
+  /** The snapped cursor while drawing. */
+  const [drawCursor, setDrawCursor] = useState<Snap | null>(null)
   const nodes = useRef(new Map<string, Konva.Group>())
   const transformer = useRef<Konva.Transformer>(null)
   const fittedProjectId = useRef<string | null>(null)
 
   const panMode = tool === 'pan' || spaceHeld
+  const drawMode = tool === 'draw-plot' && !spaceHeld
+  const interactive = tool === 'select' && !spaceHeld
   const selection = useMemo(() => new Set(selectionIds), [selectionIds])
 
   useEffect(() => {
@@ -62,7 +85,7 @@ export default function GardenCanvas() {
     const tr = transformer.current
     if (!tr || !project) return
     const objectIds = new Set(project.objects.map((o) => o.id))
-    const attached = panMode
+    const attached = !interactive
       ? []
       : currentSelection()
           .filter((id) => objectIds.has(id))
@@ -71,7 +94,7 @@ export default function GardenCanvas() {
     tr.nodes(attached)
     tr.forceUpdate()
     tr.getLayer()?.batchDraw()
-  }, [project, selectionIds, panMode])
+  }, [project, selectionIds, interactive])
 
   const handlers = useMemo<ItemHandlers>(() => {
     const selectedIds = () => new Set(currentSelection())
@@ -108,6 +131,8 @@ export default function GardenCanvas() {
     }
   }, [])
 
+  if (!project) return null
+
   function onTransformEnd() {
     const tr = transformer.current
     if (!tr) return
@@ -141,23 +166,39 @@ export default function GardenCanvas() {
     window.addEventListener('mouseup', onUp)
   }
 
+  /** The snapped world point for a screen position while drawing (Alt turns snapping off). */
+  function drawingSnap(screen: Point, alt: boolean): Snap {
+    const { viewport: vp, drawing: current } = useUiStore.getState()
+    const raw = screenToWorld(screen, vp)
+    if (alt || !project) return { point: raw, kind: null }
+    const points = current?.points ?? []
+    return snapPoint(
+      raw,
+      snapContext(project, { scale: vp.scale, drawing: points, anchor: points.at(-1) }),
+    )
+  }
+
   function onStageMouseDown(event: Konva.KonvaEventObject<MouseEvent>) {
-    const { button, shiftKey } = event.evt
+    const { button, shiftKey, altKey } = event.evt
     if (button === 1 || (button === 0 && panMode)) {
       startPan(event.evt)
       return
     }
-    // Clicking empty space clears the selection.
-    if (button === 0 && event.target === event.target.getStage() && !shiftKey) {
-      editorActions.clearSelection()
+    if (button !== 0) return
+    if (drawMode) {
+      const pointer = event.target.getStage()?.getPointerPosition()
+      if (pointer) editorActions.addDrawingPoint(drawingSnap(pointer, altKey).point)
+      return
     }
+    // Clicking empty space clears the selection.
+    if (event.target === event.target.getStage() && !shiftKey) editorActions.clearSelection()
   }
 
   function onStageMouseMove(event: Konva.KonvaEventObject<MouseEvent>) {
     const pointer = event.target.getStage()?.getPointerPosition()
-    if (pointer) {
-      useUiStore.getState().setCursor(screenToWorld(pointer, useUiStore.getState().viewport))
-    }
+    if (!pointer) return
+    useUiStore.getState().setCursor(screenToWorld(pointer, useUiStore.getState().viewport))
+    if (tool === 'draw-plot') setDrawCursor(drawingSnap(pointer, event.evt.altKey))
   }
 
   function onWheel(event: Konva.KonvaEventObject<WheelEvent>) {
@@ -172,75 +213,135 @@ export default function GardenCanvas() {
     else setViewport((vp) => zoomAt(vp, pointer, wheelZoomFactor(dy, e.ctrlKey)))
   }
 
-  const cursor = panning ? 'grabbing' : panMode ? 'grab' : hovered ? 'move' : 'default'
+  function onPlotMouseDown(event: Konva.KonvaEventObject<MouseEvent>) {
+    if (event.evt.button !== 0) return
+    const ui = useUiStore.getState()
+    if (event.evt.shiftKey) ui.toggleSelected(PLOT_ID)
+    else if (!ui.selection.includes(PLOT_ID)) ui.setSelection([PLOT_ID])
+  }
+
+  const outline = plotDraft ?? project.plot.outline
+  const plotVisible = isLayerVisible(project, PLOT_LAYER)
+  const plotEditable = isLayerEditable(project, PLOT_LAYER)
+  const editingPlot = interactive && isPlotSelected(project, selectionIds)
+  const cursor = panning
+    ? 'grabbing'
+    : panMode
+      ? 'grab'
+      : drawMode
+        ? 'crosshair'
+        : hovered === PLOT_ID
+          ? 'pointer'
+          : hovered
+            ? 'move'
+            : 'default'
   const isEmpty =
-    !!project &&
-    project.plot.outline.length === 0 &&
-    project.objects.length === 0 &&
-    project.plantings.length === 0
+    !hasPlot(project) && project.objects.length === 0 && project.plantings.length === 0
   const barLength = scaleBarLength(viewport.scale)
 
   return (
     <div
-      ref={containerRef}
       className={styles.canvas}
-      style={{ cursor }}
       role="region"
       aria-label={t('editor.canvas.label')}
       data-testid="garden-canvas"
     >
-      {size && project && (
-        <Stage
-          width={size.width}
-          height={size.height}
-          onMouseDown={onStageMouseDown}
-          onMouseMove={onStageMouseMove}
-          onMouseLeave={() => useUiStore.getState().setCursor(null)}
-          onWheel={onWheel}
-          onContextMenu={(e) => e.evt.preventDefault()}
-        >
-          <Layer listening={false}>
-            <Grid viewport={viewport} size={size} />
-          </Layer>
-          <Layer>
-            <Group x={viewport.x} y={viewport.y} scaleX={viewport.scale} scaleY={viewport.scale}>
-              <PlotOutline outline={project.plot.outline} />
-              <Items
-                project={project}
-                selection={selection}
-                interactive={!panMode}
-                handlers={handlers}
-              />
-            </Group>
-            <Transformer
-              ref={transformer}
-              rotationSnaps={ROTATION_SNAPS}
-              rotationSnapTolerance={4}
-              keepRatio={false}
-              ignoreStroke
-              anchorSize={9}
-              anchorStroke={SELECTION_COLOR}
-              borderStroke={SELECTION_COLOR}
-              borderDash={[4, 3]}
-              boundBoxFunc={(oldBox, newBox) =>
-                Math.abs(newBox.width) < 4 || Math.abs(newBox.height) < 4 ? oldBox : newBox
-              }
-              onTransformEnd={onTransformEnd}
-            />
-          </Layer>
-        </Stage>
-      )}
-
-      {isEmpty && <p className={styles.emptyHint}>{t('editor.canvas.emptyHint')}</p>}
-
       <div
-        className={styles.scaleBar}
-        role="img"
-        aria-label={t('editor.canvas.scaleBar', { length: formatRoundLength(barLength) })}
+        ref={containerRef}
+        className={styles.stageArea}
+        style={{ cursor }}
+        // While drawing, keep the focus in the drawing panel's length field: without this, a click
+        // on the plan moves the focus to the page (Konva's pointer events can't prevent that).
+        onMouseDown={(e) => tool === 'draw-plot' && e.preventDefault()}
       >
-        <span className={styles.scaleBarLine} style={{ width: barLength * viewport.scale }} />
-        <span>{formatRoundLength(barLength)}</span>
+        {size && (
+          <Stage
+            width={size.width}
+            height={size.height}
+            onMouseDown={onStageMouseDown}
+            onMouseMove={onStageMouseMove}
+            onMouseLeave={() => {
+              useUiStore.getState().setCursor(null)
+              setDrawCursor(null)
+            }}
+            onWheel={onWheel}
+            onContextMenu={(e) => e.evt.preventDefault()}
+          >
+            <Layer listening={false}>
+              <Grid viewport={viewport} size={size} />
+            </Layer>
+            <Layer>
+              <Group x={viewport.x} y={viewport.y} scaleX={viewport.scale} scaleY={viewport.scale}>
+                {plotVisible && (
+                  <PlotShape
+                    outline={outline}
+                    selectable={interactive && plotEditable}
+                    selected={selection.has(PLOT_ID)}
+                    warning={outline.length > 3 && isSelfIntersecting(outline)}
+                    onMouseDown={onPlotMouseDown}
+                    onHover={(on) => setHovered(on ? PLOT_ID : null)}
+                  />
+                )}
+                <Items
+                  project={project}
+                  selection={selection}
+                  interactive={interactive}
+                  handlers={handlers}
+                />
+              </Group>
+              <Transformer
+                ref={transformer}
+                rotationSnaps={ROTATION_SNAPS}
+                rotationSnapTolerance={4}
+                keepRatio={false}
+                ignoreStroke
+                anchorSize={9}
+                anchorStroke={SELECTION_COLOR}
+                borderStroke={SELECTION_COLOR}
+                borderDash={[4, 3]}
+                boundBoxFunc={(oldBox, newBox) =>
+                  Math.abs(newBox.width) < 4 || Math.abs(newBox.height) < 4 ? oldBox : newBox
+                }
+                onTransformEnd={onTransformEnd}
+              />
+            </Layer>
+            <Layer>
+              {plotVisible && (
+                <PlotOverlay
+                  project={project}
+                  outline={outline}
+                  viewport={viewport}
+                  showLabels={isLayerVisible(project, 'measurements')}
+                  editing={editingPlot}
+                  altHeld={altHeld}
+                  onDraft={setPlotDraft}
+                />
+              )}
+              {drawing && (
+                <DrawingOverlay
+                  points={drawing.points}
+                  cursor={drawMode ? drawCursor : null}
+                  viewport={viewport}
+                />
+              )}
+            </Layer>
+          </Stage>
+        )}
+
+        {isEmpty && !drawing && <p className={styles.emptyHint}>{t('editor.canvas.emptyHint')}</p>}
+
+        <div
+          className={styles.scaleBar}
+          role="img"
+          aria-label={t('editor.canvas.scaleBar', { length: formatRoundLength(barLength) })}
+        >
+          <span className={styles.scaleBarLine} style={{ width: barLength * viewport.scale }} />
+          <span>{formatRoundLength(barLength)}</span>
+        </div>
       </div>
+
+      {/* Below the plan, not on top of it, so it never hides a spot you want to click. */}
+      {drawing && <DrawingPanel towards={drawMode ? (drawCursor?.point ?? null) : null} />}
     </div>
   )
 }

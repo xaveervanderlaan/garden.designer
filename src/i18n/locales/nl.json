@@ -76,11 +76,13 @@
       "zoomOut": "Uitzoomen",
       "zoomFit": "Alles in beeld",
       "zoomLevel": "{{percent}}%",
-      "help": "Sneltoetsen"
+      "help": "Sneltoetsen",
+      "drawPlot": "Perceelgrens tekenen",
+      "rectanglePlot": "Rechthoekig perceel"
     },
     "canvas": {
       "label": "Tuinplattegrond",
-      "emptyHint": "Je plattegrond is nog leeg. Het tekengereedschap komt in de volgende mijlpaal.",
+      "emptyHint": "Begin met het perceel: teken de grens (P) of maak een rechthoek (R).",
       "scaleBar": "Schaalbalk: {{length}}"
     },
     "status": {
@@ -162,7 +164,7 @@
       "duplicate": "Dupliceren",
       "selectAll": "Alles selecteren",
       "delete": "Selectie verwijderen",
-      "clearSelection": "Selectie opheffen",
+      "clearSelection": "Selectie opheffen / tekenen stoppen",
       "nudge": "Selectie 10 cm verplaatsen",
       "nudgeLarge": "Selectie 1 m verplaatsen",
       "zoomIn": "Inzoomen",
@@ -183,7 +185,46 @@
         "wheel": "Scrollwiel",
         "trackpad": "Touchpad",
         "shiftClick": "Shift + klik"
-      }
+      },
+      "drawPlot": "Perceelgrens tekenen",
+      "rectanglePlot": "Rechthoekig perceel"
+    },
+    "drawing": {
+      "hintStart": "Klik op de plattegrond om de eerste hoek te plaatsen.",
+      "hintNext": "Klik de volgende hoek, of typ een lengte (en hoek) en druk op Enter.",
+      "hintFinish": "Voeg meer hoeken toe, of druk op Enter of klik op de eerste hoek om af te ronden.",
+      "length": "Lengte",
+      "angle": "Hoek",
+      "metres": "m",
+      "finish": "Klaar",
+      "keys": "Hoek: 0° = rechts, 90° = omhoog. Backspace haalt de laatste hoek weg, Esc annuleert, houd Alt ingedrukt om uitlijnen uit te zetten.",
+      "invalidLength": "Vul een lengte groter dan 0 in, bijv. 12,5.",
+      "invalidAngle": "Vul een hoek in graden in, bijv. 90.",
+      "needStart": "Klik eerst op de plattegrond om de beginhoek te plaatsen.",
+      "needMoreCorners": "Een perceel heeft minstens 3 hoeken nodig."
+    },
+    "plot": {
+      "title": "Perceelgrens",
+      "edit": "Perceelgrens bewerken",
+      "area": "Oppervlakte",
+      "perimeter": "Omtrek",
+      "corners": "Hoeken",
+      "edges": "Zijden",
+      "edge": "{{from}} → {{to}}",
+      "edgeLength": "Lengte van zijde {{from}} → {{to}}",
+      "selfIntersecting": "De grens kruist zichzelf, dus de oppervlakte klopt niet. Verplaats een hoek om dit op te lossen.",
+      "cornerHint": "Sleep een hoek om hem te verplaatsen. Klik op een hoek om hem te selecteren (Delete verwijdert hem). Sleep of klik op de stip op een zijde om een hoek toe te voegen.",
+      "removeCorner": "Hoek {{corner}} verwijderen",
+      "minCorners": "Een perceel heeft minstens 3 hoeken nodig."
+    },
+    "rectangle": {
+      "title": "Rechthoekig perceel",
+      "width": "Breedte (m)",
+      "depth": "Diepte (m)",
+      "create": "Aanmaken",
+      "invalid": "Vul een breedte en diepte groter dan 0 in.",
+      "note": "Je kunt daarna hoeken verplaatsen en toevoegen.",
+      "replaces": "Vervangt de huidige perceelgrens (ongedaan maken met Ctrl+Z)."
     }
   },
   "notFound": {

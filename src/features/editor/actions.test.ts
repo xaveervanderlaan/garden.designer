@@ -3,6 +3,7 @@ import { db } from '../../persistence/db'
 import { useProjectStore } from '../../store/projectStore'
 import { useUiStore } from '../../store/uiStore'
 import { sampleProjectWithAsset } from '../../test/fixtures'
+import { PLOT_ID } from '../../model/plot'
 import { NUDGE_SMALL_M, PASTE_OFFSET_M, editorActions } from './actions'
 
 const project = () => useProjectStore.getState().project!
@@ -110,5 +111,95 @@ describe('editorActions', () => {
     expect(useUiStore.getState().viewport.scale).toBeGreaterThan(fitted.scale)
     editorActions.zoomOut()
     expect(useUiStore.getState().viewport.scale).toBeCloseTo(fitted.scale)
+  })
+
+  describe('drawing the plot', () => {
+    const drawing = () => useUiStore.getState().drawing
+    const outline = () => project().plot.outline
+
+    it('places corners by clicking and by typed lengths and angles', () => {
+      editorActions.setTool('draw-plot')
+      expect(selection()).toEqual([])
+      editorActions.addDrawingPoint({ x: 2, y: 2 })
+      expect(editorActions.addDrawingSegment(20, 0, null)).toBe(true) // right
+      expect(editorActions.addDrawingSegment(15, 270, null)).toBe(true) // down
+      // Without an angle: towards the cursor (here: to the left).
+      expect(editorActions.addDrawingSegment(20, undefined, { x: -50, y: 17 })).toBe(true)
+      expect(drawing()?.points).toEqual([
+        { x: 2, y: 2 },
+        { x: 22, y: 2 },
+        { x: 22, y: 17 },
+        { x: 2, y: 17 },
+      ])
+
+      expect(editorActions.finishDrawing()).toBe(true)
+      expect(outline()).toHaveLength(4)
+      expect(useUiStore.getState().tool).toBe('select')
+      expect(selection()).toEqual([PLOT_ID])
+
+      editorActions.undo() // one step: the whole outline
+      expect(outline()).toHaveLength(4) // the sample already had a 20 × 15 plot at the origin
+      expect(outline()[0]).toEqual({ x: 0, y: 0 })
+    })
+
+    it('finishes when the first corner is clicked again', () => {
+      editorActions.setTool('draw-plot')
+      for (const p of [
+        { x: 0, y: 0 },
+        { x: 4, y: 0 },
+        { x: 4, y: 3 },
+        { x: 0, y: 0 },
+      ])
+        editorActions.addDrawingPoint(p)
+      expect(drawing()).toBeNull()
+      expect(outline()).toEqual([
+        { x: 0, y: 0 },
+        { x: 4, y: 0 },
+        { x: 4, y: 3 },
+      ])
+    })
+
+    it('needs 3 corners, a start corner and a positive length', () => {
+      editorActions.setTool('draw-plot')
+      expect(editorActions.addDrawingSegment(5, 0, null)).toBe(false) // no start corner yet
+      editorActions.addDrawingPoint({ x: 0, y: 0 })
+      expect(editorActions.addDrawingSegment(0, 0, null)).toBe(false)
+      editorActions.addDrawingSegment(5, 0, null)
+      expect(editorActions.finishDrawing()).toBe(false)
+      editorActions.removeLastDrawingPoint()
+      expect(drawing()?.points).toHaveLength(1)
+    })
+
+    it('cancels with Escape without changing the plot', () => {
+      const before = outline()
+      editorActions.setTool('draw-plot')
+      editorActions.addDrawingPoint({ x: 0, y: 0 })
+      editorActions.escape()
+      expect(drawing()).toBeNull()
+      expect(useUiStore.getState().tool).toBe('select')
+      expect(outline()).toBe(before)
+    })
+
+    it('creates a rectangular plot', () => {
+      useUiStore.getState().setCanvasSize({ width: 800, height: 600 })
+      editorActions.createRectanglePlot(12.5, 8)
+      expect(outline()).toEqual([
+        { x: 0, y: 0 },
+        { x: 12.5, y: 0 },
+        { x: 12.5, y: 8 },
+        { x: 0, y: 8 },
+      ])
+      expect(selection()).toEqual([PLOT_ID])
+    })
+
+    it('removes the selected corner with Delete, but keeps at least 3', () => {
+      editorActions.selectPlot()
+      useUiStore.getState().setActiveCorner(1)
+      editorActions.deleteSelection()
+      expect(outline()).toHaveLength(3)
+      useUiStore.getState().setActiveCorner(0)
+      editorActions.deleteSelection()
+      expect(outline()).toHaveLength(3)
+    })
   })
 })

@@ -55,7 +55,12 @@ npx playwright test tests/e2e/smoke.spec.ts -g "Dutch browser"
     - Each item is a group at (0, 0). A drag or Transformer rotate/resize is baked into the item's coordinates on release via the pure ops in `src/model/edit.ts`, then the group is reset.
     - Copy Konva's `getTransform().getMatrix()` before resetting a node: it is reused and mutated in place.
     - Use `strokeScaleEnabled={false}` for pixel-width strokes.
-  - **Pure maths** is in `src/geometry/` (viewport, grid, bounds, transform). Number display and parsing go through `src/i18n/units.ts` (decimal comma in NL, NBSP before units).
+    - Closed shapes that should only be clickable on their line need `fillEnabled={false}`: Konva hits the inside of a closed line even without a fill.
+    - Draggable handles must have stable keys and props that don't change during their own drag (render them from committed data, show drafts elsewhere). A key change remounts the node and silently ends the drag.
+    - Screen-space overlays (labels, handles, drawing preview) live in a separate layer and convert with `worldToScreen`.
+  - **Plot:** the plot is selectable as `PLOT_ID` and belongs to the "existing" layer. Its operations are in `src/model/plot.ts`; corners are labelled A, B, C, …
+  - **Drawing tool** (`tool: 'draw-plot'`, `uiStore.drawing`): commands are in `editorActions` (`addDrawingPoint`, `addDrawingSegment`, `finishDrawing`, …). `DrawingPanel` sits below the plan and keeps the focus in its length field. Snapping (`src/geometry/snap.ts`, targets from `canvas/snapTargets.ts`) works in screen-pixel tolerances; Alt disables it.
+  - **Pure maths** is in `src/geometry/` (viewport, grid, bounds, transform, polygon, snap). Angles are map-style (0° right, 90° up) although y points down. Number display and parsing go through `src/i18n/units.ts` (decimal comma in NL, NBSP before units).
 - **Tests:**
   - **Setup:** `src/test/setup.ts` loads `fake-indexeddb/auto` first, then resets IndexedDB, localStorage, the URL hash and the language (`en`) before each test. `src/test/fixtures.ts` has a sample project/asset/plant.
   - **Fake timers:** fake only `setTimeout`/`clearTimeout`/`Date`, never `setImmediate`: fake-indexeddb runs on it.

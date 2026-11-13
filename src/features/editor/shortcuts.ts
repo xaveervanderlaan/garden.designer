@@ -21,6 +21,8 @@ export type ShortcutId =
   | 'zoomFit'
   | 'toolSelect'
   | 'toolPan'
+  | 'drawPlot'
+  | 'rectanglePlot'
   | 'help'
 
 export type Shortcut = { id: ShortcutId; combos: KeyCombo[] }
@@ -50,6 +52,8 @@ export const SHORTCUTS: readonly Shortcut[] = [
   { id: 'zoomFit', combos: [{ key: '0' }] },
   { id: 'toolSelect', combos: [{ key: 'v' }] },
   { id: 'toolPan', combos: [{ key: 'h' }] },
+  { id: 'drawPlot', combos: [{ key: 'p' }] },
+  { id: 'rectanglePlot', combos: [{ key: 'r' }] },
   { id: 'help', combos: [{ key: '?' }] },
 ]
 
@@ -130,7 +134,7 @@ const HANDLERS: Record<ShortcutId, (event: KeyboardEvent) => void> = {
   duplicate: () => editorActions.duplicate(),
   selectAll: () => editorActions.selectAll(),
   delete: () => editorActions.deleteSelection(),
-  clearSelection: () => editorActions.clearSelection(),
+  clearSelection: () => editorActions.escape(),
   nudge: (e) => nudge(e, NUDGE_SMALL_M),
   nudgeLarge: (e) => nudge(e, NUDGE_LARGE_M),
   zoomIn: () => editorActions.zoomIn(),
@@ -138,6 +142,8 @@ const HANDLERS: Record<ShortcutId, (event: KeyboardEvent) => void> = {
   zoomFit: () => editorActions.zoomToFit(),
   toolSelect: () => editorActions.setTool('select'),
   toolPan: () => editorActions.setTool('pan'),
+  drawPlot: () => editorActions.setTool('draw-plot'),
+  rectanglePlot: () => useUiStore.getState().setRectangleDialogOpen(true),
   help: () => useUiStore.getState().setHelpOpen(true),
 }
 
@@ -146,7 +152,10 @@ export function useEditorShortcuts(): void {
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
       if (event.defaultPrevented || isTypingTarget(event.target)) return
-      if (useUiStore.getState().helpOpen) return // the dialog handles its own keys
+      const { helpOpen, rectangleDialogOpen } = useUiStore.getState()
+      if (helpOpen || rectangleDialogOpen) return // dialogs handle their own keys
+      // While drawing, digits are lengths for the drawing panel, not shortcuts (e.g. 0 = zoom to fit).
+      if (useUiStore.getState().drawing && /^[0-9.,]$/.test(event.key)) return
       const id = findShortcut(event)
       if (!id) return
       event.preventDefault() // e.g. keep Ctrl+D from bookmarking and arrows from scrolling

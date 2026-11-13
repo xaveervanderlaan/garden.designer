@@ -5,12 +5,7 @@ import { POINT_OBJECT_RADIUS_M } from '../../../geometry/bounds'
 import { isLayerEditable, isLayerVisible } from '../../../model/edit'
 import { plantingLayer, plantingRadiusM } from '../../../model/plants'
 import type { GardenObject, Planting, Point, Project } from '../../../model/schema'
-import {
-  OBJECT_STYLES,
-  PLANTING_STYLE,
-  PLOT_STYLE,
-  SELECTION_COLOR,
-} from '../../../styles/elementStyles'
+import { OBJECT_STYLES, PLANTING_STYLE, SELECTION_COLOR } from '../../../styles/elementStyles'
 
 export type ItemHandlers = {
   register: (id: string, node: Konva.Group | null) => void
@@ -24,21 +19,6 @@ export type ItemHandlers = {
 const flat = (points: readonly Point[]) => points.flatMap((p) => [p.x, p.y])
 /** Stroke widths in screen pixels, independent of zoom. */
 const fixedStroke = { strokeScaleEnabled: false, perfectDrawEnabled: false } as const
-
-export function PlotOutline({ outline }: { outline: readonly Point[] }) {
-  if (outline.length < 2) return null
-  return (
-    <Line
-      points={flat(outline)}
-      closed={outline.length > 2}
-      fill={PLOT_STYLE.fill}
-      stroke={PLOT_STYLE.stroke}
-      strokeWidth={2.5}
-      listening={false}
-      {...fixedStroke}
-    />
-  )
-}
 
 type ItemsProps = {
   project: Project

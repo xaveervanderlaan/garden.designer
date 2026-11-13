@@ -76,11 +76,13 @@
       "zoomOut": "Zoom out",
       "zoomFit": "Zoom to fit",
       "zoomLevel": "{{percent}}%",
-      "help": "Keyboard shortcuts"
+      "help": "Keyboard shortcuts",
+      "drawPlot": "Draw plot outline",
+      "rectanglePlot": "Rectangular plot"
     },
     "canvas": {
       "label": "Garden plan",
-      "emptyHint": "Your plan is still empty. Drawing tools arrive in the next milestone.",
+      "emptyHint": "Start with the plot: draw its outline (P) or create a rectangle (R).",
       "scaleBar": "Scale bar: {{length}}"
     },
     "status": {
@@ -162,7 +164,7 @@
       "duplicate": "Duplicate",
       "selectAll": "Select all",
       "delete": "Delete selection",
-      "clearSelection": "Clear selection",
+      "clearSelection": "Clear selection / stop drawing",
       "nudge": "Move selection by 10 cm",
       "nudgeLarge": "Move selection by 1 m",
       "zoomIn": "Zoom in",
@@ -183,7 +185,46 @@
         "wheel": "Mouse wheel",
         "trackpad": "Trackpad",
         "shiftClick": "Shift + click"
-      }
+      },
+      "drawPlot": "Draw plot outline",
+      "rectanglePlot": "Rectangular plot"
+    },
+    "drawing": {
+      "hintStart": "Click on the plan to place the first corner.",
+      "hintNext": "Click the next corner, or type a length (and angle) and press Enter.",
+      "hintFinish": "Add more corners, or press Enter or click the first corner to finish.",
+      "length": "Length",
+      "angle": "Angle",
+      "metres": "m",
+      "finish": "Finish",
+      "keys": "Angle: 0° = right, 90° = up. Backspace removes the last corner, Esc cancels, hold Alt to turn off snapping.",
+      "invalidLength": "Enter a length greater than 0, e.g. 12,5.",
+      "invalidAngle": "Enter an angle in degrees, e.g. 90.",
+      "needStart": "Click on the plan first to place the starting corner.",
+      "needMoreCorners": "A plot needs at least 3 corners."
+    },
+    "plot": {
+      "title": "Plot boundary",
+      "edit": "Edit plot outline",
+      "area": "Area",
+      "perimeter": "Perimeter",
+      "corners": "Corners",
+      "edges": "Edges",
+      "edge": "{{from}} → {{to}}",
+      "edgeLength": "Length of edge {{from}} → {{to}}",
+      "selfIntersecting": "The outline crosses itself, so the area is not reliable. Move a corner to fix it.",
+      "cornerHint": "Drag a corner to move it. Click a corner to select it (Delete removes it). Drag or click the dot on an edge to add a corner.",
+      "removeCorner": "Remove corner {{corner}}",
+      "minCorners": "A plot needs at least 3 corners."
+    },
+    "rectangle": {
+      "title": "Rectangular plot",
+      "width": "Width (m)",
+      "depth": "Depth (m)",
+      "create": "Create",
+      "invalid": "Enter a width and depth greater than 0.",
+      "note": "You can move and add corners afterwards.",
+      "replaces": "Replaces the current plot outline (undo with Ctrl+Z)."
     }
   },
   "notFound": {

@@ -3,6 +3,8 @@ import {
   Hand,
   Keyboard,
   MousePointer2,
+  PenTool,
+  RectangleHorizontal,
   Redo2,
   Scan,
   Undo2,
@@ -107,6 +109,23 @@ export function EditorToolbar({ project }: { project: Project }) {
             onClick={() => editorActions.setTool('pan')}
           >
             <Hand {...icon} />
+          </ToolButton>
+        </div>
+        <div className={styles.toolGroup}>
+          <ToolButton
+            label={t('editor.toolbar.drawPlot')}
+            shortcut="drawPlot"
+            pressed={tool === 'draw-plot'}
+            onClick={() => editorActions.setTool('draw-plot')}
+          >
+            <PenTool {...icon} />
+          </ToolButton>
+          <ToolButton
+            label={t('editor.toolbar.rectanglePlot')}
+            shortcut="rectanglePlot"
+            onClick={() => useUiStore.getState().setRectangleDialogOpen(true)}
+          >
+            <RectangleHorizontal {...icon} />
           </ToolButton>
         </div>
         <div className={styles.toolGroup}>

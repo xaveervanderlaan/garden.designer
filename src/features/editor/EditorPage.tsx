@@ -11,6 +11,7 @@ import styles from './EditorPage.module.css'
 import { LayersPanel } from './panels/LayersPanel'
 import { LibraryPanel } from './panels/LibraryPanel'
 import { PropertiesPanel } from './panels/PropertiesPanel'
+import { RectangleDialog } from './panels/RectangleDialog'
 import { ShortcutHelp } from './panels/ShortcutHelp'
 import { StatusBar } from './panels/StatusBar'
 import { useEditorShortcuts } from './shortcuts'
@@ -89,6 +90,7 @@ function Workspace({ project }: { project: Project }) {
         <StatusBar project={project} />
       </div>
       <ShortcutHelp />
+      <RectangleDialog />
     </div>
   )
 }
