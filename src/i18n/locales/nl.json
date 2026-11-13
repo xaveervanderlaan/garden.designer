@@ -1,0 +1,29 @@
+{
+  "app": {
+    "name": "Tuinontwerper",
+    "home": "Naar de lijst met ontwerpen"
+  },
+  "language": {
+    "label": "Taal",
+    "names": {
+      "en": "English",
+      "nl": "Nederlands"
+    }
+  },
+  "projects": {
+    "title": "Jouw tuinontwerpen",
+    "empty": "Nog geen ontwerpen.",
+    "comingSoon": "Ontwerpen maken, openen en beheren komt in de volgende mijlpaal.",
+    "previewEditor": "Bekijk de editor"
+  },
+  "editor": {
+    "title": "Tuineditor",
+    "placeholder": "Ontwerp ‘{{id}}’. Het tekenvlak komt in een latere mijlpaal.",
+    "back": "Terug naar je ontwerpen"
+  },
+  "notFound": {
+    "title": "Pagina niet gevonden",
+    "text": "Deze pagina bestaat niet.",
+    "back": "Terug naar je ontwerpen"
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["react", "typescript", "oxc"],
+  "jsPlugins": ["./scripts/oxlint-plugin-i18n.js"],
+  "rules": {
+    "react/rules-of-hooks": "error",
+    "react/exhaustive-deps": "warn",
+    "react/only-export-components": ["warn", { "allowConstantExport": true }],
+    "garden-i18n/no-literal-jsx-text": "error"
+  },
+  "overrides": [
+    {
+      "files": ["**/*.test.ts", "**/*.test.tsx", "tests/**", "src/test/**"],
+      "rules": {
+        "garden-i18n/no-literal-jsx-text": "off"
+      }
+    }
+  ]
+}

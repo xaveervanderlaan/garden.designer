@@ -1,0 +1,29 @@
+{
+  "app": {
+    "name": "Garden Designer",
+    "home": "Go to the project list"
+  },
+  "language": {
+    "label": "Language",
+    "names": {
+      "en": "English",
+      "nl": "Nederlands"
+    }
+  },
+  "projects": {
+    "title": "Your garden designs",
+    "empty": "No designs yet.",
+    "comingSoon": "Creating, opening and managing designs arrives in the next milestone.",
+    "previewEditor": "Preview the editor"
+  },
+  "editor": {
+    "title": "Garden editor",
+    "placeholder": "Design “{{id}}”. The drawing canvas arrives in a later milestone.",
+    "back": "Back to your designs"
+  },
+  "notFound": {
+    "title": "Page not found",
+    "text": "This page doesn’t exist.",
+    "back": "Back to your designs"
+  }
+}
