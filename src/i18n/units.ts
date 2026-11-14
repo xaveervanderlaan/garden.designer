@@ -10,6 +10,18 @@ export function formatNumber(value: number, digits = 2, lang: string = currentLa
   }).format(value)
 }
 
+/** A number for an input field, with up to `maxDigits` decimals and no grouping: "0,45", "12". */
+export function formatDecimal(
+  value: number,
+  maxDigits = 2,
+  lang: string = currentLanguage(),
+): string {
+  return new Intl.NumberFormat(lang, {
+    maximumFractionDigits: maxDigits,
+    useGrouping: false,
+  }).format(value)
+}
+
 /** "12.50 m" / "12,50 m". */
 export function formatLength(metres: number, digits = 2, lang?: string): string {
   return `${formatNumber(metres, digits, lang)}${NBSP}m`

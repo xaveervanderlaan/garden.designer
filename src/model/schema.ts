@@ -7,7 +7,7 @@ import { z } from 'zod'
  *
  * Changing the shape of stored data? Bump SCHEMA_VERSION and add a migration (see migrations.ts).
  */
-export const SCHEMA_VERSION = 2
+export const SCHEMA_VERSION = 3
 
 export const idSchema = z.string().min(1).max(100)
 
@@ -76,11 +76,87 @@ export const PLANT_CATEGORIES = [
   'herb',
   'fruit',
 ] as const
+export type PlantCategory = (typeof PLANT_CATEGORIES)[number]
+/** Categories with a sowing/harvest calendar (the `veg` part of a plant). */
+export const EDIBLE_CATEGORIES = ['vegetable', 'herb', 'fruit'] as const satisfies PlantCategory[]
+
 export const SUN_LEVELS = ['full-sun', 'part-shade', 'shade'] as const
+export type SunLevel = (typeof SUN_LEVELS)[number]
 export const WILDLIFE = ['bees', 'butterflies', 'birds'] as const
+export type Wildlife = (typeof WILDLIFE)[number]
+
+/**
+ * The named colour palette for plants (hex values in styles/plantColors.ts). Flowers, foliage and
+ * autumn colour each use part of it, so filters and the plan show a small, consistent set.
+ */
+export const PLANT_COLORS = [
+  'white',
+  'cream',
+  'yellow',
+  'orange',
+  'red',
+  'pink',
+  'magenta',
+  'purple',
+  'lilac',
+  'blue',
+  'lime',
+  'bronze',
+  'green',
+  'dark-green',
+  'grey-green',
+  'silver',
+  'blue-green',
+  'gold',
+  'burgundy',
+  'variegated',
+] as const
+export type PlantColor = (typeof PLANT_COLORS)[number]
+export const FLOWER_COLORS = [
+  'white',
+  'cream',
+  'yellow',
+  'orange',
+  'red',
+  'pink',
+  'magenta',
+  'purple',
+  'lilac',
+  'blue',
+  'lime',
+  'bronze',
+] as const satisfies PlantColor[]
+export type FlowerColor = (typeof FLOWER_COLORS)[number]
+export const FOLIAGE_COLORS = [
+  'green',
+  'dark-green',
+  'lime',
+  'grey-green',
+  'silver',
+  'blue-green',
+  'gold',
+  'burgundy',
+  'variegated',
+] as const satisfies PlantColor[]
+export type FoliageColor = (typeof FOLIAGE_COLORS)[number]
+export const AUTUMN_COLORS = [
+  'yellow',
+  'orange',
+  'red',
+  'burgundy',
+  'bronze',
+] as const satisfies PlantColor[]
+export type AutumnColor = (typeof AUTUMN_COLORS)[number]
+
+/** Months are numbered 1 (January) to 12 (December). */
+export const MONTHS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] as const
 
 const month = z.number().int().min(1).max(12)
 const positiveLength = z.number().positive()
+/** A list without repeats (e.g. months, sun levels). */
+const uniqueList = <T extends z.ZodType>(item: T) =>
+  z.array(item).refine((list) => new Set(list).size === list.length, 'Duplicate entries')
+const monthList = uniqueList(month)
 
 // --- Project parts --------------------------------------------------------------------------
 
@@ -157,43 +233,63 @@ export const plantingSchema = z.object({
 })
 export type Planting = z.infer<typeof plantingSchema>
 
-/** A plant species. Vocabularies such as colours are refined in M5 (plant library). */
+export const PLANT_NAME_MAX_LENGTH = 100
+
+/**
+ * A plant species (or cultivar). Built-in plants are bundled JSON (src/data/plants); custom plants
+ * are stored in the project. Sizes are at maturity, in metres; for a climber the spread is the
+ * width it covers, for a hedging plant the width of the hedge.
+ */
 export const plantSchema = z.object({
+  /** Built-in: a slug of the Latin name (plus a suffix for a variant). Custom: "custom-<uuid>". */
   id: idSchema,
-  names: z.object({
-    nl: z.string().min(1),
-    en: z.string().min(1),
-    latin: z.string().min(1),
-  }),
+  /** At least one name. Built-in plants have all three (checked by the plant data test). */
+  names: z
+    .object({
+      nl: z.string().trim().max(PLANT_NAME_MAX_LENGTH),
+      en: z.string().trim().max(PLANT_NAME_MAX_LENGTH),
+      latin: z.string().trim().max(PLANT_NAME_MAX_LENGTH),
+    })
+    .refine((names) => names.nl || names.en || names.latin, 'A plant needs a name'),
   category: z.enum(PLANT_CATEGORIES),
-  heightM: positiveLength,
-  spreadM: positiveLength,
-  yearsToMature: z.number().positive(),
+  heightM: positiveLength.max(100),
+  spreadM: positiveLength.max(50),
+  /** Years until it reaches its mature size (1 for annuals). */
+  yearsToMature: z.number().positive().max(100),
   evergreen: z.boolean(),
-  sun: z.array(z.enum(SUN_LEVELS)).min(1),
-  soil: z.array(z.enum(SOIL_TYPES)).min(1),
+  /** Light levels it does well in. */
+  sun: uniqueList(z.enum(SUN_LEVELS)).min(1),
+  /** Soil types it does well in. */
+  soil: uniqueList(z.enum(SOIL_TYPES)).min(1),
   droughtTolerant: z.boolean(),
-  bloomMonths: z.array(month),
-  flowerColor: z.string().optional(),
-  foliageColor: z.string().optional(),
-  autumnColor: z.string().optional(),
+  bloomMonths: monthList,
+  /** Flower colours, the most typical first (that one is drawn on the plan). */
+  flowerColors: uniqueList(z.enum(FLOWER_COLORS)),
+  foliageColor: z.enum(FOLIAGE_COLORS),
+  /** Notable autumn colour, if any. */
+  autumnColor: z.enum(AUTUMN_COLORS).optional(),
   nativeNL: z.boolean(),
-  wildlife: z.array(z.enum(WILDLIFE)),
+  wildlife: uniqueList(z.enum(WILDLIFE)),
+  /** Poisonous to children or pets (some part of the plant). */
   toxic: z.boolean(),
+  /** Built-in data that has been spot-checked by a person. */
   verified: z.boolean(),
+  /** Vegetables, herbs and fruit: when to sow, plant out and harvest, and the spacing in rows. */
   veg: z
     .object({
-      sowIndoors: z.array(month),
-      sowOutdoors: z.array(month),
-      plantOut: z.array(month),
-      harvest: z.array(month),
-      rowSpacingM: positiveLength,
-      inRowSpacingM: positiveLength,
-      family: z.string().min(1),
+      sowIndoors: monthList,
+      sowOutdoors: monthList,
+      plantOut: monthList,
+      harvest: monthList,
+      rowSpacingM: positiveLength.max(10),
+      inRowSpacingM: positiveLength.max(10),
+      /** Botanical family, e.g. "Solanaceae". */
+      family: z.string().trim().max(PLANT_NAME_MAX_LENGTH).optional(),
     })
     .optional(),
 })
 export type Plant = z.infer<typeof plantSchema>
+export type VegData = NonNullable<Plant['veg']>
 
 const layerStateSchema = z.object({ visible: z.boolean(), locked: z.boolean() })
 /** Every layer id must be present (zod records with enum keys are exhaustive). */

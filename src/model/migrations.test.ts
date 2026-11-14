@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { newProject } from './defaults'
 import { MIGRATIONS, type Migration, MigrationError, migrateProject } from './migrations'
+import { samplePlant } from '../test/fixtures'
 import { SCHEMA_VERSION, projectSchema } from './schema'
 
 const reasonOf = (fn: () => unknown) => {
@@ -72,9 +73,32 @@ describe('migration steps', () => {
         locked: false,
       },
     }
-    const migrated = projectSchema.parse(migrateProject(v1, 2))
-    expect(migrated.schemaVersion).toBe(2)
+    const v2 = migrateProject(v1, 2)
+    expect(v2.schemaVersion).toBe(2)
+    expect(v2.background).toBeUndefined()
+    const migrated = projectSchema.parse(migrateProject(v1))
     expect(migrated.background).toBeUndefined()
     expect(migrated.name).toBe('Old')
+  })
+
+  it('2 → 3: maps plant colours onto the palette (several flower colours)', () => {
+    const { flowerColors: _, ...current } = samplePlant
+    const v2 = {
+      ...newProject('Old', 1_700_000_000_000),
+      schemaVersion: 2,
+      customPlants: [
+        { ...current, id: 'a', flowerColor: 'purple', foliageColor: 'grey-green' },
+        { ...current, id: 'b', flowerColor: 'sky blue', foliageColor: 'teal', autumnColor: 'red' },
+        { ...current, id: 'c', autumnColor: 'tartan' },
+      ],
+    }
+    const migrated = projectSchema.parse(migrateProject(v2))
+    expect(migrated.schemaVersion).toBe(3)
+    const [a, b, c] = migrated.customPlants
+    expect(a).toMatchObject({ flowerColors: ['purple'], foliageColor: 'grey-green' })
+    expect(a?.autumnColor).toBeUndefined()
+    expect(b).toMatchObject({ flowerColors: [], foliageColor: 'green', autumnColor: 'red' })
+    expect(c).toMatchObject({ flowerColors: [], foliageColor: 'grey-green' })
+    expect(c?.autumnColor).toBeUndefined()
   })
 })

@@ -6,7 +6,7 @@
     'toolbar toolbar toolbar'
     'left canvas right'
     'status status status';
-  grid-template-columns: 14rem minmax(0, 1fr) 17rem;
+  grid-template-columns: 17rem minmax(0, 1fr) 17rem;
   grid-template-rows: auto minmax(0, 1fr) auto;
 }
 
@@ -28,7 +28,10 @@
 }
 
 .left {
+  display: flex;
+  flex-direction: column;
   grid-area: left;
+  overflow: hidden;
   border-right: 1px solid var(--color-border);
 }
 

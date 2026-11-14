@@ -26,6 +26,7 @@ npm run dev          # start the dev server → http://localhost:5173/garden.des
 | `npm run typecheck` | TypeScript type check |
 | `npm test` | Unit and component tests (Vitest) |
 | `npm run e2e` | End-to-end tests (Playwright, against the production build) |
+| `npm run plants:review` | Review tables of the built-in plant data (written to the private docs folder) |
 
 First-time e2e setup: `npx playwright install chromium`. On Arch Linux (WSL) Chromium also needs
 these system packages:

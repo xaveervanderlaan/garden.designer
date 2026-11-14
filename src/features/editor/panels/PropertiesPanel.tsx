@@ -5,7 +5,7 @@ import { boundsCentre, shapeBounds } from '../../../geometry/bounds'
 import { currentLanguage } from '../../../i18n'
 import { formatLength } from '../../../i18n/units'
 import { updateObject, updatePlanting, validSelection } from '../../../model/edit'
-import { findPlant } from '../../../model/plants'
+import { findPlant, plantName } from '../../../model/plants'
 import { BACKGROUND_ID } from '../../../model/background'
 import { PLOT_ID } from '../../../model/plot'
 import type { GardenObject, Planting, Point, Project } from '../../../model/schema'
@@ -123,7 +123,7 @@ function PlantingProperties({ project, planting }: { project: Project; planting:
     <>
       <dl className={styles.facts}>
         <dt>{t('editor.properties.plant')}</dt>
-        <dd>{plant ? plant.names[currentLanguage()] : t('editor.properties.unknownPlant')}</dd>
+        <dd>{plant ? plantName(plant, currentLanguage()) : t('editor.properties.unknownPlant')}</dd>
         <PositionRow position={planting.position} />
         <dt>{t('editor.properties.plantedYear')}</dt>
         <dd>{planting.plantedYear}</dd>

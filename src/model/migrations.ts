@@ -1,4 +1,4 @@
-import { SCHEMA_VERSION } from './schema'
+import { AUTUMN_COLORS, FLOWER_COLORS, FOLIAGE_COLORS, SCHEMA_VERSION } from './schema'
 
 type ProjectData = Record<string, unknown>
 
@@ -20,6 +20,31 @@ export const MIGRATIONS: Readonly<Record<number, Migration>> = {
     const { background: _, ...rest } = project
     return rest
   },
+  /**
+   * v3 (M5): plant colours come from a fixed palette, and a plant can have several flower
+   * colours. Custom plants couldn't be created before M5, so this only tidies up hand-made data:
+   * known colours are kept, anything else is dropped (foliage falls back to green).
+   */
+  2: (project) => ({
+    ...project,
+    customPlants: Array.isArray(project.customPlants)
+      ? project.customPlants.map((plant) => migratePlantColors(plant))
+      : project.customPlants,
+  }),
+}
+
+const isOneOf = <T extends string>(list: readonly T[], value: unknown): value is T =>
+  list.includes(value as T)
+
+function migratePlantColors(plant: unknown): unknown {
+  if (!isRecord(plant)) return plant
+  const { flowerColor, foliageColor, autumnColor, ...rest } = plant
+  return {
+    ...rest,
+    flowerColors: isOneOf(FLOWER_COLORS, flowerColor) ? [flowerColor] : [],
+    foliageColor: isOneOf(FOLIAGE_COLORS, foliageColor) ? foliageColor : 'green',
+    ...(isOneOf(AUTUMN_COLORS, autumnColor) ? { autumnColor } : {}),
+  }
 }
 
 export type MigrationErrorReason = 'missing-version' | 'newer-version' | 'missing-migration'

@@ -6,10 +6,11 @@ import { useProjectStore } from '../../store/projectStore'
 import { useUiStore } from '../../store/uiStore'
 import controls from '../../styles/controls.module.css'
 import page from '../../styles/page.module.css'
+import { LibraryPanel } from '../library/LibraryPanel'
+import { PlantFormDialog } from '../library/PlantFormDialog'
 import { EditorToolbar } from './EditorToolbar'
 import styles from './EditorPage.module.css'
 import { LayersPanel } from './panels/LayersPanel'
-import { LibraryPanel } from './panels/LibraryPanel'
 import { PropertiesPanel } from './panels/PropertiesPanel'
 import { RectangleDialog } from './panels/RectangleDialog'
 import { ShortcutHelp } from './panels/ShortcutHelp'
@@ -76,7 +77,7 @@ function Workspace({ project }: { project: Project }) {
     <div className={styles.editor}>
       <EditorToolbar project={project} />
       <aside className={styles.left}>
-        <LibraryPanel />
+        <LibraryPanel project={project} />
       </aside>
       <div className={styles.canvasArea}>
         <Suspense fallback={<p className={styles.canvasLoading}>{t('editor.loading')}</p>}>
@@ -93,6 +94,7 @@ function Workspace({ project }: { project: Project }) {
       <ShortcutHelp />
       <RectangleDialog />
       <SitePlanImport />
+      <PlantFormDialog />
     </div>
   )
 }

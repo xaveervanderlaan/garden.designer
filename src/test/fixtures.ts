@@ -15,7 +15,7 @@ export const samplePlant: Plant = {
   soil: ['sand'],
   droughtTolerant: true,
   bloomMonths: [6, 7, 8],
-  flowerColor: 'purple',
+  flowerColors: ['purple'],
   foliageColor: 'grey-green',
   nativeNL: false,
   wildlife: ['bees', 'butterflies'],

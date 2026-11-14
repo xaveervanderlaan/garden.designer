@@ -1,0 +1,158 @@
+// Writes readable review tables of the built-in plant data to docs/plant-review/<file>.md, for
+// spot-checking (PLAN.md M5). docs/ is the private docs repo; run with `npm run plants:review`.
+import { mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs'
+import { basename, join } from 'node:path'
+import type { Plant } from '../src/model/schema.ts'
+
+const ROOT = join(import.meta.dirname, '..')
+const DATA = join(ROOT, 'src/data/plants')
+const OUT = join(ROOT, 'docs/plant-review')
+
+const TITLES: Record<string, string> = {
+  trees: 'Trees',
+  shrubs: 'Shrubs',
+  hedging: 'Hedging',
+  perennials: 'Perennials',
+  'grasses-ferns': 'Grasses & ferns',
+  climbers: 'Climbers',
+  bulbs: 'Bulbs',
+  vegetables: 'Vegetables',
+  herbs: 'Herbs',
+  fruit: 'Fruit',
+}
+
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+
+/** "Jun–Aug", "Nov–Mar", "Apr–Jun, Sep" (runs continue over the turn of the year). */
+function months(list: readonly number[]): string {
+  const set = new Set(list)
+  if (set.size === 0) return '–'
+  if (set.size === 12) return 'all year'
+  let gap = 1
+  while (set.has(gap)) gap++
+  const runs: number[][] = []
+  let run: number[] = []
+  for (let i = 1; i <= 12; i++) {
+    const m = ((gap - 1 + i) % 12) + 1
+    if (set.has(m)) run.push(m)
+    else if (run.length) {
+      runs.push(run)
+      run = []
+    }
+  }
+  if (run.length) runs.push(run)
+  return runs
+    .sort((a, b) => a[0]! - b[0]!)
+    .map((r) =>
+      r.length === 1 ? MONTHS[r[0]! - 1] : `${MONTHS[r[0]! - 1]}–${MONTHS[r.at(-1)! - 1]}`,
+    )
+    .join(', ')
+}
+
+const SUN = { 'full-sun': 'sun', 'part-shade': 'part', shade: 'shade' }
+const SOIL = { clay: 'C', sand: 'S', peat: 'P' }
+const WILDLIFE = { bees: 'bees', butterflies: 'butterflies', birds: 'birds' }
+const yesNo = (value: boolean) => (value ? 'yes' : '–')
+const cell = (text: string) => text.replace(/\|/g, '\\|')
+const num = (n: number) => String(n)
+
+function table(plants: Plant[]): string {
+  const edible = plants.some((p) => p.veg)
+  const head = [
+    'ok',
+    'NL',
+    'EN',
+    'Latin',
+    'H × W (m)',
+    'Yrs',
+    'Leaf',
+    'Light',
+    'Soil',
+    'Dry ok',
+    'Flowers',
+    'Flower colour',
+    'Leaf colour',
+    'Autumn',
+    'Native',
+    'Wildlife',
+    'Toxic',
+    ...(edible ? ['Sow in', 'Sow out', 'Plant out', 'Harvest', 'Row / in row (m)', 'Family'] : []),
+  ]
+  const rows = plants.map((p) => [
+    p.verified ? '✓' : '',
+    p.names.nl,
+    p.names.en,
+    `*${p.names.latin}*`,
+    `${num(p.heightM)} × ${num(p.spreadM)}`,
+    num(p.yearsToMature),
+    p.evergreen ? 'evergreen' : 'deciduous',
+    p.sun.map((s) => SUN[s]).join(', '),
+    p.soil.map((s) => SOIL[s]).join(''),
+    yesNo(p.droughtTolerant),
+    months(p.bloomMonths),
+    p.flowerColors.join(', ') || '–',
+    p.foliageColor,
+    p.autumnColor ?? '–',
+    yesNo(p.nativeNL),
+    p.wildlife.map((w) => WILDLIFE[w]).join(', ') || '–',
+    yesNo(p.toxic),
+    ...(edible
+      ? p.veg
+        ? [
+            months(p.veg.sowIndoors),
+            months(p.veg.sowOutdoors),
+            months(p.veg.plantOut),
+            months(p.veg.harvest),
+            `${num(p.veg.rowSpacingM)} / ${num(p.veg.inRowSpacingM)}`,
+            p.veg.family ?? '–',
+          ]
+        : ['', '', '', '', '', '']
+      : []),
+  ])
+  const line = (cells: string[]) => `| ${cells.map(cell).join(' | ')} |`
+  return [line(head), line(head.map(() => '---')), ...rows.map(line)].join('\n')
+}
+
+const LEGEND = `**Legend.** H × W: mature height × width (climbers: the width they cover; hedging: hedge
+height and width). Yrs: years to full size. Light: sun = full sun, part = part shade. Soil: C clay,
+S sand, P peat (soils it does well in). Dry ok: drought tolerant (matters on sand). Wildlife: food
+for bees / butterflies (nectar, pollen or caterpillars) / birds (berries, seeds, shelter). Toxic:
+poisonous to children or pets. Months: Nov–Mar runs over the turn of the year.`
+
+const HOW = `**How to review.** Check the rows you know; report corrections by Dutch or Latin name (or
+"OK" for a whole table). Claude applies them and sets \`verified: true\`, which shows as ✓ here and
+removes the "Unverified" badge in the app.`
+
+mkdirSync(OUT, { recursive: true })
+const today = new Date().toISOString().slice(0, 10)
+const index: string[] = []
+
+// In batch order (as in PLAN.md), then any file not listed.
+const order = (f: string) => {
+  const i = Object.keys(TITLES).indexOf(basename(f, '.json'))
+  return i < 0 ? Infinity : i
+}
+const files = readdirSync(DATA)
+  .filter((f) => f.endsWith('.json'))
+  .sort((a, b) => order(a) - order(b) || a.localeCompare(b))
+
+for (const file of files) {
+  const name = basename(file, '.json')
+  const plants = JSON.parse(readFileSync(join(DATA, file), 'utf8')) as Plant[]
+  const verified = plants.filter((p) => p.verified).length
+  const title = TITLES[name] ?? name
+  writeFileSync(
+    join(OUT, `${name}.md`),
+    `# Plant review: ${title}\n\nGenerated by \`npm run plants:review\` on ${today} from ` +
+      `\`src/data/plants/${file}\`: ${plants.length} plants, ${verified} verified.\n\n` +
+      `${HOW}\n\n${LEGEND}\n\n${table(plants)}\n`,
+  )
+  index.push(`| [${title}](${name}.md) | ${plants.length} | ${verified} |`)
+}
+
+writeFileSync(
+  join(OUT, 'README.md'),
+  `# Plant data review\n\nGenerated by \`npm run plants:review\` on ${today}.\n\n${HOW}\n\n` +
+    `| Batch | Plants | Verified |\n| --- | --- | --- |\n${index.join('\n')}\n`,
+)
+console.log(`Wrote ${index.length} review tables to ${OUT}`)
