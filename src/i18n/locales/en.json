@@ -327,7 +327,8 @@
       },
       "drawPlot": "Draw plot outline",
       "rectanglePlot": "Rectangular plot",
-      "snapToGrid": "Snap to grid on/off"
+      "snapToGrid": "Snap to grid on/off",
+      "drawBed": "Draw ornamental bed"
     },
     "drawing": {
       "hintStart": "Click on the plan to place the first corner.",
@@ -341,7 +342,8 @@
       "invalidLength": "Enter a length greater than 0, e.g. 12,5.",
       "invalidAngle": "Enter an angle in degrees, e.g. 90.",
       "needStart": "Click on the plan first to place the starting corner.",
-      "needMoreCorners": "A plot needs at least 3 corners."
+      "needMoreCorners": "A plot needs at least 3 corners.",
+      "titlePlot": "Plot outline:"
     },
     "plot": {
       "title": "Plot boundary",
@@ -416,6 +418,107 @@
       "hide": "Hide",
       "replace": "Replace image…",
       "remove": "Remove"
+    },
+    "beds": {
+      "drawOrnamental": "Draw ornamental bed",
+      "drawVegetable": "Draw vegetable bed",
+      "drawing": {
+        "bed-ornamental": "Ornamental bed:",
+        "bed-vegetable": "Vegetable bed:"
+      },
+      "defaultName": {
+        "bed-ornamental": "Ornamental bed {{number}}",
+        "bed-vegetable": "Vegetable bed {{number}}"
+      },
+      "needMoreCorners": "A bed needs at least 3 corners.",
+      "minCorners": "A bed needs at least 3 corners.",
+      "name": "Name",
+      "plants": "Plants in it",
+      "selfIntersecting": "The outline crosses itself, so the area is not reliable. Move a corner to fix it.",
+      "fillHint": "To fill this bed, open a plant in the library and choose “Fill bed”.",
+      "cornerHint": "Drag a corner to move it, or click it to select it (Delete removes it). Drag or click the dot on an edge to add a corner."
+    },
+    "placing": {
+      "title": "Put on the plan",
+      "dragHint": "Drag onto the plan to place it.",
+      "onPlan_one": "{{count}} on the plan. Drag onto the plan to place another.",
+      "onPlan_other": "{{count}} on the plan. Drag onto the plan to place another.",
+      "stamp": "Place",
+      "stampTitle": "Placing {{name}}:",
+      "stampHint": "click on the plan to place a plant, as often as you like. Esc stops.",
+      "placed_one": "{{count}} placed",
+      "placed_other": "{{count}} placed",
+      "done": "Done",
+      "fill": "Fill bed",
+      "fillNoBeds": "Draw a bed first.",
+      "fillTitle": "Fill a bed with {{name}}:",
+      "fillChooseBed": "click the bed to fill.",
+      "fillBed": "{{bed}}. Change the spacing if you like, then press Enter or “Fill bed”. Click another bed to fill that one.",
+      "spacing": "Spacing",
+      "plantCount_one": "{{count}} plant",
+      "plantCount_other": "{{count}} plants",
+      "invalidSpacing": "Enter a spacing between 0,05 and 50 m.",
+      "tooMany": "That would be more than {{max}} plants. Use a larger spacing.",
+      "noRoom": "No room for this plant at this spacing (or the bed is full).",
+      "row": "Plant a row",
+      "rowTitle": "Row of {{name}}:",
+      "rowHintFinish": "Add more points, or press Enter to plant the row.",
+      "rowNeedsPoints": "A row needs a start and an end point.",
+      "plantRow": "Plant row",
+      "labelCodes": "Label plants with codes instead of names"
+    },
+    "planting": {
+      "bed": "Bed",
+      "noBed": "Not in a bed",
+      "species": "Plant",
+      "speciesMany": "Plant (for all {{count}})",
+      "severalSpecies": "Several plants",
+      "showInLibrary": "Show in the library"
+    },
+    "warnings": {
+      "title": "Warnings",
+      "none": "No warnings.",
+      "selectHint": "Select these plants",
+      "count": "{{count}}×",
+      "thresholdHint": "Plants overlap when they do by more than {{percent}} of the smaller one at full size (design settings).",
+      "overlapOne": "Overlaps {{name}} by {{percent}} at full size.",
+      "outsideOne": "Outside the plot.",
+      "soilDryOne": "Isn’t drought tolerant, and sand dries out: water it in dry spells.",
+      "soilUnsuitedOne": "Doesn’t suit your soil ({{soil}}).",
+      "overlapSame": "{{name}} too close together",
+      "overlapPair": "{{a}} and {{b}} overlap",
+      "outside": "{{name}} outside the plot",
+      "soilDry": "{{name}}: not drought tolerant",
+      "soilUnsuited": "{{name}} doesn’t suit {{soil}}"
+    },
+    "plantingList": {
+      "title": "Planting list",
+      "empty": "No plants on the plan yet. Drag one from the library.",
+      "grouping": "Count",
+      "whole": "Whole design",
+      "perBed": "Per bed",
+      "noBed": "Not in a bed",
+      "selectHint": "Select these plants",
+      "total_one": "{{count}} plant in total",
+      "total_other": "{{count}} plants in total",
+      "copy": "Copy as text",
+      "copied": "Copied to the clipboard.",
+      "copyFailed": "Couldn’t copy. Your browser may not allow it.",
+      "textTitle": "Planting list: {{name}}",
+      "textLine": "{{code}}. {{name}} ({{latin}}): {{count}}",
+      "textLineShort": "{{code}}. {{name}}: {{count}}"
+    },
+    "settings": {
+      "title": "Design settings",
+      "name": "Name",
+      "nameRequired": "Please enter a name.",
+      "soil": "Soil",
+      "soilHint": "Plants that don’t suit the soil get a warning.",
+      "grid": "Grid (m)",
+      "overlap": "Overlap warning (%)",
+      "invalidGrid": "Enter a grid size between 0,01 and 100 m.",
+      "invalidOverlap": "Enter a percentage between 0 and 100.",
+      "overlapHint": "Two plants get a warning when, at full size, they overlap by more than this share of the smaller plant’s width."
     }
   },
   "plants": {

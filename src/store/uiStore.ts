@@ -1,12 +1,32 @@
 import { create } from 'zustand'
 import type { Bounds } from '../geometry/bounds'
 import type { Size, Viewport } from '../geometry/viewport'
+import type { BedKind } from '../model/beds'
 import type { Point } from '../model/schema'
 
-export type Tool = 'select' | 'pan' | 'draw-plot' | 'calibrate'
+/**
+ * select/pan: the usual. draw: drawing an outline or line (see DrawTarget). calibrate: measuring
+ * the site plan's scale. stamp: every click places a plant. fill: filling a bed with a plant.
+ */
+export type Tool = 'select' | 'pan' | 'draw' | 'calibrate' | 'stamp' | 'fill'
 
-/** An outline being drawn: the corners placed so far (world metres). */
-export type Drawing = { points: Point[] }
+/** What the drawing tool makes: the plot outline, a bed, or a row of plants along a line. */
+export type DrawTarget =
+  | { kind: 'plot' }
+  | { kind: 'bed'; bedKind: BedKind }
+  | { kind: 'row'; plantId: string; spacingM: number }
+
+/** An outline or line being drawn: what it's for and the corners placed so far (world metres). */
+export type Drawing = { target: DrawTarget; points: Point[] }
+
+/** Stamp mode: the plant each click places, and how many were placed so far. */
+export type Stamp = { plantId: string; placed: number }
+
+/** Filling a bed: the plant, the bed (null until one is clicked) and the spacing in metres. */
+export type Fill = { plantId: string; bedId: string | null; spacingM: number }
+
+/** Plant labels on the plan: the plant's name, or its numbered species code. */
+export type LabelMode = 'name' | 'code'
 
 /** The site plan being calibrated: the (up to two) points clicked so far (world metres). */
 export type Calibration = { points: Point[] }
@@ -29,6 +49,12 @@ type UiStore = {
   tool: Tool
   /** The outline being drawn with the draw tool, or null. */
   drawing: Drawing | null
+  /** The plant being stamped onto the plan, or null. */
+  stamp: Stamp | null
+  /** The bed being filled with plants, or null. */
+  fill: Fill | null
+  labelMode: LabelMode
+  settingsOpen: boolean
   /** The line being measured with the calibrate tool, or null. */
   calibration: Calibration | null
   /** Snap to the grid while drawing and dragging corners (off while tracing the site plan). */
@@ -48,11 +74,21 @@ type UiStore = {
   /** Adds the id to the selection, or removes it if it was already selected. */
   toggleSelected: (id: string) => void
   /**
-   * Switches tools. Starting the draw or calibrate tool begins a new drawing or measurement and
-   * clears the selection.
+   * Switches tools. Starting the draw or calibrate tool begins a new drawing (of the plot) or
+   * measurement and clears the selection.
    */
   setTool: (tool: Tool) => void
+  /** Starts drawing an outline or line for `target`. */
+  startDrawing: (target: DrawTarget) => void
+  /** Starts stamp mode with a plant. */
+  startStamp: (plantId: string) => void
+  /** Starts filling a bed (keeps the selection, so the selected bed stays visible). */
+  startFill: (fill: Fill) => void
   setDrawing: (drawing: Drawing | null) => void
+  setStamp: (stamp: Stamp | null) => void
+  setFill: (fill: Fill | null) => void
+  setLabelMode: (mode: LabelMode) => void
+  setSettingsOpen: (open: boolean) => void
   setCalibration: (calibration: Calibration | null) => void
   setSnapToGrid: (on: boolean) => void
   setActiveCorner: (index: number | null) => void
@@ -71,6 +107,10 @@ const initial = {
   selection: [],
   tool: 'select' as Tool,
   drawing: null,
+  stamp: null,
+  fill: null,
+  labelMode: 'name' as LabelMode,
+  settingsOpen: false,
   calibration: null,
   snapToGrid: true,
   activeCorner: null,
@@ -79,6 +119,9 @@ const initial = {
   rectangleDialogOpen: false,
   sitePlanDialogOpen: false,
 }
+
+/** The state of every tool that has one, cleared when another tool starts. */
+const noToolState = { drawing: null, calibration: null, stamp: null, fill: null }
 
 export const useUiStore = create<UiStore>()((set) => ({
   ...initial,
@@ -97,15 +140,36 @@ export const useUiStore = create<UiStore>()((set) => ({
         : [...state.selection, id],
     })),
   setTool: (tool) =>
-    set({
+    set((state) => ({
       tool,
-      drawing: tool === 'draw-plot' ? { points: [] } : null,
+      drawing: tool === 'draw' ? { target: { kind: 'plot' }, points: [] } : null,
       calibration: tool === 'calibrate' ? { points: [] } : null,
-      ...(tool === 'draw-plot' || tool === 'calibrate'
-        ? { selection: [], activeCorner: null }
-        : {}),
+      stamp: tool === 'stamp' ? state.stamp : null,
+      fill: tool === 'fill' ? state.fill : null,
+      ...(tool === 'draw' || tool === 'calibrate' ? { selection: [], activeCorner: null } : {}),
+    })),
+  startDrawing: (target) =>
+    set({
+      ...noToolState,
+      tool: 'draw',
+      drawing: { target, points: [] },
+      selection: [],
+      activeCorner: null,
     }),
+  startStamp: (plantId) =>
+    set({
+      ...noToolState,
+      tool: 'stamp',
+      stamp: { plantId, placed: 0 },
+      selection: [],
+      activeCorner: null,
+    }),
+  startFill: (fill) => set({ ...noToolState, tool: 'fill', fill, activeCorner: null }),
   setDrawing: (drawing) => set({ drawing }),
+  setStamp: (stamp) => set({ stamp }),
+  setFill: (fill) => set({ fill }),
+  setLabelMode: (labelMode) => set({ labelMode }),
+  setSettingsOpen: (settingsOpen) => set({ settingsOpen }),
   setCalibration: (calibration) => set({ calibration }),
   setSnapToGrid: (snapToGrid) => set({ snapToGrid }),
   setActiveCorner: (activeCorner) => set({ activeCorner }),

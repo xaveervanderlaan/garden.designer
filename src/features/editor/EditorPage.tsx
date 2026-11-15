@@ -11,10 +11,13 @@ import { PlantFormDialog } from '../library/PlantFormDialog'
 import { EditorToolbar } from './EditorToolbar'
 import styles from './EditorPage.module.css'
 import { LayersPanel } from './panels/LayersPanel'
+import { PlantingListPanel } from './panels/PlantingListPanel'
 import { PropertiesPanel } from './panels/PropertiesPanel'
 import { RectangleDialog } from './panels/RectangleDialog'
+import { SettingsDialog } from './panels/SettingsDialog'
 import { ShortcutHelp } from './panels/ShortcutHelp'
 import { StatusBar } from './panels/StatusBar'
+import { WarningsPanel } from './panels/WarningsPanel'
 import { useEditorShortcuts } from './shortcuts'
 import { SitePlanImport } from './siteplan/SitePlanImport'
 
@@ -86,6 +89,8 @@ function Workspace({ project }: { project: Project }) {
       </div>
       <aside className={styles.right}>
         <PropertiesPanel project={project} />
+        <WarningsPanel project={project} />
+        <PlantingListPanel project={project} />
         <LayersPanel project={project} />
       </aside>
       <div className={styles.status}>
@@ -93,6 +98,7 @@ function Workspace({ project }: { project: Project }) {
       </div>
       <ShortcutHelp />
       <RectangleDialog />
+      <SettingsDialog />
       <SitePlanImport />
       <PlantFormDialog />
     </div>

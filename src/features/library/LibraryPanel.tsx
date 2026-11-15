@@ -13,6 +13,7 @@ import {
 import controls from '../../styles/controls.module.css'
 import { cx } from '../../styles/cx'
 import { libraryActions } from './actions'
+import { plantDragProps } from './drag'
 import styles from './library.module.css'
 import { toggled, useLibraryStore } from './libraryStore'
 import { ColorToggles, MonthToggles, PlantSymbol } from './parts'
@@ -108,7 +109,13 @@ function PlantBrowser({ project }: { project: Project }) {
         <ul className={styles.results} aria-label={t('editor.library.resultsLabel')}>
           {results.map((plant) => (
             <li key={plant.id}>
-              <button type="button" className={styles.result} onClick={() => open(plant.id)}>
+              <button
+                type="button"
+                className={styles.result}
+                title={t('editor.placing.dragHint')}
+                onClick={() => open(plant.id)}
+                {...plantDragProps(plant.id)}
+              >
                 <PlantSymbol plant={plant} size={26} />
                 <span className={styles.resultNames}>
                   <span className={styles.resultName}>{plantName(plant, lang)}</span>

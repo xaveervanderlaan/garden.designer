@@ -11,19 +11,24 @@ import { HaloText, SNAP_COLOR, SnapIndicator } from './overlayShapes'
 
 type Props = {
   points: readonly Point[]
+  /** An outline (closes back to the first corner), or a line (a row of plants). */
+  closed: boolean
   /** The snapped cursor, or null when the mouse is not over the plan. */
   cursor: Snap | null
   viewport: Viewport
 }
 
 /** Preview of an outline being drawn: placed corners, the next edge, lengths and angle. */
-export function DrawingOverlay({ points, cursor, viewport }: Props) {
+export function DrawingOverlay({ points, closed, cursor, viewport }: Props) {
   const screen = points.map((p) => worldToScreen(p, viewport))
   const last = points.at(-1)
   const lastScreen = screen.at(-1)
   const cursorScreen = cursor ? worldToScreen(cursor.point, viewport) : null
   const closes =
-    !!cursor && points.length >= MIN_PLOT_CORNERS && distance(cursor.point, points[0]!) < 1e-6
+    closed &&
+    !!cursor &&
+    points.length >= MIN_PLOT_CORNERS &&
+    distance(cursor.point, points[0]!) < 1e-6
 
   return (
     <Group listening={false}>
@@ -46,7 +51,7 @@ export function DrawingOverlay({ points, cursor, viewport }: Props) {
             strokeWidth={2}
             dash={[8, 5]}
           />
-          {points.length >= 2 && !closes && (
+          {closed && points.length >= 2 && !closes && (
             <Line
               points={[cursorScreen.x, cursorScreen.y, screen[0]!.x, screen[0]!.y]}
               stroke={SELECTION_COLOR}

@@ -2,18 +2,19 @@ import { Trash2 } from 'lucide-react'
 import { useId, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { boundsCentre, shapeBounds } from '../../../geometry/bounds'
-import { currentLanguage } from '../../../i18n'
 import { formatLength } from '../../../i18n/units'
-import { updateObject, updatePlanting, validSelection } from '../../../model/edit'
-import { findPlant, plantName } from '../../../model/plants'
+import { isBed } from '../../../model/beds'
+import { updateObject, validSelection } from '../../../model/edit'
 import { BACKGROUND_ID } from '../../../model/background'
 import { PLOT_ID } from '../../../model/plot'
-import type { GardenObject, Planting, Point, Project } from '../../../model/schema'
+import type { GardenObject, Point, Project } from '../../../model/schema'
 import { useProjectStore } from '../../../store/projectStore'
 import { useUiStore } from '../../../store/uiStore'
 import controls from '../../../styles/controls.module.css'
 import { cx } from '../../../styles/cx'
 import { editorActions } from '../actions'
+import { BedProperties } from './BedProperties'
+import { PlantingProperties } from './PlantingProperties'
 import { NothingSelected, PlotProperties } from './PlotProperties'
 import { SitePlanProperties } from './SitePlanProperties'
 import styles from './panels.module.css'
@@ -25,7 +26,12 @@ export function PropertiesPanel({ project }: { project: Project }) {
   const ids = useMemo(() => validSelection(project, selectionIds), [project, selectionIds])
 
   const object = ids.length === 1 ? project.objects.find((o) => o.id === ids[0]) : undefined
-  const planting = ids.length === 1 ? project.plantings.find((p) => p.id === ids[0]) : undefined
+  // One or more plantings (and nothing else): their species, year, …
+  const plantings = useMemo(() => {
+    const selected = new Set(ids)
+    const found = project.plantings.filter((p) => selected.has(p.id))
+    return found.length === ids.length ? found : []
+  }, [project, ids])
 
   return (
     <section className={styles.panel} aria-labelledby={titleId}>
@@ -40,8 +46,13 @@ export function PropertiesPanel({ project }: { project: Project }) {
       {ids.length === 1 && ids[0] === BACKGROUND_ID && project.background && (
         <SitePlanProperties background={project.background} />
       )}
-      {object && <ObjectProperties object={object} />}
-      {planting && <PlantingProperties project={project} planting={planting} />}
+      {object &&
+        (isBed(object) ? (
+          <BedProperties project={project} bed={object} />
+        ) : (
+          <ObjectProperties object={object} />
+        ))}
+      {plantings.length > 0 && <PlantingProperties project={project} plantings={plantings} />}
       {ids.some((id) => id !== PLOT_ID && id !== BACKGROUND_ID) && (
         <button
           type="button"
@@ -108,40 +119,6 @@ function ObjectProperties({ object }: { object: GardenObject }) {
         maxLength={5000}
         rows={3}
         onChange={(e) => set('notes', e.target.value)}
-      />
-    </>
-  )
-}
-
-function PlantingProperties({ project, planting }: { project: Project; planting: Planting }) {
-  const { t } = useTranslation()
-  const update = useProjectStore((s) => s.update)
-  const notesId = useId()
-  const plant = findPlant(project, planting.plantId)
-
-  return (
-    <>
-      <dl className={styles.facts}>
-        <dt>{t('editor.properties.plant')}</dt>
-        <dd>{plant ? plantName(plant, currentLanguage()) : t('editor.properties.unknownPlant')}</dd>
-        <PositionRow position={planting.position} />
-        <dt>{t('editor.properties.plantedYear')}</dt>
-        <dd>{planting.plantedYear}</dd>
-      </dl>
-      <label className={controls.label} htmlFor={notesId}>
-        {t('editor.properties.notes')}
-      </label>
-      <textarea
-        id={notesId}
-        className={cx(controls.input, styles.field, styles.notes)}
-        value={planting.notes ?? ''}
-        maxLength={5000}
-        rows={3}
-        onChange={(e) =>
-          update((p) => updatePlanting(p, planting.id, { notes: e.target.value }), {
-            coalesce: `notes:${planting.id}`,
-          })
-        }
       />
     </>
   )

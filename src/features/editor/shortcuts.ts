@@ -23,6 +23,7 @@ export type ShortcutId =
   | 'toolPan'
   | 'drawPlot'
   | 'rectanglePlot'
+  | 'drawBed'
   | 'snapToGrid'
   | 'help'
 
@@ -55,6 +56,7 @@ export const SHORTCUTS: readonly Shortcut[] = [
   { id: 'toolPan', combos: [{ key: 'h' }] },
   { id: 'drawPlot', combos: [{ key: 'p' }] },
   { id: 'rectanglePlot', combos: [{ key: 'r' }] },
+  { id: 'drawBed', combos: [{ key: 'b' }] },
   { id: 'snapToGrid', combos: [{ key: 'g' }] },
   { id: 'help', combos: [{ key: '?' }] },
 ]
@@ -144,8 +146,9 @@ const HANDLERS: Record<ShortcutId, (event: KeyboardEvent) => void> = {
   zoomFit: () => editorActions.zoomToFit(),
   toolSelect: () => editorActions.setTool('select'),
   toolPan: () => editorActions.setTool('pan'),
-  drawPlot: () => editorActions.setTool('draw-plot'),
+  drawPlot: () => editorActions.setTool('draw'),
   rectanglePlot: () => useUiStore.getState().setRectangleDialogOpen(true),
+  drawBed: () => editorActions.drawBed('bed-ornamental'),
   snapToGrid: () => editorActions.toggleSnapToGrid(),
   help: () => useUiStore.getState().setHelpOpen(true),
 }
@@ -155,9 +158,16 @@ export function useEditorShortcuts(): void {
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
       if (event.defaultPrevented || isTypingTarget(event.target)) return
-      const { helpOpen, rectangleDialogOpen, sitePlanDialogOpen, drawing, calibration } =
-        useUiStore.getState()
-      if (helpOpen || rectangleDialogOpen || sitePlanDialogOpen) return // dialogs handle their keys
+      const {
+        helpOpen,
+        rectangleDialogOpen,
+        sitePlanDialogOpen,
+        settingsOpen,
+        drawing,
+        calibration,
+      } = useUiStore.getState()
+      // Dialogs handle their own keys.
+      if (helpOpen || rectangleDialogOpen || sitePlanDialogOpen || settingsOpen) return
       // While drawing or calibrating, digits are lengths for the panel below the plan, not
       // shortcuts (e.g. 0 = zoom to fit).
       if ((drawing || calibration) && /^[0-9.,]$/.test(event.key)) return

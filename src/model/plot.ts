@@ -1,5 +1,12 @@
 import { boundsOfPoints } from '../geometry/bounds'
-import { distance, roundPoint } from '../geometry/polygon'
+import {
+  MIN_OUTLINE_CORNERS,
+  insertCorner,
+  moveCorner,
+  removeCorner,
+  setEdgeLength,
+} from '../geometry/outline'
+import { roundPoint } from '../geometry/polygon'
 import type { LayerId, Point, Project } from './schema'
 
 /**
@@ -8,7 +15,7 @@ import type { LayerId, Point, Project } from './schema'
  */
 export const PLOT_ID = '#plot'
 export const PLOT_LAYER: LayerId = 'existing'
-export const MIN_PLOT_CORNERS = 3
+export const MIN_PLOT_CORNERS = MIN_OUTLINE_CORNERS
 
 /** Corner names A, B, …, Z, AA, AB, … */
 export function cornerLabel(index: number): string {
@@ -48,26 +55,18 @@ export function rectangleOutline(project: Project, width: number, depth: number)
 }
 
 export function movePlotCorner(project: Project, index: number, to: Point): Project {
-  return withOutline(
-    project,
-    project.plot.outline.map((p, i) => (i === index ? to : p)),
-  )
+  return withOutline(project, moveCorner(project.plot.outline, index, to))
 }
 
 /** Inserts a corner after `afterIndex` (i.e. on the edge from that corner to the next). */
 export function insertPlotCorner(project: Project, afterIndex: number, at: Point): Project {
-  const outline = [...project.plot.outline]
-  outline.splice(afterIndex + 1, 0, at)
-  return withOutline(project, outline)
+  return withOutline(project, insertCorner(project.plot.outline, afterIndex, at))
 }
 
 /** Removes a corner; refused (returns the project unchanged) below the minimum of 3. */
 export function removePlotCorner(project: Project, index: number): Project {
-  if (project.plot.outline.length <= MIN_PLOT_CORNERS) return project
-  return withOutline(
-    project,
-    project.plot.outline.filter((_, i) => i !== index),
-  )
+  const outline = removeCorner(project.plot.outline, index)
+  return outline === project.plot.outline ? project : withOutline(project, [...outline])
 }
 
 /**
@@ -75,15 +74,6 @@ export function removePlotCorner(project: Project, index: number): Project {
  * the edge's direction. The following edge changes accordingly.
  */
 export function setPlotEdgeLength(project: Project, index: number, length: number): Project {
-  const outline = project.plot.outline
-  const n = outline.length
-  if (n < 2 || !(length > 0)) return project
-  const from = outline[index]!
-  const nextIndex = (index + 1) % n
-  const to = outline[nextIndex]!
-  const current = distance(from, to)
-  if (current === 0) return project
-  const factor = length / current
-  const moved = { x: from.x + (to.x - from.x) * factor, y: from.y + (to.y - from.y) * factor }
-  return movePlotCorner(project, nextIndex, moved)
+  const outline = setEdgeLength(project.plot.outline, index, length)
+  return outline === project.plot.outline ? project : withOutline(project, [...outline])
 }

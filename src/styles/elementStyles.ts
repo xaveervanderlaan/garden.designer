@@ -2,9 +2,21 @@ import type { ObjectKind } from '../model/schema'
 
 /**
  * How each kind of element looks on the plan (SPEC §5). One table for the canvas, legend and PDF
- * export. M2 version: fill and outline per kind. Patterns and symbols follow in M8/M9.
+ * export: fill, outline and (optionally) a pattern per kind. Plant symbols per category are in
+ * plantSymbols.ts. More patterns follow in M8/M9.
  */
-export type ElementStyle = { fill: string; stroke: string }
+export type ElementStyle = {
+  fill: string
+  stroke: string
+  /** Outline width in screen pixels (default 1.25). */
+  strokeWidthPx?: number
+  pattern?: ElementPattern
+}
+
+/** Parallel lines inside the shape (e.g. the rows of a vegetable bed), `spacingM` apart. */
+export type ElementPattern = { kind: 'rows'; spacingM: number; color: string }
+
+export const DEFAULT_STROKE_PX = 1.25
 
 export const SELECTION_COLOR = '#2f80d1'
 export const WARNING_COLOR = '#b3261e'
@@ -35,8 +47,29 @@ export const OBJECT_STYLES: Record<ObjectKind, ElementStyle> = {
   play: { fill: '#f3c7a5', stroke: '#b36b3a' },
   compost: { fill: '#9c7a57', stroke: '#5c4129' },
   'rain-barrel': { fill: '#9fc3dc', stroke: '#4f7f9f' },
-  'bed-ornamental': { fill: '#d9bf9c', stroke: '#8a6a45' },
-  'bed-vegetable': { fill: '#c49a6c', stroke: '#7a5532' },
+  // Ornamental bed: soil brown with a light outline. Vegetable bed: darker, with row lines.
+  'bed-ornamental': { fill: '#dcc3a1', stroke: '#a8875f', strokeWidthPx: 1.5 },
+  'bed-vegetable': {
+    fill: '#c29667',
+    stroke: '#7a5532',
+    strokeWidthPx: 1.5,
+    pattern: { kind: 'rows', spacingM: 0.5, color: 'rgba(92, 61, 30, 0.45)' },
+  },
+}
+
+/** Plants on the plan: selection ring, warning badge and labels (sizes in screen pixels). */
+export const PLANTING_MARKS = {
+  selectionColor: SELECTION_COLOR,
+  selectionWidthPx: 2.5,
+  warningColor: WARNING_COLOR,
+  /** A badge for a notice (e.g. needs watering on sand) rather than a real problem. */
+  noticeColor: '#c47a00',
+  warningSizePx: 13,
+  labelColor: '#253325',
+  labelHalo: '#ffffff',
+  labelFontPx: 11,
+  /** Placement previews (filling a bed, a row, stamping) are drawn see-through. */
+  previewOpacity: 0.55,
 }
 
 /** Grid line colours on the canvas. */

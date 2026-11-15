@@ -6,6 +6,7 @@ import {
   translation,
 } from '../geometry/transform'
 import { BACKGROUND_ID, BACKGROUND_LAYER, hasBackground } from './background'
+import { isBed, relinkBeds, withPlantsInBeds } from './beds'
 import { newId } from './ids'
 import { plantingLayer } from './plants'
 import { PLOT_ID, PLOT_LAYER, hasPlot } from './plot'
@@ -101,15 +102,17 @@ export function transformShape(shape: Shape, m: Matrix): Shape {
   }
 }
 
+/** Moves items; a bed takes the plants in it along. */
 export function moveItems(
   project: Project,
-  ids: ReadonlySet<string>,
+  selected: ReadonlySet<string>,
   dx: number,
   dy: number,
 ): Project {
   if (dx === 0 && dy === 0) return project
+  const ids = withPlantsInBeds(project, selected)
   const m = translation(dx, dy)
-  return {
+  const moved = {
     ...project,
     objects: project.objects.map((o) =>
       ids.has(o.id) ? { ...o, shape: transformShape(o.shape, m) } : o,
@@ -118,6 +121,9 @@ export function moveItems(
       ids.has(p.id) ? { ...p, position: applyMatrix(m, p.position) } : p,
     ),
   }
+  // Plants follow the bed they're in; a moved bed or plant may change which bed contains what.
+  const bedMoved = project.objects.some((o) => ids.has(o.id) && isBed(o))
+  return relinkBeds(moved, bedMoved ? undefined : ids)
 }
 
 /** Applies a transform per object (e.g. after rotating/resizing on the canvas). */
@@ -125,13 +131,16 @@ export function transformObjects(
   project: Project,
   transforms: ReadonlyMap<string, Matrix>,
 ): Project {
-  return {
+  const transformed = {
     ...project,
     objects: project.objects.map((o) => {
       const m = transforms.get(o.id)
       return m ? { ...o, shape: transformShape(o.shape, m) } : o
     }),
   }
+  return project.objects.some((o) => transforms.has(o.id) && isBed(o))
+    ? relinkBeds(transformed)
+    : transformed
 }
 
 // --- Item fields ------------------------------------------------------------------------------
@@ -169,15 +178,15 @@ function withFields<T extends object>(item: T, fields: Partial<Record<string, un
 
 // --- Delete / copy / paste --------------------------------------------------------------------
 
+/** Deletes items; plants in a deleted bed stay, linked to whatever bed is left underneath. */
 export function deleteItems(project: Project, ids: ReadonlySet<string>): Project {
-  const deletedBeds = new Set(project.objects.filter((o) => ids.has(o.id)).map((o) => o.id))
-  return {
+  const remaining = {
     ...project,
     objects: project.objects.filter((o) => !ids.has(o.id)),
-    plantings: project.plantings
-      .filter((p) => !ids.has(p.id))
-      .map((p) => (p.bedId && deletedBeds.has(p.bedId) ? withoutBed(p) : p)),
+    plantings: project.plantings.filter((p) => !ids.has(p.id)),
   }
+  const bedDeleted = project.objects.some((o) => ids.has(o.id) && isBed(o))
+  return bedDeleted ? relinkBeds(remaining) : remaining
 }
 
 function withoutBed(planting: Planting): Planting {
@@ -222,12 +231,14 @@ export function pasteItems(
     const bedId = newIds.get(p.bedId) ?? (existingIds.has(p.bedId) ? p.bedId : undefined)
     return bedId ? { ...copy, bedId } : withoutBed(copy)
   })
+  const pasted = {
+    ...project,
+    objects: [...project.objects, ...objects],
+    plantings: [...project.plantings, ...plantings],
+  }
+  const bedPasted = objects.some(isBed)
   return {
-    project: {
-      ...project,
-      objects: [...project.objects, ...objects],
-      plantings: [...project.plantings, ...plantings],
-    },
+    project: relinkBeds(pasted, bedPasted ? undefined : new Set(plantings.map((p) => p.id))),
     ids: [...objects.map((o) => o.id), ...plantings.map((p) => p.id)],
   }
 }

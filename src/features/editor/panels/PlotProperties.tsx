@@ -1,6 +1,6 @@
 import { PenTool, RectangleHorizontal, Trash2 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
-import { edgeLengths, isSelfIntersecting, perimeter, polygonArea } from '../../../geometry/polygon'
+import { isSelfIntersecting, perimeter, polygonArea } from '../../../geometry/polygon'
 import { formatArea, formatLength } from '../../../i18n/units'
 import { isLayerEditable } from '../../../model/edit'
 import {
@@ -17,7 +17,8 @@ import controls from '../../../styles/controls.module.css'
 import { cx } from '../../../styles/cx'
 import { editorActions } from '../actions'
 import { shortcutLabel } from '../shortcuts'
-import { NumberField } from './NumberField'
+import { BedStart } from './BedProperties'
+import { EdgeList } from './EdgeList'
 import { SitePlanStart } from './SitePlanProperties'
 import styles from './panels.module.css'
 
@@ -45,7 +46,7 @@ export function NothingSelected({ project }: { project: Project }) {
                 type="button"
                 className={cx(controls.button, controls.small)}
                 title={shortcutLabel('drawPlot')}
-                onClick={() => editorActions.setTool('draw-plot')}
+                onClick={() => editorActions.setTool('draw')}
               >
                 <PenTool size={16} aria-hidden />
                 {t('editor.toolbar.drawPlot')}
@@ -63,6 +64,7 @@ export function NothingSelected({ project }: { project: Project }) {
           )}
         </div>
       )}
+      <BedStart project={project} />
       <SitePlanStart project={project} />
     </>
   )
@@ -74,7 +76,6 @@ export function PlotProperties({ project }: { project: Project }) {
   const activeCorner = useUiStore((s) => s.activeCorner)
   const outline = project.plot.outline
   const n = outline.length
-  const lengths = edgeLengths(outline)
 
   return (
     <>
@@ -95,27 +96,12 @@ export function PlotProperties({ project }: { project: Project }) {
         </p>
       )}
 
-      <h3 className={styles.subtitle}>{t('editor.plot.edges')}</h3>
-      <ul className={styles.edgeList}>
-        {lengths.map((length, i) => {
-          const from = cornerLabel(i)
-          const to = cornerLabel((i + 1) % n)
-          return (
-            <li key={i} className={styles.edgeRow}>
-              <span className={styles.edgeName}>{t('editor.plot.edge', { from, to })}</span>
-              <NumberField
-                value={length}
-                label={t('editor.plot.edgeLength', { from, to })}
-                accept={(value) => value > 0}
-                onCommit={(value) =>
-                  useProjectStore.getState().update((p) => setPlotEdgeLength(p, i, value))
-                }
-              />
-              <span aria-hidden>{t('editor.drawing.metres')}</span>
-            </li>
-          )
-        })}
-      </ul>
+      <EdgeList
+        outline={outline}
+        onLengthChange={(i, value) =>
+          useProjectStore.getState().update((p) => setPlotEdgeLength(p, i, value))
+        }
+      />
 
       {activeCorner !== null && activeCorner < n ? (
         <div className={styles.buttonColumn}>

@@ -9,22 +9,28 @@ import styles from './panels.module.css'
  * changes (dragging, undo) while you're not typing in it. Escape restores the current value.
  */
 export function NumberField({
+  id,
   value,
   label,
   digits = 2,
+  format = (v) => formatNumber(v, digits),
   accept = Number.isFinite,
   onCommit,
 }: {
+  id?: string
+  /** The value shown; NaN shows an empty field (e.g. several different values). */
   value: number
   /** Accessible name (the field has no visible label of its own). */
   label: string
   /** Decimals shown. */
   digits?: number
+  /** How the value is shown (default: with `digits` decimals). */
+  format?: (value: number) => string
   /** Whether a typed number is allowed; otherwise the field is marked invalid. */
   accept?: (value: number) => boolean
   onCommit: (value: number) => void
 }) {
-  const formatted = formatNumber(value, digits)
+  const formatted = Number.isFinite(value) ? format(value) : ''
   const [text, setText] = useState(formatted)
   const [invalid, setInvalid] = useState(false)
   const input = useRef<HTMLInputElement>(null)
@@ -42,19 +48,24 @@ export function NumberField({
       setInvalid(false)
       return
     }
+    if (text === formatted) {
+      setInvalid(false)
+      return
+    }
     const parsed = parseNumber(text)
     if (parsed === undefined || !accept(parsed)) {
       setInvalid(true)
       return
     }
     setInvalid(false)
-    if (formatNumber(parsed, digits) !== formatted) onCommit(parsed)
+    if (format(parsed) !== formatted) onCommit(parsed)
     else setText(formatted)
   }
 
   return (
     <input
       ref={input}
+      id={id}
       className={cx(controls.input, styles.edgeInput)}
       aria-label={label}
       aria-invalid={invalid}

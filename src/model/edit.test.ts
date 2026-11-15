@@ -56,7 +56,7 @@ describe('moveItems', () => {
       ],
     })
     expect(moved.objects[2]!.shape).toMatchObject({ position: { x: 11, y: 3 } })
-    expect(moved.plantings[0]!.position).toEqual({ x: 3, y: 0 })
+    expect(moved.plantings[0]!.position).toEqual({ x: 5, y: -0.5 })
   })
 
   it('leaves other items and zero moves alone', () => {
@@ -103,7 +103,7 @@ describe('copy and paste', () => {
     const [plantingCopy] = pasted.plantings.slice(-1)
     expect(bedCopy!.id).not.toBe('bed-1')
     expect(plantingCopy!.bedId).toBe(bedCopy!.id)
-    expect(plantingCopy!.position).toEqual({ x: 3, y: 3 })
+    expect(plantingCopy!.position).toEqual({ x: 5, y: 2.5 })
   })
 
   it('keeps the bed of a pasted planting only if that bed still exists', () => {

@@ -327,7 +327,8 @@
       },
       "drawPlot": "Perceelgrens tekenen",
       "rectanglePlot": "Rechthoekig perceel",
-      "snapToGrid": "Uitlijnen op raster aan/uit"
+      "snapToGrid": "Uitlijnen op raster aan/uit",
+      "drawBed": "Border tekenen"
     },
     "drawing": {
       "hintStart": "Klik op de plattegrond om de eerste hoek te plaatsen.",
@@ -341,7 +342,8 @@
       "invalidLength": "Vul een lengte groter dan 0 in, bijv. 12,5.",
       "invalidAngle": "Vul een hoek in graden in, bijv. 90.",
       "needStart": "Klik eerst op de plattegrond om de beginhoek te plaatsen.",
-      "needMoreCorners": "Een perceel heeft minstens 3 hoeken nodig."
+      "needMoreCorners": "Een perceel heeft minstens 3 hoeken nodig.",
+      "titlePlot": "Perceelgrens:"
     },
     "plot": {
       "title": "Perceelgrens",
@@ -416,6 +418,107 @@
       "hide": "Verbergen",
       "replace": "Andere afbeelding…",
       "remove": "Verwijderen"
+    },
+    "beds": {
+      "drawOrnamental": "Border tekenen",
+      "drawVegetable": "Moestuinbed tekenen",
+      "drawing": {
+        "bed-ornamental": "Border:",
+        "bed-vegetable": "Moestuinbed:"
+      },
+      "defaultName": {
+        "bed-ornamental": "Border {{number}}",
+        "bed-vegetable": "Moestuinbed {{number}}"
+      },
+      "needMoreCorners": "Een border of bed heeft minstens 3 hoeken nodig.",
+      "minCorners": "Een border of bed heeft minstens 3 hoeken nodig.",
+      "name": "Naam",
+      "plants": "Planten erin",
+      "selfIntersecting": "De omtrek kruist zichzelf, dus de oppervlakte klopt niet. Verplaats een hoek om dat op te lossen.",
+      "fillHint": "Om dit bed te vullen: open een plant in de bibliotheek en kies ‘Bed vullen’.",
+      "cornerHint": "Sleep een hoek om hem te verplaatsen, of klik erop om hem te selecteren (Delete verwijdert hem). Sleep of klik op het bolletje op een zijde om een hoek toe te voegen."
+    },
+    "placing": {
+      "title": "Op de tekening zetten",
+      "dragHint": "Sleep naar de tekening om hem te plaatsen.",
+      "onPlan_one": "{{count}} op de tekening. Sleep naar de tekening om er nog een te plaatsen.",
+      "onPlan_other": "{{count}} op de tekening. Sleep naar de tekening om er nog een te plaatsen.",
+      "stamp": "Plaatsen",
+      "stampTitle": "{{name}} plaatsen:",
+      "stampHint": "klik op de tekening om een plant te plaatsen, zo vaak als je wilt. Esc stopt.",
+      "placed_one": "{{count}} geplaatst",
+      "placed_other": "{{count}} geplaatst",
+      "done": "Klaar",
+      "fill": "Bed vullen",
+      "fillNoBeds": "Teken eerst een bed.",
+      "fillTitle": "Een bed vullen met {{name}}:",
+      "fillChooseBed": "klik op het bed dat je wilt vullen.",
+      "fillBed": "{{bed}}. Pas eventueel de plantafstand aan en druk op Enter of ‘Bed vullen’. Klik op een ander bed om dat te vullen.",
+      "spacing": "Plantafstand",
+      "plantCount_one": "{{count}} plant",
+      "plantCount_other": "{{count}} planten",
+      "invalidSpacing": "Vul een plantafstand in tussen 0,05 en 50 m.",
+      "tooMany": "Dat worden meer dan {{max}} planten. Kies een grotere plantafstand.",
+      "noRoom": "Geen plek voor deze plant met deze plantafstand (of het bed is vol).",
+      "row": "Rij planten",
+      "rowTitle": "Rij {{name}}:",
+      "rowHintFinish": "Voeg meer punten toe, of druk op Enter om de rij te planten.",
+      "rowNeedsPoints": "Een rij heeft een begin- en een eindpunt nodig.",
+      "plantRow": "Rij planten",
+      "labelCodes": "Planten met codes labelen in plaats van namen"
+    },
+    "planting": {
+      "bed": "Bed",
+      "noBed": "Niet in een bed",
+      "species": "Plant",
+      "speciesMany": "Plant (voor alle {{count}})",
+      "severalSpecies": "Verschillende planten",
+      "showInLibrary": "In de bibliotheek tonen"
+    },
+    "warnings": {
+      "title": "Waarschuwingen",
+      "none": "Geen waarschuwingen.",
+      "selectHint": "Deze planten selecteren",
+      "count": "{{count}}×",
+      "thresholdHint": "Planten overlappen als dat volgroeid meer is dan {{percent}} van de kleinste (ontwerpinstellingen).",
+      "overlapOne": "Overlapt volgroeid {{percent}} met {{name}}.",
+      "outsideOne": "Buiten het perceel.",
+      "soilDryOne": "Niet droogtebestendig, en zand droogt snel uit: water geven bij droogte.",
+      "soilUnsuitedOne": "Past niet bij je grond ({{soil}}).",
+      "overlapSame": "{{name}} staat te dicht op elkaar",
+      "overlapPair": "{{a}} en {{b}} overlappen",
+      "outside": "{{name}} buiten het perceel",
+      "soilDry": "{{name}}: niet droogtebestendig",
+      "soilUnsuited": "{{name}} past niet bij {{soil}}"
+    },
+    "plantingList": {
+      "title": "Plantlijst",
+      "empty": "Nog geen planten op de tekening. Sleep er een uit de bibliotheek.",
+      "grouping": "Tellen",
+      "whole": "Hele ontwerp",
+      "perBed": "Per bed",
+      "noBed": "Niet in een bed",
+      "selectHint": "Deze planten selecteren",
+      "total_one": "{{count}} plant in totaal",
+      "total_other": "{{count}} planten in totaal",
+      "copy": "Kopiëren als tekst",
+      "copied": "Gekopieerd naar het klembord.",
+      "copyFailed": "Kopiëren lukte niet. Misschien staat je browser het niet toe.",
+      "textTitle": "Plantlijst: {{name}}",
+      "textLine": "{{code}}. {{name}} ({{latin}}): {{count}}",
+      "textLineShort": "{{code}}. {{name}}: {{count}}"
+    },
+    "settings": {
+      "title": "Ontwerpinstellingen",
+      "name": "Naam",
+      "nameRequired": "Vul een naam in.",
+      "soil": "Grond",
+      "soilHint": "Planten die niet bij de grond passen krijgen een waarschuwing.",
+      "grid": "Raster (m)",
+      "overlap": "Overlapwaarschuwing (%)",
+      "invalidGrid": "Vul een rastermaat in tussen 0,01 en 100 m.",
+      "invalidOverlap": "Vul een percentage in tussen 0 en 100.",
+      "overlapHint": "Twee planten krijgen een waarschuwing als ze volgroeid meer dan dit deel van de breedte van de kleinste plant overlappen."
     }
   },
   "plants": {

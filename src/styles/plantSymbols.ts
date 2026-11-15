@@ -86,10 +86,23 @@ export function symbolColor(plant: Plant): string {
   return PLANT_COLOR_HEX[usesFlower && flower ? flower : plant.foliageColor]
 }
 
-export function plantSymbol(plant: Plant): SymbolPart[] {
-  const foliage = PLANT_COLOR_HEX[plant.foliageColor]
+/**
+ * The colours a symbol is drawn with: `main` (flowers or leaves, see symbolColor) and `foliage`.
+ * The seasonal view (M14) passes other colours for a month.
+ */
+export type SymbolColors = { main: string; foliage: string }
+
+export function symbolColors(plant: Plant): SymbolColors {
+  return { main: symbolColor(plant), foliage: PLANT_COLOR_HEX[plant.foliageColor] }
+}
+
+export function plantSymbol(
+  plant: Plant,
+  colors: SymbolColors = symbolColors(plant),
+): SymbolPart[] {
+  const foliage = colors.foliage
   const outline = darken(foliage, 0.4)
-  const main = symbolColor(plant)
+  const main = colors.main
 
   switch (plant.category) {
     case 'tree':

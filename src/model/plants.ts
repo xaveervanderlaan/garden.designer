@@ -36,10 +36,17 @@ export function plantName(plant: Plant, lang: 'en' | 'nl'): string {
   return plant.names[lang] || plant.names[other] || plant.names.latin
 }
 
+/**
+ * Drawn radius of a plant: half its mature spread. The one place that sizes plants on the plan
+ * and in the overlap warnings (growth over the years, M13, will scale it).
+ */
+export function plantRadiusM(plant: Plant | undefined): number {
+  return plant ? plant.spreadM / 2 : DEFAULT_PLANTING_RADIUS_M
+}
+
 /** Drawn radius of a planting: half its mature spread. */
 export function plantingRadiusM(project: Project, planting: Planting): number {
-  const plant = findPlant(project, planting.plantId)
-  return plant ? plant.spreadM / 2 : DEFAULT_PLANTING_RADIUS_M
+  return plantRadiusM(findPlant(project, planting.plantId))
 }
 
 /** Vegetables and herbs live on the vegetables layer; everything else on beds & plants. */

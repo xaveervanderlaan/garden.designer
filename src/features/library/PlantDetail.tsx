@@ -1,4 +1,4 @@
-import { ArrowLeft, Copy, Pencil, Trash2 } from 'lucide-react'
+import { ArrowLeft, Copy, Grid3x3, Pencil, Rows3, Stamp, Trash2 } from 'lucide-react'
 import { useId, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { currentLanguage } from '../../i18n'
@@ -9,7 +9,9 @@ import controls from '../../styles/controls.module.css'
 import { cx } from '../../styles/cx'
 import { PLANT_COLOR_HEX } from '../../styles/plantColors'
 import { symbolColor } from '../../styles/plantSymbols'
+import { editorActions } from '../editor/actions'
 import { libraryActions } from './actions'
+import { plantDragProps } from './drag'
 import styles from './library.module.css'
 import { useLibraryStore } from './libraryStore'
 import { ColorChip, MonthStrip, PlantSymbol } from './parts'
@@ -39,7 +41,12 @@ export function PlantDetail({ project, plant }: { project: Project; plant: Plant
         </button>
 
         <div className={styles.detailHeader}>
-          <figure className={styles.symbolFigure}>
+          <figure
+            className={cx(styles.symbolFigure, styles.draggable)}
+            title={t('editor.placing.dragHint')}
+            data-testid="detail-symbol"
+            {...plantDragProps(plant.id)}
+          >
             <PlantSymbol plant={plant} size={64} />
             <figcaption className={styles.visuallyHidden}>{t('editor.library.symbol')}</figcaption>
           </figure>
@@ -66,6 +73,8 @@ export function PlantDetail({ project, plant }: { project: Project; plant: Plant
             </li>
           )}
         </ul>
+
+        <PlaceActions project={project} plant={plant} />
 
         <p
           className={suitability === 'suited' ? styles.soilGood : styles.soilWarning}
@@ -201,6 +210,51 @@ export function PlantDetail({ project, plant }: { project: Project; plant: Plant
         )}
       </div>
     </section>
+  )
+}
+
+/** Ways to put the plant on the plan: drag it, stamp it, fill a bed or plant a row. */
+function PlaceActions({ project, plant }: { project: Project; plant: Plant }) {
+  const { t } = useTranslation()
+  const count = plantingCount(project, plant.id)
+  const hasBeds = project.objects.some(
+    (o) => o.kind === 'bed-ornamental' || o.kind === 'bed-vegetable',
+  )
+  return (
+    <div className={styles.place}>
+      <div className={styles.placeButtons} role="group" aria-label={t('editor.placing.title')}>
+        <button
+          type="button"
+          className={cx(controls.button, controls.small)}
+          title={t('editor.placing.stampHint')}
+          onClick={() => editorActions.startStamp(plant.id)}
+        >
+          <Stamp size={16} aria-hidden />
+          {t('editor.placing.stamp')}
+        </button>
+        <button
+          type="button"
+          className={cx(controls.button, controls.small)}
+          disabled={!hasBeds}
+          title={hasBeds ? undefined : t('editor.placing.fillNoBeds')}
+          onClick={() => editorActions.startFill(plant.id)}
+        >
+          <Grid3x3 size={16} aria-hidden />
+          {t('editor.placing.fill')}
+        </button>
+        <button
+          type="button"
+          className={cx(controls.button, controls.small)}
+          onClick={() => editorActions.drawRow(plant.id)}
+        >
+          <Rows3 size={16} aria-hidden />
+          {t('editor.placing.row')}
+        </button>
+      </div>
+      <p className={styles.hint}>
+        {count ? t('editor.placing.onPlan', { count }) : t('editor.placing.dragHint')}
+      </p>
+    </div>
   )
 }
 

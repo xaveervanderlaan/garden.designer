@@ -92,13 +92,28 @@ describe('migration steps', () => {
         { ...current, id: 'c', autumnColor: 'tartan' },
       ],
     }
+    expect(migrateProject(v2, 3).schemaVersion).toBe(3)
     const migrated = projectSchema.parse(migrateProject(v2))
-    expect(migrated.schemaVersion).toBe(3)
     const [a, b, c] = migrated.customPlants
     expect(a).toMatchObject({ flowerColors: ['purple'], foliageColor: 'grey-green' })
     expect(a?.autumnColor).toBeUndefined()
     expect(b).toMatchObject({ flowerColors: [], foliageColor: 'green', autumnColor: 'red' })
     expect(c).toMatchObject({ flowerColors: [], foliageColor: 'grey-green' })
     expect(c?.autumnColor).toBeUndefined()
+  })
+
+  it('3 → 4: adds the overlap threshold (20 %) to the settings', () => {
+    const { overlapThreshold: _, ...settings } = newProject('Old', 1_700_000_000_000).settings
+    const v3 = { ...newProject('Old', 1_700_000_000_000), schemaVersion: 3, settings }
+    const v4 = migrateProject(v3, 4)
+    expect(v4.schemaVersion).toBe(4)
+    const migrated = projectSchema.parse(migrateProject(v3))
+    expect(migrated.settings).toEqual({ ...settings, overlapThreshold: 0.2 })
+  })
+
+  it('3 → 4: keeps a threshold that is already there', () => {
+    const v3 = { ...newProject('Old', 1_700_000_000_000), schemaVersion: 3 }
+    v3.settings.overlapThreshold = 0.35
+    expect(projectSchema.parse(migrateProject(v3)).settings.overlapThreshold).toBe(0.35)
   })
 })

@@ -3,6 +3,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Group, Layer, Stage, Transformer } from 'react-konva'
 import { scaleBarLength } from '../../../geometry/grid'
+import { rowPositions } from '../../../geometry/planting'
 import { isSelfIntersecting } from '../../../geometry/polygon'
 import { type Snap, snapPoint } from '../../../geometry/snap'
 import type { Matrix } from '../../../geometry/transform'
@@ -15,7 +16,9 @@ import {
   wheelZoomFactor,
   zoomAt,
 } from '../../../geometry/viewport'
+import { currentLanguage } from '../../../i18n'
 import { formatRoundLength } from '../../../i18n/units'
+import { bedAt, findBed, isBed, withPlantsInBeds } from '../../../model/beds'
 import {
   isLayerEditable,
   isLayerVisible,
@@ -24,22 +27,32 @@ import {
   transformObjects,
 } from '../../../model/edit'
 import { BACKGROUND_ID, BACKGROUND_LAYER } from '../../../model/background'
+import { findPlant } from '../../../model/plants'
+import { fillBedPositions, plantingLabels } from '../../../model/plantings'
 import { PLOT_ID, PLOT_LAYER, hasPlot } from '../../../model/plot'
 import type { Point } from '../../../model/schema'
+import { designWarnings, warningsByPlanting, worstSeverity } from '../../../model/warnings'
 import { useProjectStore } from '../../../store/projectStore'
 import { useUiStore } from '../../../store/uiStore'
 import { SELECTION_COLOR } from '../../../styles/elementStyles'
+import { plantAppearance } from '../../../styles/plantAppearance'
+import { PLANT_DRAG_TYPE } from '../../library/drag'
+import { useLibraryStore } from '../../library/libraryStore'
 import { currentSelection, editorActions } from '../actions'
+import { BedOverlay } from './BedOverlay'
 import { CalibrationDraft, CalibrationLine } from './CalibrationOverlay'
 import { CalibrationPanel } from './CalibrationPanel'
 import { DrawingOverlay } from './DrawingOverlay'
 import { DrawingPanel } from './DrawingPanel'
 import styles from './GardenCanvas.module.css'
+import { FillPanel } from './FillPanel'
 import { Grid } from './Grid'
-import { type ItemHandlers, Items } from './Items'
+import { type BedDraft, type ItemHandlers, Items } from './Items'
+import { PlantPreview } from './PlantPreview'
 import { PlotOverlay, PlotShape } from './Plot'
 import { SitePlanLayer } from './SitePlan'
 import { snapContext } from './snapTargets'
+import { StampPanel } from './StampPanel'
 import { useAltKey } from './useAltKey'
 import { useElementSize } from './useElementSize'
 import { useSpaceKey } from './useSpaceKey'
@@ -57,6 +70,9 @@ export default function GardenCanvas() {
   const tool = useUiStore((s) => s.tool)
   const drawing = useUiStore((s) => s.drawing)
   const calibration = useUiStore((s) => s.calibration)
+  const stamp = useUiStore((s) => s.stamp)
+  const fill = useUiStore((s) => s.fill)
+  const labelMode = useUiStore((s) => s.labelMode)
   const fit = useUiStore((s) => s.fit)
   const spaceHeld = useSpaceKey()
   const altHeld = useAltKey()
@@ -68,15 +84,51 @@ export default function GardenCanvas() {
   const [drawCursor, setDrawCursor] = useState<Snap | null>(null)
   /** The cursor (world, not snapped) while calibrating. */
   const [measureCursor, setMeasureCursor] = useState<Point | null>(null)
+  /** The cursor (world) while stamping plants. */
+  const [stampCursor, setStampCursor] = useState<Point | null>(null)
+  /** A plant dragged from the library over the plan, and where it would land. */
+  const [dropAt, setDropAt] = useState<{ plantId: string; point: Point } | null>(null)
+  /** A bed outline while one of its corners is being dragged. */
+  const [bedDraft, setBedDraft] = useState<BedDraft | null>(null)
   const nodes = useRef(new Map<string, Konva.Group>())
+  /** Ids of the items moving along with the one being dragged. */
+  const dragging = useRef<ReadonlySet<string>>(new Set())
   const transformer = useRef<Konva.Transformer>(null)
   const fittedProjectId = useRef<string | null>(null)
 
   const panMode = tool === 'pan' || spaceHeld
-  const drawMode = tool === 'draw-plot' && !spaceHeld
+  const drawMode = tool === 'draw' && !spaceHeld
   const calibrateMode = tool === 'calibrate' && !spaceHeld
+  const stampMode = tool === 'stamp' && !spaceHeld
+  const fillMode = tool === 'fill' && !spaceHeld
   const interactive = tool === 'select' && !spaceHeld
   const selection = useMemo(() => new Set(selectionIds), [selectionIds])
+  const lang = currentLanguage()
+
+  const warned = useMemo(
+    () =>
+      new Map(
+        project
+          ? [...warningsByPlanting(designWarnings(project))].map(([id, list]) => [
+              id,
+              worstSeverity(list),
+            ])
+          : [],
+      ),
+    [project],
+  )
+  const labelsVisible = !!project && isLayerVisible(project, 'labels')
+  const labels = useMemo(
+    () => (project && labelsVisible ? plantingLabels(project, labelMode, lang) : null),
+    [project, labelsVisible, labelMode, lang],
+  )
+  const fillPositions = useMemo(
+    () =>
+      project && fill?.bedId
+        ? fillBedPositions(project, fill.bedId, fill.plantId, fill.spacingM).positions
+        : [],
+    [project, fill],
+  )
 
   useEffect(() => {
     if (size) useUiStore.getState().setCanvasSize(size)
@@ -107,11 +159,12 @@ export default function GardenCanvas() {
     }
   }, [size, project])
 
-  // Attach the rotate/resize handles to the selected objects (plantings only move).
+  // Attach the rotate/resize handles to the selected objects. Plantings only move; beds have
+  // corner handles instead (like the plot).
   useEffect(() => {
     const tr = transformer.current
     if (!tr || !project) return
-    const objectIds = new Set(project.objects.map((o) => o.id))
+    const objectIds = new Set(project.objects.filter((o) => !isBed(o)).map((o) => o.id))
     const attached = !interactive
       ? []
       : currentSelection()
@@ -130,6 +183,7 @@ export default function GardenCanvas() {
         if (node) nodes.current.set(id, node)
         else nodes.current.delete(id)
       },
+      offset: (id) => nodes.current.get(id)?.position() ?? { x: 0, y: 0 },
       mouseDown(id, event) {
         if (event.evt.button !== 0) return
         const ui = useUiStore.getState()
@@ -138,18 +192,28 @@ export default function GardenCanvas() {
       },
       dragStart(id, event) {
         // Shift-clicking a selected item deselects it: don't drag it then.
-        if (!useUiStore.getState().selection.includes(id)) event.target.stopDrag()
+        if (!useUiStore.getState().selection.includes(id)) {
+          event.target.stopDrag()
+          return
+        }
+        // Everything that moves along: the selection, and the plants in selected beds.
+        const project = useProjectStore.getState().project
+        const ids = selectedIds().add(id)
+        dragging.current = project ? withPlantsInBeds(project, ids) : ids
       },
       dragMove(id, event) {
         const offset = event.target.position()
-        for (const other of selectedIds()) {
+        for (const other of dragging.current) {
           if (other !== id) nodes.current.get(other)?.position(offset)
         }
       },
       dragEnd(id, event) {
         const { x: dx, y: dy } = event.target.position()
         const ids = selectedIds().add(id)
-        for (const other of ids) nodes.current.get(other)?.position({ x: 0, y: 0 })
+        for (const other of new Set([...ids, ...dragging.current])) {
+          nodes.current.get(other)?.position({ x: 0, y: 0 })
+        }
+        dragging.current = new Set()
         // One update per drag, so a drag is one undo step.
         if (dx !== 0 || dy !== 0)
           useProjectStore.getState().update((p) => moveItems(p, ids, dx, dy))
@@ -230,6 +294,14 @@ export default function GardenCanvas() {
       if (pointer) editorActions.addCalibrationPoint(screenToWorld(pointer, viewport))
       return
     }
+    if (stampMode || fillMode) {
+      const pointer = event.target.getStage()?.getPointerPosition()
+      if (!pointer) return
+      const world = screenToWorld(pointer, viewport)
+      if (stampMode) editorActions.stampAt(world)
+      else editorActions.chooseFillBed(world)
+      return
+    }
     // Clicking empty space clears the selection.
     if (event.target === event.target.getStage() && !shiftKey) editorActions.clearSelection()
   }
@@ -239,8 +311,37 @@ export default function GardenCanvas() {
     if (!pointer) return
     const world = screenToWorld(pointer, useUiStore.getState().viewport)
     useUiStore.getState().setCursor(world)
-    if (tool === 'draw-plot') setDrawCursor(drawingSnap(pointer, event.evt.altKey))
+    if (tool === 'draw') setDrawCursor(drawingSnap(pointer, event.evt.altKey))
     if (tool === 'calibrate') setMeasureCursor(world)
+    if (tool === 'stamp') setStampCursor(world)
+    if (tool === 'fill') setHovered(project && bedAt(project, world) ? 'fill-bed' : null)
+  }
+
+  /** World position of a mouse event on the plan area (for drag and drop). */
+  function eventToWorld(event: React.DragEvent): Point {
+    const rect = containerRef.current!.getBoundingClientRect()
+    return screenToWorld(
+      { x: event.clientX - rect.left, y: event.clientY - rect.top },
+      useUiStore.getState().viewport,
+    )
+  }
+
+  function onDragOver(event: React.DragEvent) {
+    const plantId = useLibraryStore.getState().dragging
+    if (!plantId || !event.dataTransfer.types.includes(PLANT_DRAG_TYPE)) return
+    event.preventDefault()
+    event.dataTransfer.dropEffect = 'copy'
+    setDropAt({ plantId, point: eventToWorld(event) })
+  }
+
+  function onDrop(event: React.DragEvent) {
+    const plantId =
+      event.dataTransfer.getData(PLANT_DRAG_TYPE) || useLibraryStore.getState().dragging
+    setDropAt(null)
+    if (!plantId) return
+    event.preventDefault()
+    if (useUiStore.getState().fit) useUiStore.getState().setFit(null)
+    editorActions.placePlant(plantId, eventToWorld(event))
   }
 
   function onWheel(event: Konva.KonvaEventObject<WheelEvent>) {
@@ -263,6 +364,10 @@ export default function GardenCanvas() {
   }
 
   const outline = plotDraft ?? project.plot.outline
+  const editedBed =
+    interactive && selectionIds.length === 1 ? findBed(project, selectionIds[0]!) : undefined
+  const editingBed = editedBed && isLayerEditable(project, editedBed.layer) ? editedBed : undefined
+  const preview = previewOf()
   const plotVisible = isLayerVisible(project, PLOT_LAYER)
   const plotEditable = isLayerEditable(project, PLOT_LAYER)
   const editingPlot = interactive && isPlotSelected(project, selectionIds)
@@ -273,22 +378,26 @@ export default function GardenCanvas() {
     ? 'grabbing'
     : panMode
       ? 'grab'
-      : drawMode || calibrateMode
+      : drawMode || calibrateMode || stampMode
         ? 'crosshair'
-        : hovered === PLOT_ID
-          ? 'pointer'
-          : hovered === BACKGROUND_ID
-            ? sitePlanSelected
-              ? 'move'
-              : 'default'
-            : hovered
-              ? 'move'
-              : 'default'
+        : fillMode
+          ? hovered === 'fill-bed'
+            ? 'pointer'
+            : 'default'
+          : hovered === PLOT_ID
+            ? 'pointer'
+            : hovered === BACKGROUND_ID
+              ? sitePlanSelected
+                ? 'move'
+                : 'default'
+              : hovered
+                ? 'move'
+                : 'default'
   const isEmpty =
     !hasPlot(project) && project.objects.length === 0 && project.plantings.length === 0
   // While the site plan is selected its rotate handle is at the top, where the hint would be.
   const hint =
-    drawing || calibration || !isEmpty
+    drawing || calibration || stamp || fill || !isEmpty
       ? null
       : !sitePlanVisible
         ? 'start'
@@ -296,6 +405,26 @@ export default function GardenCanvas() {
           ? null
           : 'trace'
   const barLength = scaleBarLength(viewport.scale)
+
+  /** Plants to preview: a fill, a row being drawn, the stamp under the cursor, or a drop. */
+  function previewOf() {
+    if (!project) return null
+    const of = (plantId: string, positions: Point[]) => ({
+      appearance: plantAppearance(findPlant(project, plantId)),
+      positions,
+    })
+    if (dropAt) return of(dropAt.plantId, [dropAt.point])
+    if (fill && fillMode) return of(fill.plantId, fillPositions)
+    if (stamp && stampMode && stampCursor) return of(stamp.plantId, [stampCursor])
+    if (drawing?.target.kind === 'row') {
+      // The row as it is; while placing its end point, up to the cursor.
+      const points = drawing.points
+      const line =
+        points.length === 1 && drawMode && drawCursor ? [points[0]!, drawCursor.point] : points
+      return of(drawing.target.plantId, rowPositions(line, drawing.target.spacingM))
+    }
+    return null
+  }
 
   return (
     <div
@@ -309,9 +438,17 @@ export default function GardenCanvas() {
         className={styles.stageArea}
         data-testid="plan-area"
         style={{ cursor }}
-        // While drawing or calibrating, keep the focus in the panel's input: without this, a click
-        // on the plan moves the focus to the page (Konva's pointer events can't prevent that).
-        onMouseDown={(e) => (tool === 'draw-plot' || tool === 'calibrate') && e.preventDefault()}
+        // While drawing, calibrating or filling, keep the focus in the panel's input: without this,
+        // a click on the plan moves the focus to the page (Konva's pointer events can't prevent
+        // that).
+        onMouseDown={(e) =>
+          (tool === 'draw' || tool === 'calibrate' || tool === 'fill') && e.preventDefault()
+        }
+        onDragOver={onDragOver}
+        onDragLeave={(e) => {
+          if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setDropAt(null)
+        }}
+        onDrop={onDrop}
       >
         {size && (
           <Stage
@@ -323,6 +460,7 @@ export default function GardenCanvas() {
               useUiStore.getState().setCursor(null)
               setDrawCursor(null)
               setMeasureCursor(null)
+              setStampCursor(null)
             }}
             onWheel={onWheel}
             onContextMenu={(e) => e.evt.preventDefault()}
@@ -356,7 +494,14 @@ export default function GardenCanvas() {
                   selection={selection}
                   interactive={interactive}
                   handlers={handlers}
+                  warned={warned}
+                  labels={labels}
+                  labelMode={labelMode}
+                  bedDraft={bedDraft}
                 />
+                {preview && (
+                  <PlantPreview appearance={preview.appearance} positions={preview.positions} />
+                )}
               </Group>
               <Transformer
                 ref={transformer}
@@ -386,9 +531,24 @@ export default function GardenCanvas() {
                   onDraft={setPlotDraft}
                 />
               )}
+              {editingBed && (
+                <BedOverlay
+                  key={editingBed.id}
+                  project={project}
+                  bed={editingBed}
+                  outline={
+                    bedDraft?.id === editingBed.id ? bedDraft.points : editingBed.shape.points
+                  }
+                  viewport={viewport}
+                  showLabels={isLayerVisible(project, 'measurements')}
+                  altHeld={altHeld}
+                  onDraft={(points) => setBedDraft(points && { id: editingBed.id, points })}
+                />
+              )}
               {drawing && (
                 <DrawingOverlay
                   points={drawing.points}
+                  closed={drawing.target.kind !== 'row'}
                   cursor={drawMode ? drawCursor : null}
                   viewport={viewport}
                 />
@@ -424,8 +584,16 @@ export default function GardenCanvas() {
       </div>
 
       {/* Below the plan, not on top of it, so it never hides a spot you want to click. */}
-      {drawing && <DrawingPanel towards={drawMode ? (drawCursor?.point ?? null) : null} />}
+      {drawing && (
+        <DrawingPanel
+          // A new drawing (e.g. a row of another plant) starts with fresh fields.
+          key={drawing.target.kind === 'row' ? drawing.target.plantId : drawing.target.kind}
+          towards={drawMode ? (drawCursor?.point ?? null) : null}
+        />
+      )}
       {calibration && <CalibrationPanel />}
+      {stamp && <StampPanel project={project} />}
+      {fill && <FillPanel key={fill.plantId} project={project} count={fillPositions.length} />}
     </div>
   )
 }

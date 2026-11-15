@@ -14,6 +14,7 @@ describe('newProject', () => {
       northAngleDeg: 0,
       gridSizeM: 0.5,
       soil: 'sand',
+      overlapThreshold: 0.2,
     })
     expect(Object.keys(project.layers).sort()).toEqual([...LAYER_IDS].sort())
     expect(project.createdAt).toBe(123)

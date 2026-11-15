@@ -1,0 +1,63 @@
+import { useTranslation } from 'react-i18next'
+import { currentLanguage } from '../../../i18n'
+import { formatPercent } from '../../../i18n/units'
+import { findPlant, plantName } from '../../../model/plants'
+import type { Project } from '../../../model/schema'
+import type { Warning, WarningGroup } from '../../../model/warnings'
+
+/** Display name of a plant id (or "Unknown plant"). */
+function useNameOf(project: Project): (plantId: string) => string {
+  const { t } = useTranslation()
+  const lang = currentLanguage()
+  return (plantId) => {
+    const plant = findPlant(project, plantId)
+    return plant ? plantName(plant, lang) : t('editor.properties.unknownPlant')
+  }
+}
+
+/** A warning about one planting (`about`), as shown in its properties. */
+export function useWarningText(project: Project): (warning: Warning, about: string) => string {
+  const { t } = useTranslation()
+  const nameOf = useNameOf(project)
+  const soil = t(`plants.soil.${project.settings.soil}`).toLowerCase()
+  return (warning, about) => {
+    switch (warning.kind) {
+      case 'overlap': {
+        const otherId = warning.plantingId === about ? warning.otherId : warning.plantingId
+        const other = project.plantings.find((p) => p.id === otherId)
+        return t('editor.warnings.overlapOne', {
+          name: other ? nameOf(other.plantId) : '',
+          percent: formatPercent(warning.fraction),
+        })
+      }
+      case 'outside-plot':
+        return t('editor.warnings.outsideOne')
+      case 'soil':
+        return warning.suitability === 'dry'
+          ? t('editor.warnings.soilDryOne')
+          : t('editor.warnings.soilUnsuitedOne', { soil })
+    }
+  }
+}
+
+/** A line in the warnings list: one kind of warning for one species (or a pair). */
+export function useWarningGroupText(project: Project): (group: WarningGroup) => string {
+  const { t } = useTranslation()
+  const nameOf = useNameOf(project)
+  const soil = t(`plants.soil.${project.settings.soil}`).toLowerCase()
+  return (group) => {
+    const [a = '', b] = group.plantIds
+    switch (group.kind) {
+      case 'overlap':
+        return b === undefined
+          ? t('editor.warnings.overlapSame', { name: nameOf(a) })
+          : t('editor.warnings.overlapPair', { a: nameOf(a), b: nameOf(b) })
+      case 'outside-plot':
+        return t('editor.warnings.outside', { name: nameOf(a) })
+      case 'soil':
+        return group.suitability === 'dry'
+          ? t('editor.warnings.soilDry', { name: nameOf(a) })
+          : t('editor.warnings.soilUnsuited', { name: nameOf(a), soil })
+    }
+  }
+}

@@ -17,12 +17,15 @@ type LibraryStore = {
   /** Scroll position of the result list, restored when coming back from the detail card. */
   listScrollTop: number
   form: PlantForm | null
+  /** The plant being dragged from the library onto the plan, or null. */
+  dragging: string | null
   setFilters: (change: Partial<LibraryFilters>) => void
   resetFilters: () => void
   setFiltersOpen: (open: boolean) => void
   showDetail: (id: string | null, listScrollTop?: number) => void
   openForm: (form: PlantForm) => void
   closeForm: () => void
+  setDragging: (plantId: string | null) => void
 }
 
 export const useLibraryStore = create<LibraryStore>()((set) => ({
@@ -31,6 +34,7 @@ export const useLibraryStore = create<LibraryStore>()((set) => ({
   detailId: null,
   listScrollTop: 0,
   form: null,
+  dragging: null,
   setFilters: (change) => set((state) => ({ filters: { ...state.filters, ...change } })),
   // Keeps the search text and category tab: "clear filters" only clears the filter panel.
   resetFilters: () =>
@@ -42,6 +46,7 @@ export const useLibraryStore = create<LibraryStore>()((set) => ({
     set((state) => ({ detailId, listScrollTop: listScrollTop ?? state.listScrollTop })),
   openForm: (form) => set({ form }),
   closeForm: () => set({ form: null }),
+  setDragging: (dragging) => set({ dragging }),
 }))
 
 /** Adds or removes a value in a list (for toggle buttons). */

@@ -31,6 +31,16 @@ export const MIGRATIONS: Readonly<Record<number, Migration>> = {
       ? project.customPlants.map((plant) => migratePlantColors(plant))
       : project.customPlants,
   }),
+  /**
+   * v4 (M6): the overlap warning's threshold is a design setting (a fraction of the smaller
+   * plant's diameter), starting at the default of 20 %.
+   */
+  3: (project) => ({
+    ...project,
+    settings: isRecord(project.settings)
+      ? { overlapThreshold: 0.2, ...project.settings }
+      : project.settings,
+  }),
 }
 
 const isOneOf = <T extends string>(list: readonly T[], value: unknown): value is T =>

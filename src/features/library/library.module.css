@@ -611,3 +611,24 @@
 .noneButton {
   padding-inline: 0.625rem;
 }
+
+/* Placing a plant from the detail card */
+.draggable {
+  cursor: grab;
+}
+
+.place {
+  margin: 0 0 0.75rem;
+}
+
+.placeButtons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+}
+
+.placeButtons > button {
+  max-width: 100%;
+  white-space: normal;
+  text-align: left;
+}

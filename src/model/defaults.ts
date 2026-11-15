@@ -8,12 +8,19 @@ import {
   type Settings,
 } from './schema'
 
-/** Defaults for a new design: sandy soil, centre of the Netherlands, north up, 0.5 m grid. */
+/** Overlap warnings start at 20 % of the smaller plant's diameter. */
+export const DEFAULT_OVERLAP_THRESHOLD = 0.2
+
+/**
+ * Defaults for a new design: sandy soil, centre of the Netherlands, north up, 0.5 m grid, overlap
+ * warnings from 20 %.
+ */
 export const DEFAULT_SETTINGS: Settings = {
   location: { lat: 52.13, lng: 5.29 },
   northAngleDeg: 0,
   gridSizeM: 0.5,
   soil: 'sand',
+  overlapThreshold: DEFAULT_OVERLAP_THRESHOLD,
 }
 
 export function defaultLayers(): Layers {

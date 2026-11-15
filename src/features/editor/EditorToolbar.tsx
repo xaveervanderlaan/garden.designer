@@ -1,6 +1,9 @@
 import {
   ArrowLeft,
+  Carrot,
+  Flower2,
   Hand,
+  Hash,
   ImagePlus,
   Keyboard,
   Magnet,
@@ -10,6 +13,7 @@ import {
   Redo2,
   Ruler,
   Scan,
+  Settings,
   Undo2,
   ZoomIn,
   ZoomOut,
@@ -61,6 +65,11 @@ export function EditorToolbar({ project }: { project: Project }) {
   const saveState = useProjectStore((s) => s.saveState)
   const update = useProjectStore((s) => s.update)
   const tool = useUiStore((s) => s.tool)
+  const drawTarget = useUiStore((s) => s.drawing?.target.kind)
+  const bedKind = useUiStore((s) =>
+    s.drawing?.target.kind === 'bed' ? s.drawing.target.bedKind : null,
+  )
+  const labelMode = useUiStore((s) => s.labelMode)
   const snapToGrid = useUiStore((s) => s.snapToGrid)
   const scale = useUiStore((s) => s.viewport.scale)
   const icon = { size: 18, 'aria-hidden': true } as const
@@ -119,8 +128,8 @@ export function EditorToolbar({ project }: { project: Project }) {
           <ToolButton
             label={t('editor.toolbar.drawPlot')}
             shortcut="drawPlot"
-            pressed={tool === 'draw-plot'}
-            onClick={() => editorActions.setTool('draw-plot')}
+            pressed={tool === 'draw' && drawTarget === 'plot'}
+            onClick={() => editorActions.setTool('draw')}
           >
             <PenTool {...icon} />
           </ToolButton>
@@ -138,6 +147,30 @@ export function EditorToolbar({ project }: { project: Project }) {
             onClick={editorActions.toggleSnapToGrid}
           >
             <Magnet {...icon} />
+          </ToolButton>
+        </div>
+        <div className={styles.toolGroup}>
+          <ToolButton
+            label={t('editor.beds.drawOrnamental')}
+            shortcut="drawBed"
+            pressed={bedKind === 'bed-ornamental'}
+            onClick={() => editorActions.drawBed('bed-ornamental')}
+          >
+            <Flower2 {...icon} />
+          </ToolButton>
+          <ToolButton
+            label={t('editor.beds.drawVegetable')}
+            pressed={bedKind === 'bed-vegetable'}
+            onClick={() => editorActions.drawBed('bed-vegetable')}
+          >
+            <Carrot {...icon} />
+          </ToolButton>
+          <ToolButton
+            label={t('editor.placing.labelCodes')}
+            pressed={labelMode === 'code'}
+            onClick={() => editorActions.setLabelMode(labelMode === 'code' ? 'name' : 'code')}
+          >
+            <Hash {...icon} />
           </ToolButton>
         </div>
         <div className={styles.toolGroup}>
@@ -180,6 +213,12 @@ export function EditorToolbar({ project }: { project: Project }) {
           </ToolButton>
         </div>
         <div className={styles.toolGroup}>
+          <ToolButton
+            label={t('editor.settings.title')}
+            onClick={() => useUiStore.getState().setSettingsOpen(true)}
+          >
+            <Settings {...icon} />
+          </ToolButton>
           <ToolButton
             label={t('editor.toolbar.help')}
             shortcut="help"

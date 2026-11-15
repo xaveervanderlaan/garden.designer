@@ -13,6 +13,8 @@ type Options = {
   drawing?: readonly Point[]
   /** A plot corner being dragged: it and its two edges are not snap targets. */
   excludePlotCorner?: number
+  /** A corner of an object (a bed) being dragged: it and its two edges are not snap targets. */
+  excludeObjectCorner?: { id: string; index: number }
 }
 
 /** Corners and edges of everything visible that can be snapped to. */
@@ -40,10 +42,15 @@ export function snapContext(project: Project, options: Options): SnapContext {
     const shape = object.shape
     if (shape.type === 'point') {
       vertices.push(shape.position)
-    } else {
-      vertices.push(...shape.points)
-      edges.push(...edgesOf(shape.points, shape.type === 'polygon'))
+      continue
     }
+    const n = shape.points.length
+    const skip =
+      options.excludeObjectCorner?.id === object.id ? options.excludeObjectCorner.index : undefined
+    shape.points.forEach((p, i) => i !== skip && vertices.push(p))
+    edgesOf(shape.points, shape.type === 'polygon').forEach((edge, i) => {
+      if (skip === undefined || (i !== skip && (i + 1) % n !== skip)) edges.push(edge)
+    })
   }
 
   return {

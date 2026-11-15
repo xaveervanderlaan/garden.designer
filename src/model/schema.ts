@@ -7,7 +7,7 @@ import { z } from 'zod'
  *
  * Changing the shape of stored data? Bump SCHEMA_VERSION and add a migration (see migrations.ts).
  */
-export const SCHEMA_VERSION = 3
+export const SCHEMA_VERSION = 4
 
 export const idSchema = z.string().min(1).max(100)
 
@@ -168,6 +168,11 @@ export const settingsSchema = z.object({
   northAngleDeg: z.number().min(0).lt(360),
   gridSizeM: positiveLength.max(100),
   soil: z.enum(SOIL_TYPES),
+  /**
+   * Two plants overlap (a warning) when their mature circles overlap by more than this fraction
+   * of the smaller plant's diameter. 0.2 = 20 %.
+   */
+  overlapThreshold: z.number().min(0).max(1),
 })
 export type Settings = z.infer<typeof settingsSchema>
 

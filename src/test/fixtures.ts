@@ -74,7 +74,7 @@ export function sampleProjectWithAsset(name = 'Back garden'): {
     {
       id: 'p-1',
       plantId: samplePlant.id,
-      position: { x: 2, y: 2 },
+      position: { x: 4, y: 1.5 }, // inside bed-1
       bedId: 'bed-1',
       plantedYear: 2027,
     },
