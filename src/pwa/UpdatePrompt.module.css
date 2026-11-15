@@ -1,0 +1,25 @@
+.prompt {
+  position: fixed;
+  z-index: 1000;
+  bottom: max(2.5rem, env(safe-area-inset-bottom)); /* clear of the editor's status bar */
+  left: 50%;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+  width: max-content;
+  max-width: calc(100vw - 2rem);
+  padding: 0.5rem 0.5rem 0.5rem 1rem;
+  border: 1px solid var(--color-notice-border);
+  border-radius: 10px;
+  background: var(--color-notice-bg);
+  box-shadow: 0 4px 16px rgb(31 42 31 / 18%);
+  font-size: 0.9375rem;
+  transform: translateX(-50%);
+}
+
+.actions {
+  display: flex;
+  gap: 0.25rem;
+}

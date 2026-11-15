@@ -10,6 +10,11 @@
       "nl": "Nederlands"
     }
   },
+  "appUpdate": {
+    "available": "A new version of the app is available.",
+    "reload": "Reload",
+    "later": "Later"
+  },
   "common": {
     "cancel": "Cancel",
     "save": "Save",

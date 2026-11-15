@@ -7,6 +7,15 @@ Everything is stored locally in the browser; nothing is sent to a server.
 - **Live app:** https://xaveervanderlaan.github.io/garden.designer/
 - The specification and implementation plan are kept in a separate private repository.
 
+## Install and offline use
+
+The app is a PWA: after the first visit it works without a connection (in the garden, say), and it
+can be installed like an app. In Chrome or Edge, use the install icon in the address bar; on Android,
+*Add to Home screen* / *Install app*; on an iPhone or iPad, Safari's *Share → Add to Home Screen*.
+When a new version has been deployed, the app shows "A new version of the app is available" with
+a **Reload** button; it never updates in the middle of your work by itself. Your designs stay in
+the browser's storage either way; export them (`.garden.json`) to move them to another device.
+
 ## Development
 
 Requirements: Node.js 24 (see `.nvmrc`; with nvm: `nvm use`).
@@ -27,6 +36,7 @@ npm run dev          # start the dev server → http://localhost:5173/garden.des
 | `npm test` | Unit and component tests (Vitest) |
 | `npm run e2e` | End-to-end tests (Playwright, against the production build) |
 | `npm run plants:review` | Review tables of the built-in plant data (written to the private docs folder) |
+| `npm run icons` | Render the app icons in `public/icons/` (after changing their design) |
 
 First-time e2e setup: `npx playwright install chromium`. On Arch Linux (WSL) Chromium also needs
 these system packages:

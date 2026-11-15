@@ -17,7 +17,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "e2e": "playwright test",
-    "plants:review": "node scripts/plants-review.ts"
+    "plants:review": "node scripts/plants-review.ts",
+    "icons": "node scripts/render-icons.ts"
   },
   "dependencies": {
     "dexie": "^4.4.7",
@@ -50,6 +51,7 @@
     "prettier": "^3.9.10",
     "typescript": "~7.0.2",
     "vite": "^8.3.5",
+    "vite-plugin-pwa": "^2.0.0",
     "vitest": "^5.0.5"
   }
 }

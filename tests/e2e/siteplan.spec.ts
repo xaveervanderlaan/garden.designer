@@ -258,12 +258,14 @@ test('imports a site plan, calibrates it with a 10 m line and traces the plot', 
 
 test('imports the chosen page of a PDF, rendered locally without outside requests', async ({
   page,
+  baseURL,
 }) => {
   const errors = collectErrors(page)
   const outside: string[] = []
+  const app = `${new URL(baseURL!).origin}/`
   page.on('request', (request) => {
     const url = request.url()
-    if (!/^(http:\/\/localhost:4173\/|data:|blob:)/.test(url)) outside.push(url)
+    if (!url.startsWith(app) && !/^(data|blob):/.test(url)) outside.push(url)
   })
   await newDesign(page)
 
