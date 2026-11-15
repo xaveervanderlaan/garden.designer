@@ -30,7 +30,7 @@ npx vitest run -t "switches to Dutch"       # tests matching a name
 npx playwright test tests/e2e/smoke.spec.ts -g "Dutch browser"
 ```
 
-- Playwright runs against the **production build**: its `webServer` runs `npm run build && npm run preview` on port 4173 under `/garden.designer/` (reuses a running server locally).
+- Playwright runs against the **production build**: its `webServer` runs `npm run build && npm run preview` on port 4173 under `/garden.designer/` (reuses a running server locally). Set `E2E_PORT` to use another port, e.g. when several git worktrees run e2e tests at the same time (a reused server on the same port would serve another checkout's build).
 - This machine is Arch Linux on WSL; Playwright's `install-deps` doesn't support it. The Chromium system packages are listed in README.md (pacman).
 - Definition of done for a milestone: lint, typecheck, test, build and e2e all pass; every UI string exists in EN and NL; no console errors (e2e tests collect them).
 - Add dependencies with a supply-chain cool-down: `npm install --before=<date at least 2 weeks ago> <pkg>`.

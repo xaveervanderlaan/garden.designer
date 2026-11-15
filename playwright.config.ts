@@ -1,6 +1,7 @@
 import { defineConfig, devices } from '@playwright/test'
 
-const PORT = 4173
+// E2E_PORT lets several checkouts (git worktrees) run their e2e tests side by side.
+const PORT = Number(process.env.E2E_PORT) || 4173
 const BASE_URL = `http://localhost:${PORT}/garden.designer/`
 const isCI = !!process.env.CI
 

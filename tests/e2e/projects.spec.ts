@@ -1,5 +1,6 @@
 import { readFile, writeFile } from 'node:fs/promises'
 import { type Page, expect, test } from '@playwright/test'
+import { SCHEMA_VERSION } from '../../src/model/schema.ts'
 
 function collectErrors(page: Page): string[] {
   const errors: string[] = []
@@ -61,7 +62,7 @@ test('design lifecycle: create, edit, rename, duplicate, export, delete, import'
   await download.saveAs(exportPath)
   expect(JSON.parse(await readFile(exportPath, 'utf8'))).toMatchObject({
     format: 'garden-designer',
-    schemaVersion: 3,
+    schemaVersion: SCHEMA_VERSION,
     project: { name: 'Voortuin', settings: { soil: 'sand' } },
   })
 
