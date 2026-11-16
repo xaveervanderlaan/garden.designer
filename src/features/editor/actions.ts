@@ -5,6 +5,7 @@ import {
   projectBounds,
 } from '../../geometry/bounds'
 import { worldToImage } from '../../geometry/calibration'
+import { rectangleFromCorners } from '../../geometry/frame'
 import { rowPositions } from '../../geometry/planting'
 import { angleDeg, distance, pointAt, roundPoint } from '../../geometry/polygon'
 import { fitBounds, screenToWorld, zoomAt } from '../../geometry/viewport'
@@ -27,9 +28,9 @@ import {
   bedLayer,
   bedsOf,
   findBed,
-  removeBedCorner,
   setBedKind,
 } from '../../model/beds'
+import { type ReorderDirection, reorderItems } from '../../model/drawOrder'
 import {
   type Clipboard,
   copyItems,
@@ -41,9 +42,24 @@ import {
   moveItems,
   pasteItems,
   setLayerState,
+  updateObject,
   updatePlanting,
   validSelection,
 } from '../../model/edit'
+import { OBJECT_PRESETS, editedByCorners, objectLayer } from '../../model/objectKinds'
+import {
+  MIN_POINTS,
+  addObject,
+  defaultFootprint,
+  findObject,
+  removeObjectCorner,
+  resizeObject,
+  rotateObjectTo,
+  setObjectKind,
+  setObjectStatus,
+  setPolylineThickness,
+  shapeForKind,
+} from '../../model/objects'
 import { findPlant, plantingLayer } from '../../model/plants'
 import {
   addPlantings,
@@ -58,7 +74,14 @@ import {
   removePlotCorner,
   setPlotOutline,
 } from '../../model/plot'
-import type { LayerId, Point, Project, Settings } from '../../model/schema'
+import type {
+  LayerId,
+  ObjectKind,
+  ObjectStatus,
+  Point,
+  Project,
+  Settings,
+} from '../../model/schema'
 import { useProjectStore } from '../../store/projectStore'
 import { type DrawTarget, type LabelMode, type Tool, useUiStore } from '../../store/uiStore'
 import { pickSitePlanFile } from './siteplan/picker'
@@ -92,11 +115,23 @@ export function currentSelection(): string[] {
 const selectedItems = () =>
   currentSelection().filter((id) => id !== PLOT_ID && id !== BACKGROUND_ID)
 
-/** The bed id when exactly one bed is selected (then its corners can be edited). */
-export function selectedBed(): string | undefined {
+/**
+ * The object whose corners can be edited now: the only selected item, when it is a bed (always
+ * edited by its corners) or an outline or line switched to corner editing.
+ */
+export function cornerEditedObject(): string | undefined {
   const project = currentProject()
   const ids = currentSelection()
-  return project && ids.length === 1 && findBed(project, ids[0]!) ? ids[0] : undefined
+  const object = project && ids.length === 1 ? findObject(project, ids[0]!) : undefined
+  if (!object || object.shape.type === 'point') return undefined
+  return editedByCorners(object.kind) || ui().editingCorners === object.id ? object.id : undefined
+}
+
+/** The only selected item when it is an object, or undefined. */
+function singleObject() {
+  const project = currentProject()
+  const ids = selectedItems()
+  return project && ids.length === 1 ? findObject(project, ids[0]!) : undefined
 }
 
 const sitePlanSelected = () => {
@@ -138,10 +173,25 @@ function plant(plantId: string, positions: readonly Point[]): string[] {
   return ids
 }
 
-/** Fewest corners for what is being drawn: 3 for an outline, 2 for a row (a line). */
-export function minDrawingPoints(target: DrawTarget): number {
-  return target.kind === 'row' ? 2 : MIN_PLOT_CORNERS
+/** What a drawing makes: a closed outline, an open line or a single point. */
+export function drawingShape(target: DrawTarget): 'polygon' | 'polyline' | 'point' {
+  if (target.kind === 'row') return 'polyline'
+  if (target.kind === 'object') return OBJECT_PRESETS[target.objectKind].shape
+  return 'polygon'
 }
+
+/** Fewest corners for what is being drawn: 3 for an outline, 2 for a line, 1 for a symbol. */
+export function minDrawingPoints(target: DrawTarget): number {
+  return target.kind === 'plot' ? MIN_PLOT_CORNERS : MIN_POINTS[drawingShape(target)]
+}
+
+/** Outlines (plot, beds, polygon objects) can also be drawn by dragging a rectangle. */
+export function drawsRectangles(target: DrawTarget): boolean {
+  return target.kind === 'bed' || (target.kind === 'object' && drawingShape(target) === 'polygon')
+}
+
+/** Rectangles dragged smaller than this (either side) count as a click. */
+export const MIN_RECTANGLE_M = 0.05
 
 /** The bed to fill when filling starts: the selected bed, or the design's only bed. */
 function bedToFill(project: Project): string | null {
@@ -224,6 +274,7 @@ export const editorActions = {
    */
   escape() {
     if (ui().drawing) editorActions.cancelDrawing()
+    else if (ui().editingCorners && currentSelection().length > 0) ui().setEditingCorners(null)
     else if (ui().calibration) editorActions.cancelCalibration()
     else if (ui().stamp || ui().fill) editorActions.stopPlacing()
     else editorActions.clearSelection()
@@ -239,9 +290,9 @@ export const editorActions = {
       editorActions.removeCorner(activeCorner)
       return
     }
-    const bed = project && activeCorner !== null ? selectedBed() : undefined
-    if (bed && activeCorner !== null) {
-      editorActions.removeBedCorner(bed, activeCorner)
+    const cornerObject = project && activeCorner !== null ? cornerEditedObject() : undefined
+    if (cornerObject && activeCorner !== null) {
+      editorActions.removeObjectCorner(cornerObject, activeCorner)
       return
     }
     if (sitePlanSelected()) {
@@ -338,11 +389,19 @@ export const editorActions = {
     if (!project) return
     if (target.kind === 'bed') showLayer(bedLayer(target.bedKind))
     if (target.kind === 'row') showLayer(layerOfPlant(project, target.plantId))
+    if (target.kind === 'object') {
+      const kind = target.objectKind
+      showLayer(objectLayer(kind, OBJECT_PRESETS[kind].status))
+    }
     ui().startDrawing(target)
   },
   /** Starts drawing a bed of the given kind. */
   drawBed(kind: BedKind) {
     editorActions.startDrawing({ kind: 'bed', bedKind: kind })
+  },
+  /** Starts drawing an object of a kind (an outline, a line or a symbol, per its preset). */
+  drawObject(kind: ObjectKind) {
+    editorActions.startDrawing({ kind: 'object', objectKind: kind })
   },
   /** Starts drawing the line for a row of a plant (a hedge, an edging). */
   drawRow(plantId: string) {
@@ -352,15 +411,20 @@ export const editorActions = {
   },
   /**
    * Adds a corner; clicking the first corner again (with 3+ corners) finishes an outline. A row is
-   * a line, so it doesn't close.
+   * a line, so it doesn't close. A symbol is placed (and finished) by its one point.
    */
   addDrawingPoint(point: Point) {
     const drawing = ui().drawing
     if (!drawing) return
     const first = drawing.points[0]
     const last = drawing.points.at(-1)
+    if (drawingShape(drawing.target) === 'point') {
+      ui().setDrawing({ ...drawing, points: [roundPoint(point)] })
+      editorActions.finishDrawing()
+      return
+    }
     if (
-      drawing.target.kind !== 'row' &&
+      drawingShape(drawing.target) === 'polygon' &&
       first &&
       drawing.points.length >= MIN_PLOT_CORNERS &&
       distance(first, point) < 1e-6
@@ -401,8 +465,31 @@ export const editorActions = {
     }
   },
   /**
-   * Finishes the drawing (one undo step): the plot outline, a new bed (then selected) or a row of
-   * plants (then selected). False when there aren't enough corners yet.
+   * Draws a rectangle with corners a and b (dragged on the plan) and finishes it, for a bed or an
+   * outline object. False when it's too small or nothing is being drawn that can be a rectangle.
+   */
+  drawRectangle(a: Point, b: Point): boolean {
+    const drawing = ui().drawing
+    if (!drawing || !drawsRectangles(drawing.target)) return false
+    if (Math.abs(a.x - b.x) < MIN_RECTANGLE_M || Math.abs(a.y - b.y) < MIN_RECTANGLE_M) return false
+    ui().setDrawing({ ...drawing, points: rectangleFromCorners(a, b).map(roundPoint) })
+    return editorActions.finishDrawing()
+  },
+  /**
+   * Places the object being drawn at its preset's size, in the middle of the view (an outline
+   * object only). Returns false if it has no default size.
+   */
+  placeDefaultSize(): boolean {
+    const drawing = ui().drawing
+    if (drawing?.target.kind !== 'object') return false
+    const footprint = defaultFootprint(drawing.target.objectKind, viewCentre())
+    if (!footprint) return false
+    ui().setDrawing({ ...drawing, points: footprint.map(roundPoint) })
+    return editorActions.finishDrawing()
+  },
+  /**
+   * Finishes the drawing (one undo step): the plot outline, a new bed or object (then selected) or
+   * a row of plants (then selected). False when there aren't enough corners yet.
    */
   finishDrawing(): boolean {
     const drawing = ui().drawing
@@ -430,6 +517,19 @@ export const editorActions = {
         ui().setSelection(ids)
         break
       }
+      case 'object': {
+        const shape = shapeForKind(target.objectKind, points)
+        if (!shape) return false
+        let id = ''
+        useProjectStore.getState().update((p) => {
+          const result = addObject(p, target.objectKind, shape)
+          id = result.id
+          return result.project
+        })
+        ui().setTool('select')
+        ui().setSelection([id])
+        break
+      }
     }
     return true
   },
@@ -439,13 +539,58 @@ export const editorActions = {
 
   // --- Beds --------------------------------------------------------------------------------------
 
-  removeBedCorner(id: string, index: number) {
-    useProjectStore.getState().update((p) => removeBedCorner(p, id, index))
+  /** Removes a corner of a bed or another object (refused below 3 corners, or 2 for a line). */
+  removeObjectCorner(id: string, index: number) {
+    useProjectStore.getState().update((p) => removeObjectCorner(p, id, index))
     ui().setActiveCorner(null)
   },
   setBedKind(id: string, kind: BedKind) {
     showLayer(bedLayer(kind))
     useProjectStore.getState().update((p) => setBedKind(p, id, kind))
+  },
+
+  // --- Objects -----------------------------------------------------------------------------------
+
+  /** Marks objects as existing or new; the layer they move to is shown. */
+  setObjectStatus(ids: readonly string[], status: ObjectStatus) {
+    const project = currentProject()
+    if (!project) return
+    for (const object of project.objects) {
+      if (ids.includes(object.id)) showLayer(objectLayer(object.kind, status))
+    }
+    useProjectStore.getState().update((p) => setObjectStatus(p, new Set(ids), status))
+  },
+  setObjectKind(id: string, kind: ObjectKind) {
+    const object = currentProject() && findObject(currentProject()!, id)
+    if (!object) return
+    showLayer(objectLayer(kind, object.status))
+    useProjectStore.getState().update((p) => setObjectKind(p, id, kind))
+  },
+  setObjectHeight(id: string, heightM: number) {
+    if (!(heightM > 0)) return
+    useProjectStore.getState().update((p) => updateObject(p, id, { heightM }))
+  },
+  resizeObject(id: string, size: { widthM?: number; depthM?: number }) {
+    useProjectStore.getState().update((p) => resizeObject(p, id, size))
+  },
+  /** Turns an object to a rotation in degrees, map-style (positive = anticlockwise). */
+  rotateObject(id: string, degrees: number) {
+    useProjectStore.getState().update((p) => rotateObjectTo(p, id, degrees))
+  },
+  setThickness(id: string, thicknessM: number) {
+    useProjectStore.getState().update((p) => setPolylineThickness(p, id, thicknessM))
+  },
+  /** Switches the selected outline or line between moving it as a whole and editing its corners. */
+  toggleCornerEditing() {
+    const object = singleObject()
+    if (!object || object.shape.type === 'point' || editedByCorners(object.kind)) return
+    ui().setEditingCorners(ui().editingCorners === object.id ? null : object.id)
+  },
+  /** Brings the selected items forward or sends them back, within their drawing band. */
+  reorder(direction: ReorderDirection) {
+    const ids = selectedItems()
+    if (ids.length === 0) return
+    useProjectStore.getState().update((p) => reorderItems(p, new Set(ids), direction))
   },
 
   // --- Placing plants ----------------------------------------------------------------------------
@@ -514,6 +659,26 @@ export const editorActions = {
   /** Changes the species of the given plantings (one undo step). */
   swapSpecies(ids: readonly string[], plantId: string) {
     useProjectStore.getState().update((p) => swapSpecies(p, new Set(ids), plantId))
+  },
+  /** Marks plantings as already there or new (absent = new); their layer is shown. */
+  setPlantingStatus(ids: readonly string[], status: ObjectStatus) {
+    const project = currentProject()
+    if (!project) return
+    const set = new Set(ids)
+    for (const planting of project.plantings) {
+      if (set.has(planting.id)) {
+        showLayer(
+          plantingLayer(project, { ...planting, status: status === 'new' ? undefined : status }),
+        )
+      }
+    }
+    useProjectStore.getState().update((p) => {
+      let next = p
+      for (const id of set) {
+        next = updatePlanting(next, id, { status: status === 'new' ? undefined : status })
+      }
+      return next
+    })
   },
   setPlantedYear(ids: readonly string[], year: number) {
     const set = new Set(ids)

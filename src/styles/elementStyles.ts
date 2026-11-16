@@ -3,7 +3,7 @@ import type { ObjectKind } from '../model/schema'
 /**
  * How each kind of element looks on the plan (SPEC §5). One table for the canvas, legend and PDF
  * export: fill, outline and (optionally) a pattern per kind. Plant symbols per category are in
- * plantSymbols.ts. More patterns follow in M8/M9.
+ * plantSymbols.ts. M9 adds the surface, boundary and symbol looks.
  */
 export type ElementStyle = {
   fill: string
@@ -13,10 +13,33 @@ export type ElementStyle = {
   pattern?: ElementPattern
 }
 
-/** Parallel lines inside the shape (e.g. the rows of a vegetable bed), `spacingM` apart. */
-export type ElementPattern = { kind: 'rows'; spacingM: number; color: string }
+/**
+ * A pattern inside an outline, drawn in the object's own frame (so it turns with the object).
+ * Spacings are in metres. Except for `rows`, a pattern that would be denser than
+ * PATTERN_MIN_SPACING_PX on screen is drawn at 2×, 4×, … its spacing, so it stays readable when
+ * zoomed out and at print scale; line widths are in screen pixels.
+ * - `rows`: lines along the longest edge (a vegetable bed's rows); left out when too dense.
+ * - `hatch`: parallel lines at `angleDeg` (clockwise from the frame's x axis), e.g. a house.
+ * - `grid`: lines along both axes, from a corner (glass panes, tiles).
+ * - `beams`: lines across the short side (a pergola's open beams).
+ * - `cross`: the two diagonals of the frame box (an open roof, e.g. a carport).
+ */
+export type ElementPattern =
+  | { kind: 'rows'; spacingM: number; color: string }
+  | { kind: 'hatch'; spacingM: number; angleDeg: number; color: string; widthPx?: number }
+  | { kind: 'grid'; spacingM: number; color: string; widthPx?: number }
+  | { kind: 'beams'; spacingM: number; color: string; widthPx?: number }
+  | { kind: 'cross'; color: string; widthPx?: number }
 
 export const DEFAULT_STROKE_PX = 1.25
+/** Pattern lines closer together than this on screen are thinned out (see ElementPattern). */
+export const PATTERN_MIN_SPACING_PX = 6
+
+/**
+ * Objects that are already there (status 'existing') are drawn muted: fill and pattern see-through,
+ * outline dashed (dash and gap in screen pixels).
+ */
+export const EXISTING_STYLE = { fillOpacity: 0.5, dashPx: [6, 4] as const }
 
 export const SELECTION_COLOR = '#2f80d1'
 export const WARNING_COLOR = '#b3261e'
@@ -26,12 +49,45 @@ export const PLOT_STYLE = { stroke: '#253325', fill: 'rgba(255, 255, 255, 0.6)' 
 export const PLANTING_STYLE: ElementStyle = { fill: 'rgba(110, 168, 90, 0.85)', stroke: '#3f6f33' }
 
 export const OBJECT_STYLES: Record<ObjectKind, ElementStyle> = {
-  house: { fill: '#8a8d88', stroke: '#3e413c' },
-  shed: { fill: '#b3b6af', stroke: '#5c6058' },
-  greenhouse: { fill: '#dfeee6', stroke: '#6f8f7e' },
-  pergola: { fill: 'rgba(181, 154, 120, 0.35)', stroke: '#8a6a45' },
-  carport: { fill: '#c4c6c0', stroke: '#6f736b' },
-  'raised-bed': { fill: '#b88b5e', stroke: '#6e4c2b' },
+  // Buildings: dark grey with a diagonal hatch. Shed, greenhouse and pergola lighter: the
+  // greenhouse with a glass grid, the pergola with open beams over what grows under it; a carport
+  // is an open roof (crossed). A raised bed: darker soil brown with rows and a timber edge.
+  house: {
+    fill: '#76796f',
+    stroke: '#2e302b',
+    strokeWidthPx: 2,
+    pattern: { kind: 'hatch', spacingM: 0.6, angleDeg: 45, color: 'rgba(35, 37, 32, 0.55)' },
+  },
+  shed: {
+    fill: '#b9bcb4',
+    stroke: '#585c54',
+    strokeWidthPx: 1.75,
+    pattern: { kind: 'hatch', spacingM: 0.4, angleDeg: 45, color: 'rgba(70, 74, 66, 0.4)' },
+  },
+  greenhouse: {
+    fill: '#e4efea',
+    stroke: '#5f8070',
+    strokeWidthPx: 1.75,
+    pattern: { kind: 'grid', spacingM: 0.6, color: 'rgba(95, 128, 112, 0.75)' },
+  },
+  pergola: {
+    fill: 'rgba(196, 170, 134, 0.18)',
+    stroke: '#7d5f3d',
+    strokeWidthPx: 3,
+    pattern: { kind: 'beams', spacingM: 0.5, color: '#8d6d48', widthPx: 2 },
+  },
+  carport: {
+    fill: 'rgba(196, 198, 192, 0.6)',
+    stroke: '#5f635b',
+    strokeWidthPx: 1.75,
+    pattern: { kind: 'cross', color: 'rgba(95, 99, 91, 0.7)' },
+  },
+  'raised-bed': {
+    fill: '#a8794d',
+    stroke: '#5a3b1e',
+    strokeWidthPx: 3,
+    pattern: { kind: 'rows', spacingM: 0.4, color: 'rgba(70, 44, 20, 0.45)' },
+  },
   terrace: { fill: '#d6d7d1', stroke: '#7d8178' },
   path: { fill: '#e6dcc6', stroke: '#a39276' },
   driveway: { fill: '#cfd0ca', stroke: '#7d8178' },

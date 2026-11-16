@@ -575,3 +575,31 @@
 .fieldHint {
   margin: -0.5rem 0 0.75rem;
 }
+
+/* Objects (M8) */
+.spacer {
+  height: 0.75rem;
+}
+
+.orderRow {
+  display: flex;
+  align-items: center;
+  gap: 0.125rem;
+  margin: 0.75rem 0 0.25rem;
+}
+
+.orderLabel {
+  flex: 1;
+  color: var(--color-text-muted);
+  font-size: 0.875rem;
+}
+
+.iconButton:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.iconButton:disabled:hover {
+  background: transparent;
+  color: var(--color-text-muted);
+}

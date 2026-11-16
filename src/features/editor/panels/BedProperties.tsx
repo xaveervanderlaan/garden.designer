@@ -13,6 +13,7 @@ import {
   setBedEdgeLength,
 } from '../../../model/beds'
 import { updateObject } from '../../../model/edit'
+import { editedByCorners } from '../../../model/objectKinds'
 import { MIN_PLOT_CORNERS, cornerLabel, hasPlot } from '../../../model/plot'
 import type { Project } from '../../../model/schema'
 import { useProjectStore } from '../../../store/projectStore'
@@ -22,7 +23,11 @@ import { cx } from '../../../styles/cx'
 import { editorActions } from '../actions'
 import { shortcutLabel } from '../shortcuts'
 import { EdgeList } from './EdgeList'
+import { StatusField } from './ObjectProperties'
 import styles from './panels.module.css'
+
+/** Bed types drawn and edited like M6's beds (a raised bed is edited like a structure). */
+const FLAT_BED_KINDS = BED_KINDS.filter(editedByCorners)
 
 /** A selected bed: kind, area, plants in it, label and notes, and its edges (editable). */
 export function BedProperties({ project, bed }: { project: Project; bed: Bed }) {
@@ -50,12 +55,13 @@ export function BedProperties({ project, bed }: { project: Project; bed: Bed }) 
         data-testid="item-kind"
         onChange={(e) => editorActions.setBedKind(bed.id, e.target.value as BedKind)}
       >
-        {BED_KINDS.map((kind) => (
+        {FLAT_BED_KINDS.map((kind) => (
           <option key={kind} value={kind}>
             {t(`editor.objectKinds.${kind}`)}
           </option>
         ))}
       </select>
+      <StatusField ids={[bed.id]} status={bed.status} />
 
       <dl className={styles.facts}>
         <dt>{t('editor.plot.area')}</dt>
@@ -110,7 +116,7 @@ export function BedProperties({ project, bed }: { project: Project; bed: Bed }) 
             className={cx(controls.button, controls.small, styles.deleteButton)}
             disabled={n <= MIN_PLOT_CORNERS}
             title={n <= MIN_PLOT_CORNERS ? t('editor.beds.minCorners') : undefined}
-            onClick={() => editorActions.removeBedCorner(bed.id, activeCorner)}
+            onClick={() => editorActions.removeObjectCorner(bed.id, activeCorner)}
           >
             <Trash2 size={16} aria-hidden />
             {t('editor.plot.removeCorner', { corner: cornerLabel(activeCorner) })}
@@ -127,7 +133,7 @@ export function BedProperties({ project, bed }: { project: Project; bed: Bed }) 
 export function BedStart({ project }: { project: Project }) {
   const { t } = useTranslation()
   if (!hasPlot(project)) return null
-  const kinds = BED_KINDS.filter((kind) => !project.layers[bedLayer(kind)].locked)
+  const kinds = FLAT_BED_KINDS.filter((kind) => !project.layers[bedLayer(kind)].locked)
   if (kinds.length === 0) return null
   return (
     <div className={styles.buttonColumn}>

@@ -330,7 +330,13 @@
       "drawPlot": "Perceelgrens tekenen",
       "rectanglePlot": "Rechthoekig perceel",
       "snapToGrid": "Uitlijnen op raster aan/uit",
-      "drawBed": "Border tekenen"
+      "drawBed": "Border tekenen",
+      "addStructure": "Bouwwerk toevoegen",
+      "editCorners": "Hoeken van de selectie bewerken aan/uit",
+      "bringForward": "Naar voren",
+      "sendBackward": "Naar achteren",
+      "bringToFront": "Helemaal naar voren",
+      "sendToBack": "Helemaal naar achteren"
     },
     "drawing": {
       "hintStart": "Klik op de plattegrond om de eerste hoek te plaatsen.",
@@ -427,11 +433,13 @@
       "drawVegetable": "Moestuinbed tekenen",
       "drawing": {
         "bed-ornamental": "Border:",
-        "bed-vegetable": "Moestuinbed:"
+        "bed-vegetable": "Moestuinbed:",
+        "raised-bed": "Verhoogde bak:"
       },
       "defaultName": {
         "bed-ornamental": "Border {{number}}",
-        "bed-vegetable": "Moestuinbed {{number}}"
+        "bed-vegetable": "Moestuinbed {{number}}",
+        "raised-bed": "Verhoogde bak {{number}}"
       },
       "needMoreCorners": "Een border of bed heeft minstens 3 hoeken nodig.",
       "minCorners": "Een border of bed heeft minstens 3 hoeken nodig.",
@@ -559,6 +567,51 @@
       "invalidGrid": "Vul een rastermaat in tussen 0,01 en 100 m.",
       "invalidOverlap": "Vul een percentage in tussen 0 en 100.",
       "overlapHint": "Twee planten krijgen een waarschuwing als ze volgroeid meer dan dit deel van de breedte van de kleinste plant overlappen."
+    },
+    "objects": {
+      "add": "Bouwwerk toevoegen",
+      "menu": "Bouwwerken",
+      "drawing": {
+        "title": "{{kind}}:",
+        "hintStartOutline": "sleep om een rechthoek te tekenen, of klik de hoeken één voor één.",
+        "hintStartLine": "klik op het begin van de lijn.",
+        "hintStartPoint": "klik op de plattegrond om het te plaatsen.",
+        "hintFinishLine": "Voeg meer punten toe, of druk op Enter om af te ronden.",
+        "defaultSize": "Plaatsen op {{size}}",
+        "needMoreCorners": "Een omtrek heeft minstens 3 hoeken nodig.",
+        "needMorePoints": "Een lijn heeft een begin- en een eindpunt nodig."
+      },
+      "status": "Status",
+      "statuses": {
+        "existing": "Bestaand",
+        "new": "Nieuw"
+      },
+      "statusHint": "Wat er al is, wordt lichter getekend, op de laag ‘Bestaande situatie’.",
+      "plantStatusHint": "Een bestaande plant (zoals de boom van de buren) krijgt geen waarschuwing omdat hij buiten het perceel staat of niet bij de grond past.",
+      "height": "Hoogte (m)",
+      "heightHint": "Voor de schaduw die het werpt.",
+      "size": "Maat",
+      "sizeValue": "{{width}} × {{depth}} m",
+      "width": "Breedte (m)",
+      "depth": "Diepte (m)",
+      "rotation": "Draaiing (°)",
+      "rotationHint": "Van −45° tot 45°; positief draait tegen de klok in.",
+      "thickness": "Dikte (m)",
+      "length": "Lengte",
+      "invalidHeight": "Vul een hoogte groter dan 0 in, tot 300 m.",
+      "editCorners": "Hoeken bewerken",
+      "stopEditingCorners": "Klaar met de hoeken",
+      "transformHint": "Sleep om het te verplaatsen. Met de handgrepen draai je het of verander je de maat.",
+      "cornerHint": "Sleep een hoek om hem te verplaatsen, of klik erop om hem te selecteren (Delete verwijdert hem). Sleep of klik op het bolletje op een zijde om een hoek toe te voegen.",
+      "minCorners": "Een omtrek heeft minstens 3 hoeken nodig.",
+      "minPoints": "Een lijn heeft minstens 2 punten nodig.",
+      "order": {
+        "label": "Volgorde",
+        "forward": "Naar voren",
+        "backward": "Naar achteren",
+        "front": "Helemaal naar voren",
+        "back": "Helemaal naar achteren"
+      }
     }
   },
   "plants": {

@@ -30,6 +30,7 @@ import controls from '../../styles/controls.module.css'
 import { cx } from '../../styles/cx'
 import { editorActions } from './actions'
 import styles from './EditorPage.module.css'
+import { ObjectMenu } from './objects/ObjectMenu'
 import { type ShortcutId, shortcutLabel } from './shortcuts'
 
 type ToolButtonProps = {
@@ -175,6 +176,7 @@ export function EditorToolbar({ project }: { project: Project }) {
           >
             <Carrot {...icon} />
           </ToolButton>
+          <ObjectMenu />
           <ToolButton
             label={t('editor.placing.labelCodes')}
             pressed={labelMode === 'code'}

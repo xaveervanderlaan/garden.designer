@@ -41,6 +41,21 @@ export const MIGRATIONS: Readonly<Record<number, Migration>> = {
       ? { overlapThreshold: 0.2, ...project.settings }
       : project.settings,
   }),
+  /**
+   * v5 (M8): every object is either part of the existing situation or new. Before M8 only beds
+   * could be drawn, so objects become 'new', except anything already on the "existing" layer.
+   * Plantings get no status (absent = new).
+   */
+  4: (project) => ({
+    ...project,
+    objects: Array.isArray(project.objects)
+      ? project.objects.map((object) =>
+          isRecord(object)
+            ? { status: object.layer === 'existing' ? 'existing' : 'new', ...object }
+            : object,
+        )
+      : project.objects,
+  }),
 }
 
 const isOneOf = <T extends string>(list: readonly T[], value: unknown): value is T =>

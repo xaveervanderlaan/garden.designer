@@ -38,3 +38,22 @@ export function normaliseDegrees(degrees: number): number {
   const d = degrees % 360
   return d < 0 ? d + 360 : d + 0
 }
+
+/** The transform that applies `second` after `first` (second · first). */
+export function compose(second: Matrix, first: Matrix): Matrix {
+  const [a1, b1, c1, d1, e1, f1] = second
+  const [a2, b2, c2, d2, e2, f2] = first
+  return [
+    a1 * a2 + c1 * b2,
+    b1 * a2 + d1 * b2,
+    a1 * c2 + c1 * d2,
+    b1 * c2 + d1 * d2,
+    a1 * e2 + c1 * f2 + e1,
+    b1 * e2 + d1 * f2 + f1,
+  ]
+}
+
+/** Scaling by (sx, sy) about the origin. */
+export function scaling(sx: number, sy: number): Matrix {
+  return [sx, 0, 0, sy, 0, 0]
+}

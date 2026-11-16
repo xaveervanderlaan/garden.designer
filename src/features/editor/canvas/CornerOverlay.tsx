@@ -1,7 +1,6 @@
 import type { Viewport } from '../../../geometry/viewport'
-import type { Bed } from '../../../model/beds'
-import { insertBedCorner, moveBedCorner } from '../../../model/beds'
-import type { Point, Project } from '../../../model/schema'
+import { insertObjectCorner, moveObjectCorner } from '../../../model/objects'
+import type { GardenObject, Point, Project } from '../../../model/schema'
 import { useProjectStore } from '../../../store/projectStore'
 import { useUiStore } from '../../../store/uiStore'
 import { OutlineOverlay } from './OutlineOverlay'
@@ -9,7 +8,8 @@ import { snapContext } from './snapTargets'
 
 type Props = {
   project: Project
-  bed: Bed
+  /** A bed, or an outline or line object whose corners are being edited. */
+  object: GardenObject & { shape: { type: 'polygon' | 'polyline' } }
   /** The outline to show (a draft while a corner is being dragged). */
   outline: readonly Point[]
   viewport: Viewport
@@ -18,24 +18,25 @@ type Props = {
   onDraft: (outline: Point[] | null) => void
 }
 
-/** A selected bed: its edge lengths, and handles to move and add corners (like the plot). */
-export function BedOverlay({ project, bed, ...props }: Props) {
+/** An object's edge lengths, and handles to move and add corners (like the plot). */
+export function CornerOverlay({ project, object, ...props }: Props) {
   const update = useProjectStore((s) => s.update)
   return (
     <OutlineOverlay
       {...props}
-      committed={bed.shape.points}
+      committed={object.shape.points}
+      closed={object.shape.type === 'polygon'}
       editing
       snapContext={(draggedCorner) =>
         snapContext(project, {
           scale: props.viewport.scale,
           snapToGrid: useUiStore.getState().snapToGrid,
           excludeObjectCorner:
-            draggedCorner === undefined ? undefined : { id: bed.id, index: draggedCorner },
+            draggedCorner === undefined ? undefined : { id: object.id, index: draggedCorner },
         })
       }
-      onMoveCorner={(i, at) => update((p) => moveBedCorner(p, bed.id, i, at))}
-      onInsertCorner={(i, at) => update((p) => insertBedCorner(p, bed.id, i, at))}
+      onMoveCorner={(i, at) => update((p) => moveObjectCorner(p, object.id, i, at))}
+      onInsertCorner={(i, at) => update((p) => insertObjectCorner(p, object.id, i, at))}
     />
   )
 }

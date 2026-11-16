@@ -106,11 +106,16 @@ export function plantingWarnings(project: Project, options: WarningOptions = {})
   const bothHedges = (a: Circle, b: Circle) =>
     categories.get(a.id) === 'hedge' && categories.get(b.id) === 'hedge'
   const order = new Map(project.plantings.map((p, i) => [p.id, i]))
+  const existing = new Set(
+    project.plantings.filter((p) => p.status === 'existing').map((p) => p.id),
+  )
   for (const { a, b, fraction } of findOverlaps(
     circles,
     project.settings.overlapThreshold,
     bothHedges,
   )) {
+    // Two plants that are both already there (e.g. the neighbour's trees) are no concern.
+    if (existing.has(a.id) && existing.has(b.id)) continue
     // Report each pair in design order, so the result doesn't depend on the sweep.
     const [first, second] = order.get(a.id)! < order.get(b.id)! ? [a, b] : [b, a]
     warnings.push({ kind: 'overlap', plantingId: first.id, otherId: second.id, fraction })
@@ -119,6 +124,8 @@ export function plantingWarnings(project: Project, options: WarningOptions = {})
   const plot = hasPlot(project) ? project.plot.outline : null
   const soil = project.settings.soil
   for (const planting of project.plantings) {
+    // Something already there may be anywhere (the neighbour's tree) and evidently grows there.
+    if (existing.has(planting.id)) continue
     if (plot && !pointInPolygon(planting.position, plot)) {
       warnings.push({ kind: 'outside-plot', plantingId: planting.id })
     }

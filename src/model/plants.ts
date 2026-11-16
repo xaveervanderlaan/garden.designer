@@ -49,8 +49,12 @@ export function plantingRadiusM(project: Project, planting: Planting): number {
   return plantRadiusM(findPlant(project, planting.plantId))
 }
 
-/** Vegetables and herbs live on the vegetables layer; everything else on beds & plants. */
+/**
+ * Vegetables and herbs live on the vegetables layer; everything else on beds & plants. A plant
+ * that is already there (status 'existing') is on the existing situation layer.
+ */
 export function plantingLayer(project: Project, planting: Planting): LayerId {
+  if (planting.status === 'existing') return 'existing'
   const category = findPlant(project, planting.plantId)?.category
   return category === 'vegetable' || category === 'herb' ? 'vegetables' : 'plants'
 }

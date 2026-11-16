@@ -279,12 +279,14 @@ export function perfProject(plants: readonly Plant[], options: PerfProjectOption
       kind: 'bed-ornamental',
       shape: { type: 'polygon', points: points.map(round) },
       layer: 'plants',
+      status: 'new',
     })),
     ...VEGETABLE_BEDS.map((points, i): GardenObject => ({
       id: `perf-vegetable-bed-${i + 1}`,
       kind: 'bed-vegetable',
       shape: { type: 'polygon', points: points.map(round) },
       layer: 'vegetables',
+      status: 'new',
     })),
   ]
   const bedOf = (position: Point) =>

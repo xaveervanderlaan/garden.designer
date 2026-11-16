@@ -1,20 +1,21 @@
 import type Konva from 'konva'
 import { memo } from 'react'
-import { Circle, Group, Line, Shape } from 'react-konva'
-import { POINT_OBJECT_RADIUS_M } from '../../../geometry/bounds'
-import { longestEdgeAngle } from '../../../geometry/planting'
-import { type Bed, isBed } from '../../../model/beds'
+import { Group, Shape } from 'react-konva'
+import { shapeFrameDeg, shapePoints } from '../../../geometry/frame'
+import { applyMatrix, rotation } from '../../../geometry/transform'
+import { isTreeCanopy, objectBand } from '../../../model/drawOrder'
 import { isLayerEditable, isLayerVisible } from '../../../model/edit'
+import { type DrawBand, editedByCorners } from '../../../model/objectKinds'
 import { findPlant, plantingLayer } from '../../../model/plants'
 import type { GardenObject, Point, Project } from '../../../model/schema'
 import type { Severity } from '../../../model/warnings'
 import type { LabelMode } from '../../../store/uiStore'
-import { DEFAULT_STROKE_PX, OBJECT_STYLES, SELECTION_COLOR } from '../../../styles/elementStyles'
 import {
   type PlantAppearance,
   type PlantView,
   plantAppearance,
 } from '../../../styles/plantAppearance'
+import { ObjectShape } from './ObjectShapes'
 import {
   drawLabel,
   drawPlantSymbol,
@@ -35,12 +36,9 @@ export type ItemHandlers = {
   hover: (id: string | null) => void
 }
 
-/** A bed outline while one of its corners is dragged (committed on release). */
-export type BedDraft = { id: string; points: Point[] }
+/** An object's outline or line while one of its corners is dragged (committed on release). */
+export type ObjectDraft = { id: string; points: Point[] }
 
-const flat = (points: readonly Point[]) => points.flatMap((p) => [p.x, p.y])
-/** Stroke widths in screen pixels, independent of zoom. */
-const fixedStroke = { strokeScaleEnabled: false, perfectDrawEnabled: false } as const
 /** Plants are at least this easy to click, however small they are on screen. */
 const MIN_HIT_RADIUS_PX = 6
 /** Codes are shown from this radius on screen, names (below the plant) from the next. */
@@ -63,13 +61,22 @@ type ItemsProps = {
   /** Label text per planting, or null when labels are hidden. */
   labels: ReadonlyMap<string, string> | null
   labelMode: LabelMode
-  bedDraft: BedDraft | null
+  objectDraft: ObjectDraft | null
   /** The year and month plants are drawn for (view bar). */
   view: PlantView
 }
 
 /**
- * All objects and plantings, then the plants' labels and warning badges on top. Memoised, so
+ * The frame angle an object's group is turned by, so the Transformer's handles line up with the
+ * object (see geometry/frame.ts). Beds edited by their corners stay unturned.
+ */
+function groupRotation(object: GardenObject): number {
+  return editedByCorners(object.kind) ? 0 : shapeFrameDeg(object.shape)
+}
+
+/**
+ * All objects and plantings in drawing order (bands: surfaces, beds, plants, structures, tree
+ * canopies; see objectKinds.ts), then the plants' labels and warning badges on top. Memoised, so
  * zooming and panning don't re-render them: everything sized in pixels is drawn by Konva
  * `sceneFunc`s that read the zoom when they draw.
  */
@@ -81,7 +88,7 @@ export const Items = memo(function Items({
   warned,
   labels,
   labelMode,
-  bedDraft,
+  objectDraft,
   view,
 }: ItemsProps) {
   const plantings = project.plantings.flatMap((planting) => {
@@ -89,33 +96,36 @@ export const Items = memo(function Items({
     if (!isLayerVisible(project, layer)) return []
     const plant = findPlant(project, planting.plantId)
     const appearance = plantAppearance(plant, view, planting.plantedYear)
-    return [{ planting, layer, appearance }]
+    return [{ planting, layer, appearance, canopy: isTreeCanopy(plant) }]
   })
 
-  return (
-    <>
-      {project.objects.map((object) =>
-        isLayerVisible(project, object.layer) ? (
-          <ItemGroup
-            key={object.id}
-            id={object.id}
-            editable={isLayerEditable(project, object.layer)}
-            interactive={interactive}
-            handlers={handlers}
-          >
-            {isBed(object) ? (
-              <BedShape
-                bed={object}
-                points={bedDraft?.id === object.id ? bedDraft.points : object.shape.points}
-                selected={selection.has(object.id)}
-              />
-            ) : (
-              <ObjectShape object={object} selected={selection.has(object.id)} />
-            )}
-          </ItemGroup>
-        ) : null,
-      )}
-      {plantings.map(({ planting, layer, appearance }) => (
+  const objects = (band: DrawBand) =>
+    project.objects.map((object) => {
+      if (objectBand(object) !== band || !isLayerVisible(project, object.layer)) return null
+      const angle = groupRotation(object)
+      const toGroup = rotation(-angle)
+      const points = objectDraft?.id === object.id ? objectDraft.points : shapePoints(object.shape)
+      return (
+        <ItemGroup
+          key={object.id}
+          id={object.id}
+          rotation={angle}
+          editable={isLayerEditable(project, object.layer)}
+          interactive={interactive}
+          handlers={handlers}
+        >
+          <ObjectShape
+            object={object}
+            points={angle === 0 ? points : points.map((p) => applyMatrix(toGroup, p))}
+            selected={selection.has(object.id)}
+          />
+        </ItemGroup>
+      )
+    })
+
+  const plants = (canopy: boolean) =>
+    plantings.map(({ planting, layer, appearance, canopy: isCanopy }) =>
+      isCanopy === canopy ? (
         <ItemGroup
           key={planting.id}
           id={planting.id}
@@ -129,7 +139,16 @@ export const Items = memo(function Items({
             selected={selection.has(planting.id)}
           />
         </ItemGroup>
-      ))}
+      ) : null,
+    )
+
+  return (
+    <>
+      {objects('surface')}
+      {objects('bed')}
+      {plants(false)}
+      {objects('structure')}
+      {plants(true)}
       <PlantMarks
         marks={plantings.map(({ planting, appearance }) => ({
           id: planting.id,
@@ -147,6 +166,8 @@ export const Items = memo(function Items({
 
 type ItemGroupProps = {
   id: string
+  /** The group's turn (degrees, clockwise): an object's frame angle, 0 for plants. */
+  rotation?: number
   editable: boolean
   interactive: boolean
   handlers: ItemHandlers
@@ -157,10 +178,20 @@ type ItemGroupProps = {
  * Wraps each item in a group at (0, 0): dragging or transforming moves the group, and the change
  * is then baked into the item's coordinates (see GardenCanvas).
  */
-function ItemGroup({ id, editable, interactive, handlers, children }: ItemGroupProps) {
+function ItemGroup({
+  id,
+  rotation = 0,
+  editable,
+  interactive,
+  handlers,
+  children,
+}: ItemGroupProps) {
   return (
     <Group
       id={id}
+      rotation={rotation}
+      // Read back when a transform is baked into the coordinates (GardenCanvas).
+      frameDeg={rotation}
       ref={(node) => handlers.register(id, node)}
       listening={editable && interactive}
       draggable={editable && interactive}
@@ -173,135 +204,6 @@ function ItemGroup({ id, editable, interactive, handlers, children }: ItemGroupP
     >
       {children}
     </Group>
-  )
-}
-
-function ObjectShape({ object, selected }: { object: GardenObject; selected: boolean }) {
-  const style = OBJECT_STYLES[object.kind]
-  const stroke = selected ? SELECTION_COLOR : style.stroke
-  const strokeWidth = selected ? 2.5 : (style.strokeWidthPx ?? DEFAULT_STROKE_PX)
-  const shape = object.shape
-
-  switch (shape.type) {
-    case 'polygon':
-      return (
-        <Line
-          points={flat(shape.points)}
-          closed
-          fill={style.fill}
-          stroke={stroke}
-          strokeWidth={strokeWidth}
-          {...fixedStroke}
-        />
-      )
-    case 'polyline':
-      return (
-        <>
-          {/* Wide invisible line so thin fences and walls are easy to click. */}
-          <Line
-            points={flat(shape.points)}
-            stroke="transparent"
-            strokeWidth={14}
-            {...fixedStroke}
-          />
-          <Line
-            points={flat(shape.points)}
-            stroke={selected ? SELECTION_COLOR : style.fill}
-            strokeWidth={shape.thicknessM}
-            lineCap="round"
-            lineJoin="round"
-            perfectDrawEnabled={false}
-          />
-        </>
-      )
-    case 'point':
-      return (
-        <Circle
-          x={shape.position.x}
-          y={shape.position.y}
-          radius={POINT_OBJECT_RADIUS_M}
-          fill={style.fill}
-          stroke={stroke}
-          strokeWidth={strokeWidth}
-          {...fixedStroke}
-        />
-      )
-  }
-}
-
-function tracePolygon(ctx: CanvasRenderingContext2D | Konva.Context, points: readonly Point[]) {
-  ctx.beginPath()
-  points.forEach((p, i) => (i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y)))
-  ctx.closePath()
-}
-
-/** Parallel lines across the polygon, `spacing` apart, along its longest edge. */
-function drawRows(
-  ctx: CanvasRenderingContext2D,
-  points: readonly Point[],
-  spacing: number,
-  color: string,
-  px: number,
-) {
-  const angle = longestEdgeAngle(points)
-  const cos = Math.cos(angle)
-  const sin = Math.sin(angle)
-  // Coordinates along (u) and across (v) the rows.
-  const us = points.map((p) => p.x * cos + p.y * sin)
-  const vs = points.map((p) => -p.x * sin + p.y * cos)
-  const minU = Math.min(...us)
-  const maxU = Math.max(...us)
-  const maxV = Math.max(...vs)
-  ctx.beginPath()
-  for (let v = Math.min(...vs) + spacing / 2; v < maxV; v += spacing) {
-    ctx.moveTo(minU * cos - v * sin, minU * sin + v * cos)
-    ctx.lineTo(maxU * cos - v * sin, maxU * sin + v * cos)
-  }
-  ctx.strokeStyle = color
-  ctx.lineWidth = px
-  ctx.stroke()
-}
-
-/** A bed: soil-coloured polygon with its outline, plus row lines for a vegetable bed. */
-function BedShape({
-  bed,
-  points,
-  selected,
-}: {
-  bed: Bed
-  points: readonly Point[]
-  selected: boolean
-}) {
-  const style = OBJECT_STYLES[bed.kind]
-  return (
-    <Shape
-      sceneFunc={(context, shape) => {
-        const ctx = context._context
-        const px = 1 / pxPerM(shape)
-        tracePolygon(ctx, points)
-        ctx.fillStyle = style.fill
-        ctx.fill()
-        const pattern = style.pattern
-        // Rows closer than a few pixels would only make the bed look grey.
-        if (pattern && pattern.spacingM / px >= 6) {
-          ctx.save()
-          tracePolygon(ctx, points)
-          ctx.clip()
-          drawRows(ctx, points, pattern.spacingM, pattern.color, px)
-          ctx.restore()
-        }
-        tracePolygon(ctx, points)
-        ctx.lineJoin = 'round'
-        ctx.strokeStyle = selected ? SELECTION_COLOR : style.stroke
-        ctx.lineWidth = (selected ? 2.5 : (style.strokeWidthPx ?? DEFAULT_STROKE_PX)) * px
-        ctx.stroke()
-      }}
-      hitFunc={(context, shape) => {
-        tracePolygon(context, points)
-        context.fillStrokeShape(shape)
-      }}
-      perfectDrawEnabled={false}
-    />
   )
 }
 

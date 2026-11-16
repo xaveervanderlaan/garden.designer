@@ -24,6 +24,12 @@ export type ShortcutId =
   | 'drawPlot'
   | 'rectanglePlot'
   | 'drawBed'
+  | 'addStructure'
+  | 'editCorners'
+  | 'bringForward'
+  | 'sendBackward'
+  | 'bringToFront'
+  | 'sendToBack'
   | 'snapToGrid'
   | 'help'
 
@@ -57,6 +63,24 @@ export const SHORTCUTS: readonly Shortcut[] = [
   { id: 'drawPlot', combos: [{ key: 'p' }] },
   { id: 'rectanglePlot', combos: [{ key: 'r' }] },
   { id: 'drawBed', combos: [{ key: 'b' }] },
+  { id: 'addStructure', combos: [{ key: 's' }] },
+  { id: 'editCorners', combos: [{ key: 'e' }] },
+  {
+    id: 'bringForward',
+    combos: [
+      { key: ']', mod: true, shift: false },
+      { key: 'PageUp', shift: false },
+    ],
+  },
+  {
+    id: 'sendBackward',
+    combos: [
+      { key: '[', mod: true, shift: false },
+      { key: 'PageDown', shift: false },
+    ],
+  },
+  { id: 'bringToFront', combos: [{ key: 'PageUp', shift: true }, { key: 'Home' }] },
+  { id: 'sendToBack', combos: [{ key: 'PageDown', shift: true }, { key: 'End' }] },
   { id: 'snapToGrid', combos: [{ key: 'g' }] },
   { id: 'help', combos: [{ key: '?' }] },
 ]
@@ -102,6 +126,8 @@ const KEY_LABELS: Record<string, string> = {
   Escape: 'Esc',
   Delete: 'Del',
   Backspace: '⌫',
+  PageUp: 'PgUp',
+  PageDown: 'PgDn',
 }
 
 /** Keys of a combo for display, e.g. ["Ctrl", "Shift", "Z"] or ["⌘", "⇧", "Z"]. */
@@ -149,6 +175,12 @@ const HANDLERS: Record<ShortcutId, (event: KeyboardEvent) => void> = {
   drawPlot: () => editorActions.setTool('draw'),
   rectanglePlot: () => useUiStore.getState().setRectangleDialogOpen(true),
   drawBed: () => editorActions.drawBed('bed-ornamental'),
+  addStructure: () => useUiStore.getState().setObjectMenuOpen(true),
+  editCorners: () => editorActions.toggleCornerEditing(),
+  bringForward: () => editorActions.reorder('forward'),
+  sendBackward: () => editorActions.reorder('backward'),
+  bringToFront: () => editorActions.reorder('front'),
+  sendToBack: () => editorActions.reorder('back'),
   snapToGrid: () => editorActions.toggleSnapToGrid(),
   help: () => useUiStore.getState().setHelpOpen(true),
 }
@@ -163,11 +195,14 @@ export function useEditorShortcuts(): void {
         rectangleDialogOpen,
         sitePlanDialogOpen,
         settingsOpen,
+        objectMenuOpen,
         drawing,
         calibration,
       } = useUiStore.getState()
-      // Dialogs handle their own keys.
-      if (helpOpen || rectangleDialogOpen || sitePlanDialogOpen || settingsOpen) return
+      // Dialogs (and the structures menu) handle their own keys.
+      if (helpOpen || rectangleDialogOpen || sitePlanDialogOpen || settingsOpen || objectMenuOpen) {
+        return
+      }
       // While drawing or calibrating, digits are lengths for the panel below the plan, not
       // shortcuts (e.g. 0 = zoom to fit).
       if ((drawing || calibration) && /^[0-9.,]$/.test(event.key)) return

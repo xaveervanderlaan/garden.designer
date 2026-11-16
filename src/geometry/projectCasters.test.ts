@@ -10,6 +10,7 @@ const object = (overrides: Partial<GardenObject>): GardenObject => ({
   id: 'object',
   kind: 'shed',
   layer: 'hardscape',
+  status: 'new',
   shape: {
     type: 'polygon',
     points: [

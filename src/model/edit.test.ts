@@ -29,12 +29,14 @@ function sample(): Project {
     },
     heightM: 1.8,
     layer: 'hardscape',
+    status: 'new',
   }
   const bench: GardenObject = {
     id: 'bench',
     kind: 'furniture',
     shape: { type: 'point', position: { x: 10, y: 5 }, rotationDeg: 350 },
     layer: 'hardscape',
+    status: 'new',
   }
   return { ...project, objects: [...project.objects, fence, bench] }
 }

@@ -116,4 +116,19 @@ describe('migration steps', () => {
     v3.settings.overlapThreshold = 0.35
     expect(projectSchema.parse(migrateProject(v3)).settings.overlapThreshold).toBe(0.35)
   })
+
+  it('4 → 5: marks objects new, or existing on the existing layer', () => {
+    const shape = { type: 'point', position: { x: 1, y: 1 }, rotationDeg: 0 }
+    const v4 = {
+      ...newProject('Old', 1_700_000_000_000),
+      schemaVersion: 4,
+      objects: [
+        { id: 'a', kind: 'shed', shape, layer: 'hardscape' },
+        { id: 'b', kind: 'house', shape, layer: 'existing' },
+      ],
+    }
+    expect(migrateProject(v4, 5).schemaVersion).toBe(5)
+    const migrated = projectSchema.parse(migrateProject(v4))
+    expect(migrated.objects.map((o) => o.status)).toEqual(['new', 'existing'])
+  })
 })

@@ -5,12 +5,14 @@ import type { Point } from '../../../model/schema'
 import { NumberField } from './NumberField'
 import styles from './panels.module.css'
 
-/** Every edge of an outline (A → B, …) with its length, editable. */
+/** Every edge of an outline (A → B, …) or of an open line, with its length, editable. */
 export function EdgeList({
   outline,
+  closed = true,
   onLengthChange,
 }: {
   outline: readonly Point[]
+  closed?: boolean
   onLengthChange: (index: number, length: number) => void
 }) {
   const { t } = useTranslation()
@@ -19,7 +21,7 @@ export function EdgeList({
     <>
       <h3 className={styles.subtitle}>{t('editor.plot.edges')}</h3>
       <ul className={styles.edgeList}>
-        {edgeLengths(outline).map((length, i) => {
+        {edgeLengths(outline, closed).map((length, i) => {
           const from = cornerLabel(i)
           const to = cornerLabel((i + 1) % n)
           return (

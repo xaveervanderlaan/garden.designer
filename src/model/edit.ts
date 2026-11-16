@@ -5,6 +5,7 @@ import {
   rotationOf,
   translation,
 } from '../geometry/transform'
+import { roundPoint } from '../geometry/polygon'
 import { BACKGROUND_ID, BACKGROUND_LAYER, hasBackground } from './background'
 import { isBed, relinkBeds, withPlantsInBeds } from './beds'
 import { newId } from './ids'
@@ -126,27 +127,35 @@ export function moveItems(
   return relinkBeds(moved, bedMoved ? undefined : ids)
 }
 
-/** Applies a transform per object (e.g. after rotating/resizing on the canvas). */
+/**
+ * Applies a transform per object (e.g. after rotating/resizing on the canvas). The plants in a
+ * transformed bed (a raised bed) move along with it.
+ */
 export function transformObjects(
   project: Project,
   transforms: ReadonlyMap<string, Matrix>,
 ): Project {
+  const bedTransformed = project.objects.some((o) => transforms.has(o.id) && isBed(o))
   const transformed = {
     ...project,
     objects: project.objects.map((o) => {
       const m = transforms.get(o.id)
       return m ? { ...o, shape: transformShape(o.shape, m) } : o
     }),
+    plantings: bedTransformed
+      ? project.plantings.map((p) => {
+          const m = p.bedId === undefined ? undefined : transforms.get(p.bedId)
+          return m ? { ...p, position: roundPoint(applyMatrix(m, p.position)) } : p
+        })
+      : project.plantings,
   }
-  return project.objects.some((o) => transforms.has(o.id) && isBed(o))
-    ? relinkBeds(transformed)
-    : transformed
+  return bedTransformed ? relinkBeds(transformed) : transformed
 }
 
 // --- Item fields ------------------------------------------------------------------------------
 
 type ObjectFields = Pick<GardenObject, 'label' | 'notes' | 'heightM' | 'material'>
-type PlantingFields = Pick<Planting, 'notes' | 'plantedYear'>
+type PlantingFields = Pick<Planting, 'notes' | 'plantedYear' | 'status'>
 
 /** Sets (or, with undefined, removes) fields of one object. */
 export function updateObject(project: Project, id: string, fields: Partial<ObjectFields>): Project {

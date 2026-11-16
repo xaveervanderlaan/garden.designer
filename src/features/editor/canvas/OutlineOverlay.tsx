@@ -19,6 +19,8 @@ export type OutlineOverlayProps = {
   outline: readonly Point[]
   /** The outline as it is stored: the handles are drawn from it. */
   committed: readonly Point[]
+  /** False for an open line (a fence, a wall): its last point doesn't connect to the first. */
+  closed?: boolean
   viewport: Viewport
   showLabels: boolean
   /** True when the outline is selected and its corners can be edited. */
@@ -32,12 +34,13 @@ export type OutlineOverlayProps = {
 }
 
 /**
- * Screen-space extras of a closed outline (the plot, a bed): edge lengths, and while editing,
- * corner handles (A, B, C, …) and a dot on every edge to add a corner.
+ * Screen-space extras of an outline (the plot, a bed, an object) or an open line: edge lengths,
+ * and while editing, corner handles (A, B, C, …) and a dot on every edge to add a corner.
  */
 export function OutlineOverlay({
   outline,
   committed,
+  closed = true,
   viewport,
   showLabels,
   editing,
@@ -56,7 +59,7 @@ export function OutlineOverlay({
   const n = outline.length
   if (n < 2) return null
   const screen = outline.map((p) => worldToScreen(p, viewport))
-  const lengths = edgeLengths(outline, n > 2)
+  const lengths = edgeLengths(outline, closed && n > 2)
   const clockwise = signedArea(outline) > 0
   // Handles follow the committed outline, not the draft: re-rendering a handle while it is being
   // dragged would move it (or, with changing keys, remount it and end the drag).
@@ -66,7 +69,7 @@ export function OutlineOverlay({
     x: 0,
     y: 0,
   })
-  const handleEdges = hn > 2 ? hn : hn - 1
+  const handleEdges = closed && hn > 2 ? hn : hn - 1
 
   /** Snaps a dragged handle (screen position) and remembers the world point. */
   function snapHandle(pos: Point, draggedCorner?: number): Point {

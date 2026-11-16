@@ -67,6 +67,7 @@ export function sampleProjectWithAsset(name = 'Back garden'): {
         ],
       },
       layer: 'plants',
+      status: 'new',
       label: 'Border',
     },
   ]

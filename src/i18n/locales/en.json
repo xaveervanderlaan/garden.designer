@@ -330,7 +330,13 @@
       "drawPlot": "Draw plot outline",
       "rectanglePlot": "Rectangular plot",
       "snapToGrid": "Snap to grid on/off",
-      "drawBed": "Draw ornamental bed"
+      "drawBed": "Draw ornamental bed",
+      "addStructure": "Add a structure",
+      "editCorners": "Edit the corners of the selection on/off",
+      "bringForward": "Bring forward",
+      "sendBackward": "Send backward",
+      "bringToFront": "Bring to front",
+      "sendToBack": "Send to back"
     },
     "drawing": {
       "hintStart": "Click on the plan to place the first corner.",
@@ -427,11 +433,13 @@
       "drawVegetable": "Draw vegetable bed",
       "drawing": {
         "bed-ornamental": "Ornamental bed:",
-        "bed-vegetable": "Vegetable bed:"
+        "bed-vegetable": "Vegetable bed:",
+        "raised-bed": "Raised bed:"
       },
       "defaultName": {
         "bed-ornamental": "Ornamental bed {{number}}",
-        "bed-vegetable": "Vegetable bed {{number}}"
+        "bed-vegetable": "Vegetable bed {{number}}",
+        "raised-bed": "Raised bed {{number}}"
       },
       "needMoreCorners": "A bed needs at least 3 corners.",
       "minCorners": "A bed needs at least 3 corners.",
@@ -559,6 +567,51 @@
       "invalidGrid": "Enter a grid size between 0,01 and 100 m.",
       "invalidOverlap": "Enter a percentage between 0 and 100.",
       "overlapHint": "Two plants get a warning when, at full size, they overlap by more than this share of the smaller plant’s width."
+    },
+    "objects": {
+      "add": "Add a structure",
+      "menu": "Structures",
+      "drawing": {
+        "title": "{{kind}}:",
+        "hintStartOutline": "drag to draw a rectangle, or click the corners one by one.",
+        "hintStartLine": "click the start of the line.",
+        "hintStartPoint": "click on the plan to place it.",
+        "hintFinishLine": "Add more points, or press Enter to finish.",
+        "defaultSize": "Place at {{size}}",
+        "needMoreCorners": "An outline needs at least 3 corners.",
+        "needMorePoints": "A line needs a start and an end point."
+      },
+      "status": "Status",
+      "statuses": {
+        "existing": "Existing",
+        "new": "New"
+      },
+      "statusHint": "Existing things are drawn muted, on the “Existing situation” layer.",
+      "plantStatusHint": "An existing plant (such as the neighbour’s tree) gets no warnings for being outside the plot or for the soil.",
+      "height": "Height (m)",
+      "heightHint": "For the shadow it casts.",
+      "size": "Size",
+      "sizeValue": "{{width}} × {{depth}} m",
+      "width": "Width (m)",
+      "depth": "Depth (m)",
+      "rotation": "Rotation (°)",
+      "rotationHint": "From −45° to 45°; positive turns anticlockwise.",
+      "thickness": "Thickness (m)",
+      "length": "Length",
+      "invalidHeight": "Enter a height greater than 0, up to 300 m.",
+      "editCorners": "Edit corners",
+      "stopEditingCorners": "Done with the corners",
+      "transformHint": "Drag it to move it. Use the handles to turn it or change its size.",
+      "cornerHint": "Drag a corner to move it, or click it to select it (Delete removes it). Drag or click the dot on an edge to add a corner.",
+      "minCorners": "An outline needs at least 3 corners.",
+      "minPoints": "A line needs at least 2 points.",
+      "order": {
+        "label": "Drawing order",
+        "forward": "Bring forward",
+        "backward": "Send backward",
+        "front": "Bring to front",
+        "back": "Send to back"
+      }
     }
   },
   "plants": {

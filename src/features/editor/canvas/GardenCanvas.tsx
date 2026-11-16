@@ -6,7 +6,7 @@ import { scaleBarLength } from '../../../geometry/grid'
 import { rowPositions } from '../../../geometry/planting'
 import { isSelfIntersecting } from '../../../geometry/polygon'
 import { type Snap, snapPoint } from '../../../geometry/snap'
-import type { Matrix } from '../../../geometry/transform'
+import { type Matrix, compose, rotation } from '../../../geometry/transform'
 import {
   fitBounds,
   isTrackpadPan,
@@ -18,15 +18,18 @@ import {
 } from '../../../geometry/viewport'
 import { currentLanguage } from '../../../i18n'
 import { formatRoundLength } from '../../../i18n/units'
-import { bedAt, findBed, isBed, withPlantsInBeds } from '../../../model/beds'
+import { bedAt, withPlantsInBeds } from '../../../model/beds'
 import {
   isLayerEditable,
   isLayerVisible,
   isPlotSelected,
   moveItems,
   transformObjects,
+  validSelection,
 } from '../../../model/edit'
 import { BACKGROUND_ID, BACKGROUND_LAYER } from '../../../model/background'
+import { editedByCorners } from '../../../model/objectKinds'
+import { findObject } from '../../../model/objects'
 import { findPlant } from '../../../model/plants'
 import { fillBedPositions, plantingLabels } from '../../../model/plantings'
 import { PLOT_ID, PLOT_LAYER, hasPlot } from '../../../model/plot'
@@ -38,20 +41,27 @@ import { SELECTION_COLOR } from '../../../styles/elementStyles'
 import { plantAppearance } from '../../../styles/plantAppearance'
 import { PLANT_DRAG_TYPE } from '../../library/drag'
 import { useLibraryStore } from '../../library/libraryStore'
-import { currentSelection, currentYear, editorActions } from '../actions'
+import {
+  cornerEditedObject,
+  currentSelection,
+  currentYear,
+  drawingShape,
+  editorActions,
+} from '../actions'
 import { usePlantView } from '../view/plantView'
-import { BedOverlay } from './BedOverlay'
 import { CalibrationDraft, CalibrationLine } from './CalibrationOverlay'
 import { CalibrationPanel } from './CalibrationPanel'
+import { CornerOverlay } from './CornerOverlay'
 import { DrawingOverlay } from './DrawingOverlay'
 import { DrawingPanel } from './DrawingPanel'
 import styles from './GardenCanvas.module.css'
 import { FillPanel } from './FillPanel'
 import { Grid } from './Grid'
 import { useDeferredHitGraph } from './hitGraph'
-import { type BedDraft, type ItemHandlers, Items } from './Items'
+import { type ItemHandlers, Items, type ObjectDraft } from './Items'
 import { PlantPreview } from './PlantPreview'
 import { PlotOverlay, PlotShape } from './Plot'
+import { useRectangleDrag } from './rectangleDrag'
 import { SitePlanLayer } from './SitePlan'
 import { snapContext } from './snapTargets'
 import { StampPanel } from './StampPanel'
@@ -76,6 +86,7 @@ export default function GardenCanvas() {
   const fill = useUiStore((s) => s.fill)
   const labelMode = useUiStore((s) => s.labelMode)
   const fit = useUiStore((s) => s.fit)
+  const editingCorners = useUiStore((s) => s.editingCorners)
   const view = usePlantView(project)
   const spaceHeld = useSpaceKey()
   const altHeld = useAltKey()
@@ -91,8 +102,8 @@ export default function GardenCanvas() {
   const [stampCursor, setStampCursor] = useState<Point | null>(null)
   /** A plant dragged from the library over the plan, and where it would land. */
   const [dropAt, setDropAt] = useState<{ plantId: string; point: Point } | null>(null)
-  /** A bed outline while one of its corners is being dragged. */
-  const [bedDraft, setBedDraft] = useState<BedDraft | null>(null)
+  /** An object's outline while one of its corners is being dragged. */
+  const [objectDraft, setObjectDraft] = useState<ObjectDraft | null>(null)
   const nodes = useRef(new Map<string, Konva.Group>())
   /** Ids of the items moving along with the one being dragged. */
   const dragging = useRef<ReadonlySet<string>>(new Set())
@@ -165,22 +176,49 @@ export default function GardenCanvas() {
     }
   }, [size, project])
 
-  // Attach the rotate/resize handles to the selected objects. Plantings only move; beds have
-  // corner handles instead (like the plot).
+  // Attach the rotate/resize handles to the selected objects. Plantings only move; beds, and an
+  // object whose corners are being edited, have corner handles instead (like the plot).
+  const transformed = useMemo(
+    () =>
+      !project || !interactive
+        ? []
+        : validSelection(project, selectionIds)
+            .map((id) => findObject(project, id))
+            .filter((o) => !!o && !editedByCorners(o.kind) && o.id !== editingCorners)
+            .map((o) => o!),
+    [project, selectionIds, interactive, editingCorners],
+  )
+  // A symbol has no size (yet): it can only be turned.
+  const onlySymbols = transformed.length > 0 && transformed.every((o) => o.shape.type === 'point')
   useEffect(() => {
     const tr = transformer.current
-    if (!tr || !project) return
-    const objectIds = new Set(project.objects.filter((o) => !isBed(o)).map((o) => o.id))
-    const attached = !interactive
-      ? []
-      : currentSelection()
-          .filter((id) => objectIds.has(id))
-          .map((id) => nodes.current.get(id))
-          .filter((node): node is Konva.Group => !!node)
+    if (!tr) return
+    const attached = transformed
+      .map((o) => nodes.current.get(o.id))
+      .filter((node): node is Konva.Group => !!node)
     tr.nodes(attached)
     tr.forceUpdate()
     tr.getLayer()?.batchDraw()
-  }, [project, selectionIds, interactive])
+  }, [transformed])
+
+  /** The snapped world point for a screen position while drawing (Alt turns snapping off). */
+  function drawingSnap(screen: Point, alt: boolean): Snap {
+    const { viewport: vp, drawing: current, snapToGrid } = useUiStore.getState()
+    const raw = screenToWorld(screen, vp)
+    if (alt || !project) return { point: raw, kind: null }
+    const points = current?.points ?? []
+    return snapPoint(
+      raw,
+      snapContext(project, {
+        scale: vp.scale,
+        snapToGrid,
+        drawing: points,
+        anchor: points.at(-1),
+      }),
+    )
+  }
+
+  const rectangleDrag = useRectangleDrag((screen, alt) => drawingSnap(screen, alt).point)
 
   const handlers = useMemo<ItemHandlers>(() => {
     const selectedIds = () => new Set(currentSelection())
@@ -238,8 +276,11 @@ export default function GardenCanvas() {
       // Copy the numbers: Konva reuses its Transform object, and resetting the node below
       // recomputes that same array in place (to the identity).
       const [a, b, c, d, e, f] = node.getTransform().getMatrix()
-      transforms.set(node.id(), [a!, b!, c!, d!, e!, f!])
-      node.setAttrs({ x: 0, y: 0, rotation: 0, scaleX: 1, scaleY: 1, skewX: 0, skewY: 0 })
+      // The group was turned to the object's frame before the gesture (see Items): what changed
+      // is the node's transform after undoing that turn.
+      const frame = Number(node.getAttr('frameDeg')) || 0
+      transforms.set(node.id(), compose([a!, b!, c!, d!, e!, f!], rotation(-frame)))
+      node.setAttrs({ x: 0, y: 0, rotation: frame, scaleX: 1, scaleY: 1, skewX: 0, skewY: 0 })
     }
     useProjectStore.getState().update((p) => transformObjects(p, transforms))
   }
@@ -263,23 +304,6 @@ export default function GardenCanvas() {
     window.addEventListener('mouseup', onUp)
   }
 
-  /** The snapped world point for a screen position while drawing (Alt turns snapping off). */
-  function drawingSnap(screen: Point, alt: boolean): Snap {
-    const { viewport: vp, drawing: current, snapToGrid } = useUiStore.getState()
-    const raw = screenToWorld(screen, vp)
-    if (alt || !project) return { point: raw, kind: null }
-    const points = current?.points ?? []
-    return snapPoint(
-      raw,
-      snapContext(project, {
-        scale: vp.scale,
-        snapToGrid,
-        drawing: points,
-        anchor: points.at(-1),
-      }),
-    )
-  }
-
   function onStageMouseDown(event: Konva.KonvaEventObject<MouseEvent>) {
     const { button, shiftKey, altKey } = event.evt
     // Working on the plan: from now on the view must not move by itself (see the fit effect).
@@ -291,7 +315,10 @@ export default function GardenCanvas() {
     if (button !== 0) return
     if (drawMode) {
       const pointer = event.target.getStage()?.getPointerPosition()
-      if (pointer) editorActions.addDrawingPoint(drawingSnap(pointer, altKey).point)
+      if (!pointer) return
+      const point = drawingSnap(pointer, altKey).point
+      // An outline's first corner may also start a dragged rectangle.
+      if (!rectangleDrag.start(event.evt, pointer, point)) editorActions.addDrawingPoint(point)
       return
     }
     if (calibrateMode) {
@@ -370,9 +397,12 @@ export default function GardenCanvas() {
   }
 
   const outline = plotDraft ?? project.plot.outline
-  const editedBed =
-    interactive && selectionIds.length === 1 ? findBed(project, selectionIds[0]!) : undefined
-  const editingBed = editedBed && isLayerEditable(project, editedBed.layer) ? editedBed : undefined
+  const cornerId = interactive ? cornerEditedObject() : undefined
+  const cornerObject = cornerId ? findObject(project, cornerId) : undefined
+  const editingObject =
+    cornerObject && cornerObject.shape.type !== 'point'
+      ? (cornerObject as typeof cornerObject & { shape: { type: 'polygon' | 'polyline' } })
+      : undefined
   const preview = previewOf()
   const plotVisible = isLayerVisible(project, PLOT_LAYER)
   const plotEditable = isLayerEditable(project, PLOT_LAYER)
@@ -507,7 +537,7 @@ export default function GardenCanvas() {
                   warned={warned}
                   labels={labels}
                   labelMode={labelMode}
-                  bedDraft={bedDraft}
+                  objectDraft={objectDraft}
                   view={view}
                 />
                 {preview && (
@@ -519,6 +549,7 @@ export default function GardenCanvas() {
                 rotationSnaps={ROTATION_SNAPS}
                 rotationSnapTolerance={4}
                 keepRatio={false}
+                resizeEnabled={!onlySymbols}
                 ignoreStroke
                 anchorSize={9}
                 anchorStroke={SELECTION_COLOR}
@@ -542,25 +573,27 @@ export default function GardenCanvas() {
                   onDraft={setPlotDraft}
                 />
               )}
-              {editingBed && (
-                <BedOverlay
-                  key={editingBed.id}
+              {editingObject && (
+                <CornerOverlay
+                  key={editingObject.id}
                   project={project}
-                  bed={editingBed}
+                  object={editingObject}
                   outline={
-                    bedDraft?.id === editingBed.id ? bedDraft.points : editingBed.shape.points
+                    objectDraft?.id === editingObject.id
+                      ? objectDraft.points
+                      : editingObject.shape.points
                   }
                   viewport={viewport}
                   showLabels={isLayerVisible(project, 'measurements')}
                   altHeld={altHeld}
-                  onDraft={(points) => setBedDraft(points && { id: editingBed.id, points })}
+                  onDraft={(points) => setObjectDraft(points && { id: editingObject.id, points })}
                 />
               )}
               {drawing && (
                 <DrawingOverlay
-                  points={drawing.points}
-                  closed={drawing.target.kind !== 'row'}
-                  cursor={drawMode ? drawCursor : null}
+                  points={rectangleDrag.draft ?? drawing.points}
+                  closed={drawingShape(drawing.target) === 'polygon'}
+                  cursor={drawMode && !rectangleDrag.draft ? drawCursor : null}
                   viewport={viewport}
                 />
               )}

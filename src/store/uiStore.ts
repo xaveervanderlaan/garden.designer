@@ -3,7 +3,7 @@ import type { Bounds } from '../geometry/bounds'
 import type { Size, Viewport } from '../geometry/viewport'
 import type { BedKind } from '../model/beds'
 import type { GrowthStopId } from '../model/growth'
-import type { Point } from '../model/schema'
+import type { ObjectKind, Point } from '../model/schema'
 
 /**
  * select/pan: the usual. draw: drawing an outline or line (see DrawTarget). calibrate: measuring
@@ -11,11 +11,15 @@ import type { Point } from '../model/schema'
  */
 export type Tool = 'select' | 'pan' | 'draw' | 'calibrate' | 'stamp' | 'fill'
 
-/** What the drawing tool makes: the plot outline, a bed, or a row of plants along a line. */
+/**
+ * What the drawing tool makes: the plot outline, a bed, a row of plants along a line, or an object
+ * of any kind (its preset says whether that is an outline, a line or a single point).
+ */
 export type DrawTarget =
   | { kind: 'plot' }
   | { kind: 'bed'; bedKind: BedKind }
   | { kind: 'row'; plantId: string; spacingM: number }
+  | { kind: 'object'; objectKind: ObjectKind }
 
 /** An outline or line being drawn: what it's for and the corners placed so far (world metres). */
 export type Drawing = { target: DrawTarget; points: Point[] }
@@ -67,12 +71,19 @@ type UiStore = {
   snapToGrid: boolean
   /** Index of the selected plot corner (for deleting it), or null. */
   activeCorner: number | null
+  /**
+   * The object (not a bed: those always are) whose corners are being edited instead of moving,
+   * rotating and resizing it as a whole. Ends when the selection changes.
+   */
+  editingCorners: string | null
   /** World position of the mouse over the canvas, or null when it's elsewhere. */
   cursor: Point | null
   helpOpen: boolean
   rectangleDialogOpen: boolean
   /** The site-plan import dialog (progress, page choice or error) is showing. */
   sitePlanDialogOpen: boolean
+  /** The toolbar's menu for adding a structure is open. */
+  objectMenuOpen: boolean
   setViewport: (viewport: Viewport | ((current: Viewport) => Viewport)) => void
   setCanvasSize: (size: Size) => void
   setFit: (fit: { bounds: Bounds; viewport: Viewport } | null) => void
@@ -101,10 +112,12 @@ type UiStore = {
   setCalibration: (calibration: Calibration | null) => void
   setSnapToGrid: (on: boolean) => void
   setActiveCorner: (index: number | null) => void
+  setEditingCorners: (id: string | null) => void
   setCursor: (cursor: Point | null) => void
   setHelpOpen: (open: boolean) => void
   setRectangleDialogOpen: (open: boolean) => void
   setSitePlanDialogOpen: (open: boolean) => void
+  setObjectMenuOpen: (open: boolean) => void
   /** Back to a clean state, e.g. when another project is opened. */
   reset: () => void
 }
@@ -126,10 +139,12 @@ const initial = {
   calibration: null,
   snapToGrid: true,
   activeCorner: null,
+  editingCorners: null,
   cursor: null,
   helpOpen: false,
   rectangleDialogOpen: false,
   sitePlanDialogOpen: false,
+  objectMenuOpen: false,
 }
 
 /** The state of every tool that has one, cleared when another tool starts. */
@@ -143,10 +158,19 @@ export const useUiStore = create<UiStore>()((set) => ({
     })),
   setCanvasSize: (canvasSize) => set({ canvasSize }),
   setFit: (fit) => set({ fit }),
-  setSelection: (selection) => set({ selection, activeCorner: null }),
+  setSelection: (selection) =>
+    set((state) => ({
+      selection,
+      activeCorner: null,
+      editingCorners:
+        selection.length === 1 && selection[0] === state.editingCorners
+          ? state.editingCorners
+          : null,
+    })),
   toggleSelected: (id) =>
     set((state) => ({
       activeCorner: null,
+      editingCorners: null,
       selection: state.selection.includes(id)
         ? state.selection.filter((s) => s !== id)
         : [...state.selection, id],
@@ -158,7 +182,9 @@ export const useUiStore = create<UiStore>()((set) => ({
       calibration: tool === 'calibrate' ? { points: [] } : null,
       stamp: tool === 'stamp' ? state.stamp : null,
       fill: tool === 'fill' ? state.fill : null,
-      ...(tool === 'draw' || tool === 'calibrate' ? { selection: [], activeCorner: null } : {}),
+      ...(tool === 'draw' || tool === 'calibrate'
+        ? { selection: [], activeCorner: null, editingCorners: null }
+        : {}),
     })),
   startDrawing: (target) =>
     set({
@@ -167,6 +193,7 @@ export const useUiStore = create<UiStore>()((set) => ({
       drawing: { target, points: [] },
       selection: [],
       activeCorner: null,
+      editingCorners: null,
     }),
   startStamp: (plantId) =>
     set({
@@ -175,8 +202,10 @@ export const useUiStore = create<UiStore>()((set) => ({
       stamp: { plantId, placed: 0 },
       selection: [],
       activeCorner: null,
+      editingCorners: null,
     }),
-  startFill: (fill) => set({ ...noToolState, tool: 'fill', fill, activeCorner: null }),
+  startFill: (fill) =>
+    set({ ...noToolState, tool: 'fill', fill, activeCorner: null, editingCorners: null }),
   setDrawing: (drawing) => set({ drawing }),
   setStamp: (stamp) => set({ stamp }),
   setFill: (fill) => set({ fill }),
@@ -188,9 +217,11 @@ export const useUiStore = create<UiStore>()((set) => ({
   setCalibration: (calibration) => set({ calibration }),
   setSnapToGrid: (snapToGrid) => set({ snapToGrid }),
   setActiveCorner: (activeCorner) => set({ activeCorner }),
+  setEditingCorners: (editingCorners) => set({ editingCorners, activeCorner: null }),
   setCursor: (cursor) => set({ cursor }),
   setHelpOpen: (helpOpen) => set({ helpOpen }),
   setRectangleDialogOpen: (rectangleDialogOpen) => set({ rectangleDialogOpen }),
   setSitePlanDialogOpen: (sitePlanDialogOpen) => set({ sitePlanDialogOpen }),
+  setObjectMenuOpen: (objectMenuOpen) => set({ objectMenuOpen }),
   reset: () => set({ ...initial }),
 }))

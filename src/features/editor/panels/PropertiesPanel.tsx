@@ -1,19 +1,20 @@
-import { Trash2 } from 'lucide-react'
+import { ArrowDown, ArrowDownToLine, ArrowUp, ArrowUpToLine, Trash2 } from 'lucide-react'
 import { useId, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
-import { boundsCentre, shapeBounds } from '../../../geometry/bounds'
-import { formatLength } from '../../../i18n/units'
 import { isBed } from '../../../model/beds'
-import { updateObject, validSelection } from '../../../model/edit'
+import { type ReorderDirection, reorderItems } from '../../../model/drawOrder'
+import { validSelection } from '../../../model/edit'
 import { BACKGROUND_ID } from '../../../model/background'
+import { editedByCorners } from '../../../model/objectKinds'
 import { PLOT_ID } from '../../../model/plot'
-import type { GardenObject, Point, Project } from '../../../model/schema'
-import { useProjectStore } from '../../../store/projectStore'
+import type { Project } from '../../../model/schema'
 import { useUiStore } from '../../../store/uiStore'
 import controls from '../../../styles/controls.module.css'
 import { cx } from '../../../styles/cx'
 import { editorActions } from '../actions'
+import { type ShortcutId, shortcutLabel } from '../shortcuts'
 import { BedProperties } from './BedProperties'
+import { ObjectProperties } from './ObjectProperties'
 import { PlantingProperties } from './PlantingProperties'
 import { NothingSelected, PlotProperties } from './PlotProperties'
 import { SitePlanProperties } from './SitePlanProperties'
@@ -26,6 +27,7 @@ export function PropertiesPanel({ project }: { project: Project }) {
   const ids = useMemo(() => validSelection(project, selectionIds), [project, selectionIds])
 
   const object = ids.length === 1 ? project.objects.find((o) => o.id === ids[0]) : undefined
+  const items = ids.filter((id) => id !== PLOT_ID && id !== BACKGROUND_ID)
   // One or more plantings (and nothing else): their species, year, …
   const plantings = useMemo(() => {
     const selected = new Set(ids)
@@ -47,13 +49,14 @@ export function PropertiesPanel({ project }: { project: Project }) {
         <SitePlanProperties background={project.background} />
       )}
       {object &&
-        (isBed(object) ? (
+        (isBed(object) && editedByCorners(object.kind) ? (
           <BedProperties project={project} bed={object} />
         ) : (
-          <ObjectProperties object={object} />
+          <ObjectProperties project={project} object={object} />
         ))}
       {plantings.length > 0 && <PlantingProperties project={project} plantings={plantings} />}
-      {ids.some((id) => id !== PLOT_ID && id !== BACKGROUND_ID) && (
+      {items.length > 0 && <DrawingOrder project={project} ids={items} />}
+      {items.length > 0 && (
         <button
           type="button"
           className={cx(controls.button, controls.small, styles.deleteButton)}
@@ -67,59 +70,39 @@ export function PropertiesPanel({ project }: { project: Project }) {
   )
 }
 
-function PositionRow({ position }: { position: Point }) {
-  const { t } = useTranslation()
-  return (
-    <>
-      <dt>{t('editor.properties.position')}</dt>
-      <dd data-testid="item-position">
-        {t('editor.properties.positionValue', {
-          x: formatLength(position.x),
-          y: formatLength(position.y),
-        })}
-      </dd>
-    </>
-  )
-}
+const ORDER: Array<{ direction: ReorderDirection; shortcut: ShortcutId; icon: typeof ArrowUp }> = [
+  { direction: 'back', shortcut: 'sendToBack', icon: ArrowDownToLine },
+  { direction: 'backward', shortcut: 'sendBackward', icon: ArrowDown },
+  { direction: 'forward', shortcut: 'bringForward', icon: ArrowUp },
+  { direction: 'front', shortcut: 'bringToFront', icon: ArrowUpToLine },
+]
 
-function ObjectProperties({ object }: { object: GardenObject }) {
+/**
+ * Bring forward / send back, within the item's drawing band (surfaces, beds, plants, structures,
+ * tree canopies). A button is disabled when it wouldn't change anything.
+ */
+function DrawingOrder({ project, ids }: { project: Project; ids: readonly string[] }) {
   const { t } = useTranslation()
-  const update = useProjectStore((s) => s.update)
-  const labelId = useId()
-  const notesId = useId()
-  const set = (field: 'label' | 'notes', value: string) =>
-    update((p) => updateObject(p, object.id, { [field]: value }), {
-      coalesce: `${field}:${object.id}`,
-    })
-
+  const selected = new Set(ids)
   return (
-    <>
-      <dl className={styles.facts}>
-        <dt>{t('editor.properties.kind')}</dt>
-        <dd data-testid="item-kind">{t(`editor.objectKinds.${object.kind}`)}</dd>
-        <PositionRow position={boundsCentre(shapeBounds(object.shape))} />
-      </dl>
-      <label className={controls.label} htmlFor={labelId}>
-        {t('editor.properties.label')}
-      </label>
-      <input
-        id={labelId}
-        className={cx(controls.input, styles.field)}
-        value={object.label ?? ''}
-        maxLength={200}
-        onChange={(e) => set('label', e.target.value)}
-      />
-      <label className={controls.label} htmlFor={notesId}>
-        {t('editor.properties.notes')}
-      </label>
-      <textarea
-        id={notesId}
-        className={cx(controls.input, styles.field, styles.notes)}
-        value={object.notes ?? ''}
-        maxLength={5000}
-        rows={3}
-        onChange={(e) => set('notes', e.target.value)}
-      />
-    </>
+    <div className={styles.orderRow} role="group" aria-label={t('editor.objects.order.label')}>
+      <span className={styles.orderLabel}>{t('editor.objects.order.label')}</span>
+      {ORDER.map(({ direction, shortcut, icon: Icon }) => {
+        const label = t(`editor.objects.order.${direction}`)
+        return (
+          <button
+            key={direction}
+            type="button"
+            className={styles.iconButton}
+            aria-label={label}
+            title={`${label} (${shortcutLabel(shortcut)})`}
+            disabled={reorderItems(project, selected, direction) === project}
+            onClick={() => editorActions.reorder(direction)}
+          >
+            <Icon size={16} aria-hidden />
+          </button>
+        )
+      })}
+    </div>
   )
 }

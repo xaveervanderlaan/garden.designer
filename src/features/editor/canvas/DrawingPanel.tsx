@@ -3,13 +3,14 @@ import { useTranslation } from 'react-i18next'
 import { rowPositions } from '../../../geometry/planting'
 import { currentLanguage } from '../../../i18n'
 import { formatDecimal, parseNumber } from '../../../i18n/units'
+import { OBJECT_PRESETS } from '../../../model/objectKinds'
 import { findPlant, plantName } from '../../../model/plants'
 import type { Point } from '../../../model/schema'
 import { useProjectStore } from '../../../store/projectStore'
 import { type DrawTarget, useUiStore } from '../../../store/uiStore'
 import controls from '../../../styles/controls.module.css'
 import { cx } from '../../../styles/cx'
-import { editorActions, minDrawingPoints } from '../actions'
+import { drawingShape, editorActions, minDrawingPoints } from '../actions'
 import { isTypingTarget } from '../shortcuts'
 import styles from './GardenCanvas.module.css'
 
@@ -20,16 +21,30 @@ type ErrorKey =
   | 'editor.drawing.needMoreCorners'
   | 'editor.beds.needMoreCorners'
   | 'editor.placing.rowNeedsPoints'
+  | 'editor.objects.drawing.needMoreCorners'
+  | 'editor.objects.drawing.needMorePoints'
 
 const NO_POINTS: readonly Point[] = []
 
-/** The error for finishing too early, per thing being drawn. */
-const tooFewError = (target: DrawTarget): ErrorKey =>
-  target.kind === 'plot'
-    ? 'editor.drawing.needMoreCorners'
-    : target.kind === 'bed'
-      ? 'editor.beds.needMoreCorners'
-      : 'editor.placing.rowNeedsPoints'
+/** The error for finishing too early, per thing being drawn (none for a symbol: one click places it). */
+function tooFewError(target: DrawTarget): ErrorKey | null {
+  switch (target.kind) {
+    case 'plot':
+      return 'editor.drawing.needMoreCorners'
+    case 'bed':
+      return 'editor.beds.needMoreCorners'
+    case 'row':
+      return 'editor.placing.rowNeedsPoints'
+    case 'object': {
+      const shape = drawingShape(target)
+      return shape === 'polygon'
+        ? 'editor.objects.drawing.needMoreCorners'
+        : shape === 'polyline'
+          ? 'editor.objects.drawing.needMorePoints'
+          : null
+    }
+  }
+}
 
 /** Keeps only characters that can be part of a number. */
 const numeric = (value: string) => value.replace(/[^0-9.,+\-\s]/g, '')
@@ -104,14 +119,28 @@ export function DrawingPanel({ towards }: { towards: Point | null }) {
     }
   }
 
+  const shape = drawingShape(target)
+  const isObject = target.kind === 'object'
+  const defaultSize =
+    target.kind === 'object' && corners === 0 ? OBJECT_PRESETS[target.objectKind].sizeM : undefined
   const hint =
     corners === 0
-      ? t('editor.drawing.hintStart')
+      ? isObject
+        ? t(
+            shape === 'polygon'
+              ? 'editor.objects.drawing.hintStartOutline'
+              : shape === 'polyline'
+                ? 'editor.objects.drawing.hintStartLine'
+                : 'editor.objects.drawing.hintStartPoint',
+          )
+        : t('editor.drawing.hintStart')
       : corners < minimum
         ? t('editor.drawing.hintNext')
         : target.kind === 'row'
           ? t('editor.placing.rowHintFinish')
-          : t('editor.drawing.hintFinish')
+          : isObject && shape === 'polyline'
+            ? t('editor.objects.drawing.hintFinishLine')
+            : t('editor.drawing.hintFinish')
 
   return (
     <div className={styles.drawingPanel} data-testid="drawing-panel">
@@ -120,49 +149,70 @@ export function DrawingPanel({ towards }: { towards: Point | null }) {
         {hint}
       </p>
       <div className={styles.drawingInputs}>
-        <label htmlFor={lengthId}>{t('editor.drawing.length')}</label>
-        <input
-          ref={lengthInput}
-          id={lengthId}
-          className={cx(controls.input, styles.drawingInput)}
-          inputMode="decimal"
-          autoComplete="off"
-          value={length}
-          aria-invalid={error === 'editor.drawing.invalidLength'}
-          onChange={(e) => {
-            setLength(numeric(e.target.value))
-            setError(null)
-          }}
-          onKeyDown={onKeyDown}
-        />
-        <span>{t('editor.drawing.metres')}</span>
-        <label htmlFor={angleId}>{t('editor.drawing.angle')}</label>
-        <input
-          id={angleId}
-          className={cx(controls.input, styles.drawingInput)}
-          inputMode="decimal"
-          autoComplete="off"
-          value={angle}
-          aria-invalid={error === 'editor.drawing.invalidAngle'}
-          onChange={(e) => {
-            setAngle(numeric(e.target.value))
-            setError(null)
-          }}
-          onKeyDown={onKeyDown}
-        />
-        <span>°</span>
+        {shape !== 'point' && (
+          <>
+            <label htmlFor={lengthId}>{t('editor.drawing.length')}</label>
+            <input
+              ref={lengthInput}
+              id={lengthId}
+              className={cx(controls.input, styles.drawingInput)}
+              inputMode="decimal"
+              autoComplete="off"
+              value={length}
+              aria-invalid={error === 'editor.drawing.invalidLength'}
+              onChange={(e) => {
+                setLength(numeric(e.target.value))
+                setError(null)
+              }}
+              onKeyDown={onKeyDown}
+            />
+            <span>{t('editor.drawing.metres')}</span>
+            <label htmlFor={angleId}>{t('editor.drawing.angle')}</label>
+            <input
+              id={angleId}
+              className={cx(controls.input, styles.drawingInput)}
+              inputMode="decimal"
+              autoComplete="off"
+              value={angle}
+              aria-invalid={error === 'editor.drawing.invalidAngle'}
+              onChange={(e) => {
+                setAngle(numeric(e.target.value))
+                setError(null)
+              }}
+              onKeyDown={onKeyDown}
+            />
+            <span>°</span>
+          </>
+        )}
         {target.kind === 'row' && (
           <RowSpacing spacingM={target.spacingM} count={rowCount(points, target.spacingM)} />
         )}
         <span className={styles.drawingButtons}>
-          <button
-            type="button"
-            className={cx(controls.button, controls.primary, controls.small)}
-            disabled={corners < minimum}
-            onClick={() => editorActions.finishDrawing()}
-          >
-            {target.kind === 'row' ? t('editor.placing.plantRow') : t('editor.drawing.finish')}
-          </button>
+          {defaultSize && (
+            <button
+              type="button"
+              className={cx(controls.button, controls.small)}
+              data-testid="place-default-size"
+              onClick={() => editorActions.placeDefaultSize()}
+            >
+              {t('editor.objects.drawing.defaultSize', {
+                size: t('editor.objects.sizeValue', {
+                  width: formatDecimal(defaultSize.width, 1),
+                  depth: formatDecimal(defaultSize.depth, 1),
+                }),
+              })}
+            </button>
+          )}
+          {shape !== 'point' && (
+            <button
+              type="button"
+              className={cx(controls.button, controls.primary, controls.small)}
+              disabled={corners < minimum}
+              onClick={() => editorActions.finishDrawing()}
+            >
+              {target.kind === 'row' ? t('editor.placing.plantRow') : t('editor.drawing.finish')}
+            </button>
+          )}
           <button
             type="button"
             className={cx(controls.button, controls.quiet, controls.small)}
@@ -198,7 +248,11 @@ function DrawingTitle({ target }: { target: DrawTarget }) {
       ? t('editor.drawing.titlePlot')
       : target.kind === 'bed'
         ? t(`editor.beds.drawing.${target.bedKind}`)
-        : t('editor.placing.rowTitle', { name: plant ? plantName(plant, currentLanguage()) : '' })
+        : target.kind === 'object'
+          ? t('editor.objects.drawing.title', {
+              kind: t(`editor.objectKinds.${target.objectKind}`),
+            })
+          : t('editor.placing.rowTitle', { name: plant ? plantName(plant, currentLanguage()) : '' })
   return <span className={styles.drawingTitle}>{title}</span>
 }
 

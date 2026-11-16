@@ -1,11 +1,20 @@
 import { insertCorner, moveCorner, removeCorner, setEdgeLength } from '../geometry/outline'
 import { pointInPolygon, roundPoint } from '../geometry/polygon'
 import { newId } from './ids'
+import { OBJECT_PRESETS, objectLayer } from './objectKinds'
 import type { GardenObject, LayerId, ObjectKind, Planting, Point, Project } from './schema'
 
-/** Planting beds: polygons of kind ornamental or vegetable bed. Plantings inside link to them. */
+/**
+ * Planting beds: polygons of kind ornamental bed, vegetable bed or raised bed. Plantings inside
+ * link to them. Ornamental and vegetable beds are edited by their corners; a raised bed is also a
+ * structure (with a height), edited like one (see objectKinds.ts).
+ */
 
-export const BED_KINDS = ['bed-ornamental', 'bed-vegetable'] as const satisfies ObjectKind[]
+export const BED_KINDS = [
+  'bed-ornamental',
+  'bed-vegetable',
+  'raised-bed',
+] as const satisfies ObjectKind[]
 export type BedKind = (typeof BED_KINDS)[number]
 
 export type Bed = GardenObject & {
@@ -21,9 +30,12 @@ export function isBed(object: GardenObject): object is Bed {
   return isBedKind(object.kind) && object.shape.type === 'polygon'
 }
 
-/** Ornamental beds are on "beds & plants"; vegetable beds on "vegetables". */
+/**
+ * The layer of a new bed: ornamental beds are on "beds & plants", vegetable beds on "vegetables",
+ * raised beds on "hardscape & structures".
+ */
 export function bedLayer(kind: BedKind): LayerId {
-  return kind === 'bed-vegetable' ? 'vegetables' : 'plants'
+  return OBJECT_PRESETS[kind].layer
 }
 
 export function bedsOf(project: Project): Bed[] {
@@ -94,18 +106,21 @@ export function addBed(
     id: newId(),
     kind,
     shape: { type: 'polygon', points: points.map(roundPoint) },
+    status: OBJECT_PRESETS[kind].status,
     layer: bedLayer(kind),
   }
   return { project: relinkBeds({ ...project, objects: [...project.objects, bed] }), id: bed.id }
 }
 
-/** Switches a bed between ornamental and vegetable (which also moves it to that layer). */
+/** Switches a bed between ornamental and vegetable (which also moves a new bed to that layer). */
 export function setBedKind(project: Project, id: string, kind: BedKind): Project {
   const bed = findBed(project, id)
   if (!bed || bed.kind === kind) return project
   return {
     ...project,
-    objects: project.objects.map((o) => (o.id === id ? { ...o, kind, layer: bedLayer(kind) } : o)),
+    objects: project.objects.map((o) =>
+      o.id === id ? { ...o, kind, layer: objectLayer(kind, o.status) } : o,
+    ),
   }
 }
 

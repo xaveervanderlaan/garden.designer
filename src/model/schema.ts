@@ -7,7 +7,7 @@ import { z } from 'zod'
  *
  * Changing the shape of stored data? Bump SCHEMA_VERSION and add a migration (see migrations.ts).
  */
-export const SCHEMA_VERSION = 4
+export const SCHEMA_VERSION = 5
 
 export const idSchema = z.string().min(1).max(100)
 
@@ -62,6 +62,13 @@ export const OBJECT_KINDS = [
   'bed-vegetable',
 ] as const
 export type ObjectKind = (typeof OBJECT_KINDS)[number]
+
+/**
+ * Whether something is already there (the existing situation: drawn muted, on the "existing"
+ * layer) or part of the new design.
+ */
+export const OBJECT_STATUSES = ['existing', 'new'] as const
+export type ObjectStatus = (typeof OBJECT_STATUSES)[number]
 
 export const PLANT_CATEGORIES = [
   'tree',
@@ -223,6 +230,8 @@ export const gardenObjectSchema = z.object({
   material: z.string().max(100).optional(),
   label: z.string().max(200).optional(),
   notes: z.string().max(5000).optional(),
+  /** Existing objects are on the "existing" layer; new ones on their kind's layer (objectLayer). */
+  status: z.enum(OBJECT_STATUSES),
   layer: z.enum(LAYER_IDS),
 })
 export type GardenObject = z.infer<typeof gardenObjectSchema>
@@ -235,6 +244,11 @@ export const plantingSchema = z.object({
   bedId: idSchema.optional(),
   plantedYear: z.number().int().min(1900).max(2200),
   notes: z.string().max(5000).optional(),
+  /**
+   * 'existing' for a plant that is already there (e.g. a tree to keep, or the neighbour's): it is
+   * on the "existing" layer and gets no outside-plot or soil warnings. Absent = new.
+   */
+  status: z.enum(OBJECT_STATUSES).optional(),
 })
 export type Planting = z.infer<typeof plantingSchema>
 
