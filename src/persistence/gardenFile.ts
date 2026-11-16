@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { assetIdsInUse } from '../model/background'
+import { assetIdsInUse } from '../model/assets'
 import { newId } from '../model/ids'
 import { MigrationError, migrateProject } from '../model/migrations'
 import { type Project, SCHEMA_VERSION, projectSchema } from '../model/schema'
@@ -71,9 +71,19 @@ export function gardenFileName(projectName: string): string {
 export async function exportProject(id: string): Promise<{ fileName: string; json: string }> {
   const project = await loadProject(id)
   if (!project) throw new Error(`Project ${id} not found`)
+  return exportProjectFile(project)
+}
+
+/**
+ * Exports a design as it is in memory, e.g. the open design whose latest changes couldn't be
+ * saved. Its files (site plan) are read from storage.
+ */
+export async function exportProjectFile(
+  project: Project,
+): Promise<{ fileName: string; json: string }> {
   // Only the files in use: replaced site plans may still be stored until the next clean-up.
   const inUse = assetIdsInUse(project)
-  const assets = (await listAssets(id)).filter((asset) => inUse.has(asset.id))
+  const assets = (await listAssets(project.id)).filter((asset) => inUse.has(asset.id))
   const file = buildGardenFile(project, assets)
   return { fileName: gardenFileName(project.name), json: JSON.stringify(file) }
 }

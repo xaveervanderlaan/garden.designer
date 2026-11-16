@@ -23,6 +23,7 @@ npm run format       # prettier --write .
 npm run typecheck    # tsc -b
 npm test             # vitest run (unit + component, jsdom)
 npm run e2e          # playwright test
+npm run verify       # quiet lint+typecheck+unit+build+e2e, logs in .verify/; subset: npm run verify -- unit e2e
 npm run plants:review  # plant data review tables → docs/plant-review/ (private docs repo)
 
 npx vitest run src/routing.test.ts          # one test file
@@ -30,6 +31,7 @@ npx vitest run -t "switches to Dutch"       # tests matching a name
 npx playwright test tests/e2e/smoke.spec.ts -g "Dutch browser"
 ```
 
+- `E2E_ALL_BROWSERS=1` adds the Firefox and WebKit projects; they need system libs (gtk3/gtk4, gstreamer, …) not installed here, so they are untested.
 - Playwright runs against the **production build**: its `webServer` runs `npm run build && npm run preview` on port 4173 under `/garden.designer/` (reuses a running server locally). Set `E2E_PORT` to use another port, e.g. when several git worktrees run e2e tests at the same time (a reused server on the same port would serve another checkout's build).
 - This machine is Arch Linux on WSL; Playwright's `install-deps` doesn't support it. The Chromium system packages are listed in README.md (pacman).
 - Definition of done for a milestone: lint, typecheck, test, build and e2e all pass; every UI string exists in EN and NL; no console errors (e2e tests collect them).
@@ -107,7 +109,10 @@ npx playwright test tests/e2e/smoke.spec.ts -g "Dutch browser"
   - **Site plan e2e:** `siteplan.spec.ts` draws its test PNG in the page and builds a tiny PDF in code (no binary fixtures), reads the saved design straight from IndexedDB to map image pixels to the screen, and checks that importing makes no requests outside the app (its origin comes from `baseURL`, so `E2E_PORT` works).
   - **Planting e2e:** `planting.spec.ts` draws a bed by typed lengths, then drags (list and detail card), stamps, fills and plants a row, and checks the planting list; library drags use Playwright's `dragTo`.
   - **Seasons e2e:** `seasons.spec.ts` checks what the plan draws by reading pixels (`pixelAt` composites all canvas layers of the plan area over white) and classifying them (green leaves, blue flowers, brown trunk, pale), polling until Konva has redrawn.
-  - **Konva hit map:** it refreshes on the next animation frame, so a click immediately after a state change can miss. Retry with `expect.poll`.
+  - **Shared e2e helpers:** `tests/e2e/helpers.ts` (`collectErrors`, `sitePlanPng`, `savedProjects`/`savedProject`, `savedAssetIds`, `openPlant`, image↔world/screen maps). Specs import it as `./helpers.ts` (with the extension). `fullflow.spec.ts` covers the whole workflow incl. export → import.
+  - **Perf:** `test/perfProject.ts` generates a large design; `perf.spec.ts` measures zoom/pan (busy ms, draw ms, p95 frame). `canvas/hitGraph.ts` defers the Konva hit graph while the view moves (halves draw time, no dropped pan frames); viewport culling was tried and dropped.
+- **Konva hit map:** it refreshes on the next animation frame, so a click immediately after a state change can miss. Retry with `expect.poll`.
+- **Lazy routes & storage errors:** `features/shell/LazyRoute.tsx` lazy-loads the editor route. A failed write is classified by `persistence/storageErrors.ts` (`'full'` for QuotaExceededError anywhere in the error chain, else `'failed'`). The store keeps `saveError` while `saveState === 'error'`: edits stay in memory, the save is retried on the next change and in `flush()` (close/open). `StorageErrorBanner` (above the view bar) offers a backup export of the in-memory design; leaving the editor in that state asks `confirm`, and `beforeunload` warns only then. Import is one transaction (nothing half-created); the site plan dialog maps quota to `storageFull`; the list page shows `storage.full`.
 - **PWA / offline** (config in `scripts/vite-pwa.ts`, app side in `src/pwa/`):
   - **Service worker:** `vite-plugin-pwa` (`generateSW`, Workbox) builds `sw.js` and `manifest.webmanifest` in `vite build` only; it is disabled in dev and Vitest. It precaches every built file whose extension is in `PRECACHE_EXTENSIONS` (JS chunks incl. lazy ones, CSS, the pdf.js worker `.mjs`, the `pdfjs/` fonts/wasm/ICC files, icons): new chunks and assets are included automatically, but a new file *type* must be added to that list. A file over `maximumFileSizeToCacheInBytes` (4 MiB) fails the build. Navigation falls back to `index.html`; no runtime caching, no external requests.
   - **Updates:** the app registers the worker itself (`registerServiceWorker` in `main.tsx`, after `load`, production only) and checks hourly. A new version waits (`registerType: 'prompt'`, `clientsClaim` but no `skipWaiting`); `UpdatePrompt` (`role="status"`, only rendered while an update waits) offers Reload, which flushes the autosave, posts `SKIP_WAITING` and reloads on `controllerchange`.

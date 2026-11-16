@@ -1,4 +1,4 @@
-import { assetIdsInUse } from '../model/background'
+import { assetIdsInUse } from '../model/assets'
 import { newProject, normaliseName } from '../model/defaults'
 import { newId } from '../model/ids'
 import { migrateProject } from '../model/migrations'

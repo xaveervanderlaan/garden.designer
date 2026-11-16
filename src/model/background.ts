@@ -130,7 +130,4 @@ export function backgroundCentre(project: Project): Point | null {
   return bounds ? boundsCentre(bounds) : null
 }
 
-/** Ids of the assets the project uses; anything else stored for it can be removed. */
-export function assetIdsInUse(project: Project): Set<string> {
-  return new Set(project.background ? [project.background.assetId] : [])
-}
+export { assetIdsInUse } from './assets'

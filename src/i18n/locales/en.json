@@ -1,7 +1,9 @@
 {
   "app": {
     "name": "Garden Designer",
-    "home": "Go to the project list"
+    "home": "Go to the project list",
+    "loadError": "This part of the app couldn’t be loaded. Check your internet connection and reload the page.",
+    "reload": "Reload"
   },
   "language": {
     "label": "Language",
@@ -398,7 +400,8 @@
         "unreadable": "This file couldn’t be read. It may be damaged; try saving the page as a PNG or JPG.",
         "pdfPassword": "This PDF is protected with a password. Save a copy without a password, or as an image.",
         "pdfEmpty": "This PDF has no pages.",
-        "saveFailed": "The image couldn’t be saved in the browser. The storage may be full."
+        "saveFailed": "The image couldn’t be saved in the browser. The storage may be full. Export a backup to be safe.",
+        "storageFull": "The browser’s storage is full, so the image couldn’t be saved. Export backups of your designs and remove designs or site plans you no longer need, or use a smaller image."
       },
       "file": "File",
       "fileAndPage": "{{file}}, page {{page}}",
@@ -639,6 +642,14 @@
     },
     "monthRange": "{{from}}–{{to}}",
     "monthsValue": "{{label}}: {{months}}"
+  },
+  "storage": {
+    "full": "The browser’s storage is full, so this couldn’t be saved. Export backups of your designs, then delete designs you no longer need.",
+    "autosaveFull": "The browser’s storage is full, so your latest changes aren’t saved yet. They stay here while this page is open, and saving is tried again with your next change. Export a backup now, then delete designs or site plans you no longer need.",
+    "autosaveFailed": "Your latest changes couldn’t be saved in the browser. They stay here while this page is open, and saving is tried again with your next change. Export a backup now; if this keeps happening, delete designs or site plans you no longer need.",
+    "exportBackup": "Export a backup",
+    "exportFailed": "The backup couldn’t be made. Keep this page open and try again.",
+    "leaveUnsaved": "Your latest changes aren’t saved. If you leave now, they’ll be lost. Leave anyway?"
   },
   "notFound": {
     "title": "Page not found",

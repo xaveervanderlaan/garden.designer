@@ -20,6 +20,7 @@ import { StatusBar } from './panels/StatusBar'
 import { WarningsPanel } from './panels/WarningsPanel'
 import { useEditorShortcuts } from './shortcuts'
 import { SitePlanImport } from './siteplan/SitePlanImport'
+import { StorageErrorBanner } from './StorageErrorBanner'
 import { BloomChartDialog } from './view/BloomChartDialog'
 import { ViewBar } from './view/ViewBar'
 
@@ -51,6 +52,15 @@ export function EditorPage({ projectId }: Props) {
       window.removeEventListener('pagehide', flush)
     }
   }, [])
+
+  // Changes that couldn't be saved are lost when the page closes: let the browser ask first.
+  const unsaved = useProjectStore((s) => s.saveState === 'error')
+  useEffect(() => {
+    if (!unsaved) return
+    const warn = (event: BeforeUnloadEvent) => event.preventDefault()
+    window.addEventListener('beforeunload', warn)
+    return () => window.removeEventListener('beforeunload', warn)
+  }, [unsaved])
 
   if (loadState !== 'ready' || !project) {
     const text =
@@ -85,6 +95,7 @@ function Workspace({ project }: { project: Project }) {
         <LibraryPanel project={project} />
       </aside>
       <div className={styles.canvasArea}>
+        <StorageErrorBanner project={project} />
         <ViewBar project={project} />
         <div className={styles.plan}>
           <Suspense fallback={<p className={styles.canvasLoading}>{t('editor.loading')}</p>}>

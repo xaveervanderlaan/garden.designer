@@ -16,10 +16,19 @@ export default defineConfig({
     locale: 'en-US',
     trace: 'on-first-retry',
   },
-  projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
+  projects: [
+    { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
+    // Opt-in: needs the Firefox/WebKit system libraries (gtk, gstreamer, ...).
+    ...(process.env.E2E_ALL_BROWSERS === '1'
+      ? [
+          { name: 'firefox', use: { ...devices['Desktop Firefox'] } },
+          { name: 'webkit', use: { ...devices['Desktop Safari'] } },
+        ]
+      : []),
+  ],
   // Tests run against the production build, served the same way as on GitHub Pages.
   webServer: {
-    command: `npm run build && npm run preview -- --port ${PORT} --strictPort`,
+    command: `${process.env.E2E_SKIP_BUILD ? '' : 'npm run build && '}npm run preview -- --port ${PORT} --strictPort`,
     url: BASE_URL,
     reuseExistingServer: !isCI,
     timeout: 120_000,

@@ -32,3 +32,5 @@ playwright/.cache
 
 # Private docs (SPEC.md, PLAN.md): separate private repo garden.designer-docs
 /docs/
+
+.verify/

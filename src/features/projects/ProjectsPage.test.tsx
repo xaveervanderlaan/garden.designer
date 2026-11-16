@@ -1,6 +1,8 @@
 import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
+import { exportProject } from '../../persistence/gardenFile'
+import { db } from '../../persistence/db'
 import { createProject, listProjects } from '../../persistence/projects'
 import { ProjectsPage } from './ProjectsPage'
 
@@ -86,5 +88,27 @@ describe('ProjectsPage', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent(
       'This file isn’t a Garden Designer design (.garden.json).',
     )
+  })
+
+  it('explains a full storage when importing', async () => {
+    const project = await createProject('Tuin')
+    const { json } = await exportProject(project.id)
+    vi.spyOn(console, 'warn').mockImplementation(() => {})
+    const add = vi
+      .spyOn(db.projects, 'add')
+      .mockRejectedValueOnce(new DOMException('full', 'QuotaExceededError'))
+    const user = userEvent.setup()
+    render(<ProjectsPage />)
+
+    await user.upload(
+      screen.getByTestId('import-input'),
+      new File([json], 'tuin.garden.json', { type: 'application/json' }),
+    )
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(/storage is full/)
+    expect(screen.getByRole('alert')).toHaveTextContent(/Export backups/)
+    add.mockRestore()
+    expect(await listProjects()).toHaveLength(1)
+    vi.restoreAllMocks()
   })
 })

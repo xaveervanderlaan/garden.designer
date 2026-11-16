@@ -15,6 +15,7 @@ import {
   listProjects,
   renameProject,
 } from '../../persistence/projects'
+import { isQuotaExceeded } from '../../persistence/storageErrors'
 import { navigate } from '../../routing'
 import controls from '../../styles/controls.module.css'
 import { cx } from '../../styles/cx'
@@ -49,14 +50,24 @@ export function ProjectsPage() {
   const [message, setMessage] = useState<Message | null>(null)
   const fileInput = useRef<HTMLInputElement>(null)
 
-  /** Runs a list action and shows its notice (if any), or a generic error if it fails. */
+  /** Shows why a write failed: a full storage gets advice, anything else a generic message. */
+  function showWriteError(error: unknown) {
+    if (isQuotaExceeded(error)) {
+      console.warn('Storage full', error) // the user's situation, not a bug
+      setMessage({ kind: 'error', text: t('storage.full') })
+    } else {
+      console.error(error)
+      setMessage({ kind: 'error', text: t('projects.errors.generic') })
+    }
+  }
+
+  /** Runs a list action and shows its notice (if any), or an error if it fails. */
   async function run(action: () => Promise<string | null>) {
     try {
       const text = await action()
       setMessage(text ? { kind: 'notice', text } : null)
     } catch (error) {
-      console.error(error)
-      setMessage({ kind: 'error', text: t('projects.errors.generic') })
+      showWriteError(error)
     }
   }
 
@@ -65,8 +76,7 @@ export function ProjectsPage() {
       const project = await createProject(name)
       navigate({ name: 'editor', projectId: project.id })
     } catch (error) {
-      console.error(error)
-      setMessage({ kind: 'error', text: t('projects.errors.generic') })
+      showWriteError(error)
     }
   }
 
@@ -75,10 +85,10 @@ export function ProjectsPage() {
       const project = await importGardenFile(await file.text())
       setMessage({ kind: 'notice', text: t('projects.notices.imported', { name: project.name }) })
     } catch (error) {
+      if (!(error instanceof ImportError)) return showWriteError(error)
       // Usually the user's file, not a bug: warn instead of logging an error.
       console.warn('Import failed', error)
-      const key = error instanceof ImportError ? IMPORT_ERROR_KEYS[error.code] : null
-      setMessage({ kind: 'error', text: t(key ?? 'projects.errors.generic') })
+      setMessage({ kind: 'error', text: t(IMPORT_ERROR_KEYS[error.code]) })
     }
   }
 

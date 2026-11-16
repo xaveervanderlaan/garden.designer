@@ -3,11 +3,20 @@ import { currentLanguage } from '.'
 /** Non-breaking space between a number and its unit. */
 const NBSP = ' '
 
+/** Number formats are slow to create, and the plan formats lengths on every pan and zoom. */
+const numberFormats = new Map<string, Intl.NumberFormat>()
+
 export function formatNumber(value: number, digits = 2, lang: string = currentLanguage()): string {
-  return new Intl.NumberFormat(lang, {
-    minimumFractionDigits: digits,
-    maximumFractionDigits: digits,
-  }).format(value)
+  const key = `${lang}|${digits}`
+  let format = numberFormats.get(key)
+  if (!format) {
+    format = new Intl.NumberFormat(lang, {
+      minimumFractionDigits: digits,
+      maximumFractionDigits: digits,
+    })
+    numberFormats.set(key, format)
+  }
+  return format.format(value)
 }
 
 /** A number for an input field, with up to `maxDigits` decimals and no grouping: "0,45", "12". */

@@ -1,7 +1,9 @@
 {
   "app": {
     "name": "Tuinontwerper",
-    "home": "Naar de lijst met ontwerpen"
+    "home": "Naar de lijst met ontwerpen",
+    "loadError": "Dit deel van de app kon niet worden geladen. Controleer je internetverbinding en laad de pagina opnieuw.",
+    "reload": "Opnieuw laden"
   },
   "language": {
     "label": "Taal",
@@ -398,7 +400,8 @@
         "unreadable": "Dit bestand kon niet worden gelezen. Misschien is het beschadigd; probeer de pagina op te slaan als PNG of JPG.",
         "pdfPassword": "Deze PDF is beveiligd met een wachtwoord. Sla een kopie op zonder wachtwoord, of als afbeelding.",
         "pdfEmpty": "Deze PDF heeft geen pagina’s.",
-        "saveFailed": "De afbeelding kon niet in de browser worden opgeslagen. Misschien is de opslag vol."
+        "saveFailed": "De afbeelding kon niet in de browser worden opgeslagen. Misschien is de opslag vol. Exporteer voor de zekerheid een back-up.",
+        "storageFull": "De opslag van de browser is vol, dus de afbeelding kon niet worden opgeslagen. Exporteer back-ups van je ontwerpen en verwijder ontwerpen of situatietekeningen die je niet meer nodig hebt, of gebruik een kleinere afbeelding."
       },
       "file": "Bestand",
       "fileAndPage": "{{file}}, pagina {{page}}",
@@ -639,6 +642,14 @@
     },
     "monthRange": "{{from}}–{{to}}",
     "monthsValue": "{{label}}: {{months}}"
+  },
+  "storage": {
+    "full": "De opslag van de browser is vol, dus dit kon niet worden opgeslagen. Exporteer back-ups van je ontwerpen en verwijder daarna ontwerpen die je niet meer nodig hebt.",
+    "autosaveFull": "De opslag van de browser is vol, dus je laatste wijzigingen zijn nog niet opgeslagen. Ze blijven bewaard zolang deze pagina open is, en bij je volgende wijziging wordt opnieuw geprobeerd op te slaan. Exporteer nu een back-up en verwijder daarna ontwerpen of situatietekeningen die je niet meer nodig hebt.",
+    "autosaveFailed": "Je laatste wijzigingen konden niet in de browser worden opgeslagen. Ze blijven bewaard zolang deze pagina open is, en bij je volgende wijziging wordt opnieuw geprobeerd op te slaan. Exporteer nu een back-up; gebeurt dit vaker, verwijder dan ontwerpen of situatietekeningen die je niet meer nodig hebt.",
+    "exportBackup": "Back-up exporteren",
+    "exportFailed": "De back-up kon niet worden gemaakt. Houd deze pagina open en probeer het opnieuw.",
+    "leaveUnsaved": "Je laatste wijzigingen zijn niet opgeslagen. Als je nu weggaat, raak je ze kwijt. Toch weggaan?"
   },
   "notFound": {
     "title": "Pagina niet gevonden",

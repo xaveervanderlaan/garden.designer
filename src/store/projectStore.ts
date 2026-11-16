@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import type { Project } from '../model/schema'
 import { loadProject, pruneUnusedAssets, saveProject } from '../persistence/projects'
+import { type StorageFailure, storageFailure } from '../persistence/storageErrors'
 
 export const AUTOSAVE_DELAY_MS = 1000
 /** Undo steps kept in memory. Snapshots share unchanged parts, so this is cheap. */
@@ -26,6 +27,8 @@ type ProjectStore = {
   project: Project | null
   loadState: LoadState
   saveState: SaveState
+  /** Why the last save failed; null unless saveState is 'error'. */
+  saveError: StorageFailure | null
   /** Undo history: earlier versions of the project, most recent last. */
   past: Project[]
   /** Redo history: undone versions, next one first. */
@@ -38,7 +41,7 @@ type ProjectStore = {
   update: (change: (project: Project) => Project, options?: UpdateOptions) => void
   undo: () => void
   redo: () => void
-  /** Writes pending changes now (e.g. when the page is hidden). */
+  /** Writes pending changes now (e.g. when the page is hidden), or retries a failed save. */
   flush: () => Promise<void>
 }
 
@@ -53,13 +56,19 @@ export const useProjectStore = create<ProjectStore>()((set, get) => {
     const project = get().project // read synchronously: the project as it was when the save started
     if (!project) return
 
-    set({ saveState: 'saving' })
+    set({ saveState: 'saving', saveError: null })
     try {
       await saveProject(project)
       if (get().project === project) set({ saveState: 'saved' })
     } catch (error) {
-      console.error('Autosave failed', error)
-      if (get().project?.id === project.id) set({ saveState: 'error' })
+      const failure = storageFailure(error)
+      // A full storage is the user's situation, not a bug in the app.
+      if (failure === 'full') console.warn('Autosave failed: storage full', error)
+      else console.error('Autosave failed', error)
+      // Changes made during the write already scheduled a retry; only report while none is pending.
+      if (get().project?.id === project.id && saveTimer === undefined) {
+        set({ saveState: 'error', saveError: failure })
+      }
     }
   }
 
@@ -68,8 +77,9 @@ export const useProjectStore = create<ProjectStore>()((set, get) => {
     saveTimer = setTimeout(() => void save(), AUTOSAVE_DELAY_MS)
   }
 
+  /** Saves now if a save is scheduled, or retries once if the last one failed. */
   function flush(): Promise<void> {
-    if (saveTimer === undefined) return Promise.resolve()
+    if (saveTimer === undefined && get().saveState !== 'error') return Promise.resolve()
     clearTimeout(saveTimer)
     return save()
   }
@@ -83,6 +93,7 @@ export const useProjectStore = create<ProjectStore>()((set, get) => {
     project: null,
     loadState: 'idle',
     saveState: 'saved',
+    saveError: null,
     past: [],
     future: [],
 
@@ -90,7 +101,14 @@ export const useProjectStore = create<ProjectStore>()((set, get) => {
       const myGeneration = ++generation
       const saving = flush()
       lastCoalesce = null
-      set({ project: null, loadState: 'loading', saveState: 'saved', past: [], future: [] })
+      set({
+        project: null,
+        loadState: 'loading',
+        saveState: 'saved',
+        saveError: null,
+        past: [],
+        future: [],
+      })
       await saving
 
       try {
@@ -108,7 +126,14 @@ export const useProjectStore = create<ProjectStore>()((set, get) => {
       const myGeneration = ++generation
       await flush()
       if (generation === myGeneration) {
-        set({ project: null, loadState: 'idle', saveState: 'saved', past: [], future: [] })
+        set({
+          project: null,
+          loadState: 'idle',
+          saveState: 'saved',
+          saveError: null,
+          past: [],
+          future: [],
+        })
       }
     },
 
@@ -120,7 +145,7 @@ export const useProjectStore = create<ProjectStore>()((set, get) => {
 
       const next = { ...changed, updatedAt: Date.now() }
       if (!history) {
-        set({ project: next, saveState: 'pending' })
+        set({ project: next, saveState: 'pending', saveError: null })
       } else {
         const now = Date.now()
         const merge =
@@ -134,6 +159,7 @@ export const useProjectStore = create<ProjectStore>()((set, get) => {
           past: merge ? past : [...past, project].slice(-HISTORY_LIMIT),
           future: future.length ? [] : future,
           saveState: 'pending',
+          saveError: null,
         })
       }
       scheduleSave()
@@ -149,6 +175,7 @@ export const useProjectStore = create<ProjectStore>()((set, get) => {
         past: past.slice(0, -1),
         future: [project, ...future],
         saveState: 'pending',
+        saveError: null,
       })
       scheduleSave()
     },
@@ -163,6 +190,7 @@ export const useProjectStore = create<ProjectStore>()((set, get) => {
         past: [...past, project],
         future: future.slice(1),
         saveState: 'pending',
+        saveError: null,
       })
       scheduleSave()
     },

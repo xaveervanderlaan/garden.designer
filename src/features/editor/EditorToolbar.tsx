@@ -76,7 +76,17 @@ export function EditorToolbar({ project }: { project: Project }) {
 
   return (
     <header className={styles.toolbar}>
-      <a className={styles.backLink} href={hrefFor({ name: 'projects' })} title={t('editor.back')}>
+      <a
+        className={styles.backLink}
+        href={hrefFor({ name: 'projects' })}
+        title={t('editor.back')}
+        onClick={(event) => {
+          // Closing retries the save once; if that fails too, unsaved changes are lost.
+          if (saveState === 'error' && !window.confirm(t('storage.leaveUnsaved'))) {
+            event.preventDefault()
+          }
+        }}
+      >
         <ArrowLeft {...icon} />
         <span className={controls.visuallyHidden}>{t('editor.back')}</span>
       </a>

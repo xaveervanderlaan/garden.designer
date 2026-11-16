@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { db } from '../persistence/db'
 import { createProject, loadProject } from '../persistence/projects'
 import {
   AUTOSAVE_DELAY_MS,
@@ -177,5 +178,78 @@ describe('projectStore', () => {
 
     expect(store().loadState).toBe('ready')
     expect(store().project?.id).toBe(project.id)
+  })
+
+  describe('when saving fails', () => {
+    const quota = () => new DOMException('full', 'QuotaExceededError')
+
+    beforeEach(() => {
+      vi.spyOn(console, 'warn').mockImplementation(() => {})
+      vi.spyOn(console, 'error').mockImplementation(() => {})
+    })
+
+    afterEach(() => {
+      vi.restoreAllMocks()
+    })
+
+    it('keeps the changes in memory and reports a full storage', async () => {
+      const project = await createProject('Tuin')
+      await store().open(project.id)
+      vi.spyOn(db.projects, 'put').mockRejectedValueOnce(quota())
+
+      rename('Voortuin')
+      await vi.advanceTimersByTimeAsync(AUTOSAVE_DELAY_MS)
+
+      await vi.waitFor(() => expect(store().saveState).toBe('error'))
+      expect(store().saveError).toBe('full')
+      expect(store().project?.name).toBe('Voortuin')
+      expect((await loadProject(project.id))?.name).toBe('Tuin')
+      expect(console.warn).toHaveBeenCalled()
+      expect(console.error).not.toHaveBeenCalled()
+    })
+
+    it('retries on the next change and clears the error', async () => {
+      const project = await createProject('Tuin')
+      await store().open(project.id)
+      vi.spyOn(db.projects, 'put').mockRejectedValueOnce(quota())
+      rename('Voortuin')
+      await vi.advanceTimersByTimeAsync(AUTOSAVE_DELAY_MS)
+      await vi.waitFor(() => expect(store().saveState).toBe('error'))
+
+      rename('Voortuin 2')
+      expect(store().saveError).toBeNull()
+      await vi.advanceTimersByTimeAsync(AUTOSAVE_DELAY_MS)
+
+      await vi.waitFor(() => expect(store().saveState).toBe('saved'))
+      expect(store().saveError).toBeNull()
+      expect((await loadProject(project.id))?.name).toBe('Voortuin 2')
+    })
+
+    it('retries a failed save when the design is closed', async () => {
+      const project = await createProject('Tuin')
+      await store().open(project.id)
+      vi.spyOn(db.projects, 'put').mockRejectedValueOnce(quota())
+      rename('Voortuin')
+      await vi.advanceTimersByTimeAsync(AUTOSAVE_DELAY_MS)
+      await vi.waitFor(() => expect(store().saveState).toBe('error'))
+
+      await store().close()
+
+      expect(store().saveError).toBeNull()
+      expect((await loadProject(project.id))?.name).toBe('Voortuin')
+    })
+
+    it('reports other write failures as failed', async () => {
+      const project = await createProject('Tuin')
+      await store().open(project.id)
+      vi.spyOn(db.projects, 'put').mockRejectedValueOnce(new Error('disk on fire'))
+
+      rename('Voortuin')
+      await vi.advanceTimersByTimeAsync(AUTOSAVE_DELAY_MS)
+
+      await vi.waitFor(() => expect(store().saveState).toBe('error'))
+      expect(store().saveError).toBe('failed')
+      expect(console.error).toHaveBeenCalled()
+    })
   })
 })

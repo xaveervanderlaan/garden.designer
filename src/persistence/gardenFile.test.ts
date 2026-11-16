@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import sampleFixture from '../../tests/e2e/fixtures/sample.garden.json?raw'
 import { SCHEMA_VERSION } from '../model/schema'
 import { sampleProjectWithAsset } from '../test/fixtures'
@@ -14,6 +14,7 @@ import {
   parseGardenFile,
 } from './gardenFile'
 import { addAsset, listAssets, listProjects, loadProject } from './projects'
+import { isQuotaExceeded } from './storageErrors'
 
 async function storeSample() {
   const { project, asset } = sampleProjectWithAsset('Achtertuin – versie 2')
@@ -73,6 +74,28 @@ describe('export → import', () => {
     await importGardenFile(json)
 
     expect(await listProjects()).toHaveLength(3)
+  })
+
+  it('leaves nothing behind when the import cannot be written', async () => {
+    const { project } = await storeSample()
+    const { json } = await exportProject(project.id)
+    const projectsBefore = await db.projects.count()
+    const assetsBefore = await db.assets.count()
+    const add = vi
+      .spyOn(db.projects, 'add')
+      .mockRejectedValueOnce(new DOMException('full', 'QuotaExceededError'))
+
+    const error = await importGardenFile(json).then(
+      () => null,
+      (reason: unknown) => reason,
+    )
+    add.mockRestore()
+
+    expect(error).not.toBeNull()
+    expect(error).not.toBeInstanceOf(ImportError)
+    expect(isQuotaExceeded(error)).toBe(true)
+    expect(await db.projects.count()).toBe(projectsBefore)
+    expect(await db.assets.count()).toBe(assetsBefore)
   })
 })
 

@@ -6,3 +6,5 @@ blob-report
 package-lock.json
 # Hand-written docs keep their own formatting
 *.md
+.verify
+tests/prof

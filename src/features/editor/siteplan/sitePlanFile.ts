@@ -4,7 +4,13 @@
  */
 
 export type SitePlanErrorCode =
-  'unsupported' | 'tooLarge' | 'unreadable' | 'pdfPassword' | 'pdfEmpty' | 'saveFailed'
+  | 'unsupported'
+  | 'tooLarge'
+  | 'unreadable'
+  | 'pdfPassword'
+  | 'pdfEmpty'
+  | 'saveFailed'
+  | 'storageFull'
 
 export class SitePlanError extends Error {
   readonly code: SitePlanErrorCode

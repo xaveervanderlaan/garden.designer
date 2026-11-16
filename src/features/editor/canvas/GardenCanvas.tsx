@@ -1,5 +1,5 @@
 import type Konva from 'konva'
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Group, Layer, Stage, Transformer } from 'react-konva'
 import { scaleBarLength } from '../../../geometry/grid'
@@ -48,6 +48,7 @@ import { DrawingPanel } from './DrawingPanel'
 import styles from './GardenCanvas.module.css'
 import { FillPanel } from './FillPanel'
 import { Grid } from './Grid'
+import { useDeferredHitGraph } from './hitGraph'
 import { type BedDraft, type ItemHandlers, Items } from './Items'
 import { PlantPreview } from './PlantPreview'
 import { PlotOverlay, PlotShape } from './Plot'
@@ -97,6 +98,10 @@ export default function GardenCanvas() {
   const dragging = useRef<ReadonlySet<string>>(new Set())
   const transformer = useRef<Konva.Transformer>(null)
   const fittedProjectId = useRef<string | null>(null)
+  // Performance: the items' hit graph isn't redrawn while the view moves (see hitGraph.ts).
+  const itemsHitGraph = useDeferredHitGraph(viewport)
+  const { layerRef } = itemsHitGraph
+  const itemsLayerRef = useCallback((layer: Konva.Layer | null) => layerRef(layer), [layerRef])
 
   const panMode = tool === 'pan' || spaceHeld
   const drawMode = tool === 'draw' && !spaceHeld
@@ -446,6 +451,9 @@ export default function GardenCanvas() {
         onMouseDown={(e) =>
           (tool === 'draw' || tool === 'calibrate' || tool === 'fill') && e.preventDefault()
         }
+        // Before Konva looks for the shape under the mouse (not while dragging to pan).
+        onPointerDownCapture={() => itemsHitGraph.flush()}
+        onPointerMoveCapture={(e) => e.buttons === 0 && itemsHitGraph.flush()}
         onDragOver={onDragOver}
         onDragLeave={(e) => {
           if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setDropAt(null)
@@ -479,7 +487,7 @@ export default function GardenCanvas() {
                 onHover={(on) => setHovered(on ? BACKGROUND_ID : null)}
               />
             )}
-            <Layer>
+            <Layer ref={itemsLayerRef}>
               <Group x={viewport.x} y={viewport.y} scaleX={viewport.scale} scaleY={viewport.scale}>
                 {plotVisible && (
                   <PlotShape

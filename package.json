@@ -1,7 +1,7 @@
 {
   "name": "garden-designer",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Browser app to design a garden: plot, hardscape, plants, sun and shade.",
   "type": "module",
   "engines": {
@@ -17,6 +17,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "e2e": "playwright test",
+    "verify": "bash scripts/verify.sh",
     "plants:review": "node scripts/plants-review.ts",
     "icons": "node scripts/render-icons.ts"
   },

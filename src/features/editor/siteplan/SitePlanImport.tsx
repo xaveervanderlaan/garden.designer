@@ -2,6 +2,7 @@ import { X } from 'lucide-react'
 import { useCallback, useEffect, useId, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { addAsset } from '../../../persistence/projects'
+import { isQuotaExceeded } from '../../../persistence/storageErrors'
 import { useProjectStore } from '../../../store/projectStore'
 import { useUiStore } from '../../../store/uiStore'
 import controls from '../../../styles/controls.module.css'
@@ -75,15 +76,22 @@ export function SitePlanImport() {
   /** Stores the image and puts it on the plan of the design it was imported into. */
   async function place(myRun: number, image: SitePlanImage, fileName: string, page?: number) {
     const projectId = useProjectStore.getState().project?.id
-    if (!projectId) return
+    if (!projectId) return setState({ step: 'idle' })
     let assetId: string
     try {
       assetId = await addAsset(projectId, image.mimeType, image.data)
     } catch (error) {
+      if (isQuotaExceeded(error)) {
+        console.warn('Site plan not saved: storage full', error) // the user's situation, not a bug
+        throw new SitePlanError('storageFull', String(error))
+      }
+      console.error('Site plan not saved', error)
       throw new SitePlanError('saveFailed', String(error))
     }
-    // Cancelled, or another design opened meanwhile: the stored file is cleaned up later.
-    if (run.current !== myRun || useProjectStore.getState().project?.id !== projectId) return
+    // Cancelled: a newer import or Close owns the dialog now. The stored file is cleaned up later.
+    if (run.current !== myRun) return
+    // Another design opened meanwhile: don't place it there.
+    if (useProjectStore.getState().project?.id !== projectId) return setState({ step: 'idle' })
     editorActions.placeSitePlan({
       assetId,
       widthPx: image.widthPx,
