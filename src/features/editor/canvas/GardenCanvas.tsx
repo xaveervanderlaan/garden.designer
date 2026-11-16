@@ -55,7 +55,7 @@ import { SitePlanLayer } from './SitePlan'
 import { snapContext } from './snapTargets'
 import { StampPanel } from './StampPanel'
 import { useAltKey } from './useAltKey'
-import { useElementSize } from './useElementSize'
+import { elementSize, useElementSize } from './useElementSize'
 import { useSpaceKey } from './useSpaceKey'
 
 const ROTATION_SNAPS = [0, 45, 90, 135, 180, 225, 270, 315]
@@ -144,8 +144,7 @@ export default function GardenCanvas() {
     const element = containerRef.current
     const { viewport: current, setViewport, setFit } = useUiStore.getState()
     if (!element || !fit || current !== fit.viewport) return
-    const width = Math.floor(element.clientWidth)
-    const height = Math.floor(element.clientHeight)
+    const { width, height } = elementSize(element)
     if (width <= 0 || height <= 0) return
     const next = fitBounds(fit.bounds, { width, height })
     if (next.x === current.x && next.y === current.y && next.scale === current.scale) return

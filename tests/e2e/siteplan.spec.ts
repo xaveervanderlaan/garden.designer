@@ -227,7 +227,11 @@ test('imports a site plan, calibrates it with a 10 m line and traces the plot', 
   // 200 px = 10 m: 5 cm per pixel (clicks land within about half a pixel).
   bg = (await savedProject(page)).background!
   expect(Math.abs(bg.metresPerPixel / 0.05 - 1)).toBeLessThan(0.01)
-  await expect(page.getByTestId('site-plan-size')).toHaveText(/^30\.\d\sm × 20\.\d\sm$/)
+  // The panel shows the calibrated size, which may be just under 30 × 20 m (e.g. 29.9 m).
+  const metres = (px: number) => (px * bg.metresPerPixel).toFixed(1)
+  await expect(page.getByTestId('site-plan-size')).toHaveText(
+    new RegExp(`^${metres(600)}\\sm × ${metres(400)}\\sm$`),
+  )
 
   // Lock it, so tracing can't move it, and trace the plot by clicking its corners.
   await page.getByRole('button', { name: 'Lock in place' }).click()
