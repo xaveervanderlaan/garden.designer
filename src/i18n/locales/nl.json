@@ -481,7 +481,9 @@
       "selectHint": "Deze planten selecteren",
       "count": "{{count}}×",
       "thresholdHint": "Planten overlappen als dat volgroeid meer is dan {{percent}} van de kleinste (ontwerpinstellingen).",
+      "thresholdHintYear": "Planten overlappen als dat in {{year}} meer is dan {{percent}} van de kleinste (ontwerpinstellingen).",
       "overlapOne": "Overlapt volgroeid {{percent}} met {{name}}.",
+      "overlapOneYear": "Overlapt in {{year}} {{percent}} met {{name}}.",
       "outsideOne": "Buiten het perceel.",
       "soilDryOne": "Niet droogtebestendig, en zand droogt snel uit: water geven bij droogte.",
       "soilUnsuitedOne": "Past niet bij je grond ({{soil}}).",
@@ -507,6 +509,41 @@
       "textTitle": "Plantlijst: {{name}}",
       "textLine": "{{code}}. {{name}} ({{latin}}): {{count}}",
       "textLineShort": "{{code}}. {{name}}: {{count}}"
+    },
+    "view": {
+      "label": "Weergave",
+      "year": "Jaar",
+      "yearHint": "Toon de planten op hun grootte in een jaar na het planten. Planten die later de grond in gaan, zijn vaag en hebben een gestippelde rand.",
+      "yearValue": {
+        "planting": "Plantjaar ({{year}})",
+        "after_one": "{{year}} (+{{count}} jaar)",
+        "after_other": "{{year}} (+{{count}} jaar)",
+        "mature": "Volgroeid"
+      },
+      "month": "Maand",
+      "monthHint": "Toon hoe de planten er in een maand uitzien: in bloei, in blad, in herfstkleur of kaal.",
+      "noMonth": "Geen maand",
+      "previousMonth": "Vorige maand",
+      "nextMonth": "Volgende maand",
+      "bloomChart": "Bloeikalender"
+    },
+    "bloomChart": {
+      "title": "Bloeikalender",
+      "close": "Sluiten",
+      "scope": "Planten in",
+      "whole": "Hele ontwerp",
+      "caption": "Bloeiende planten per maand",
+      "plant": "Plant",
+      "all": "In bloei",
+      "inBloom_one": "{{count}} plant in bloei",
+      "inBloom_other": "{{count}} planten in bloei",
+      "colorCount": "{{count}} {{color}}",
+      "count": "{{count}}×",
+      "showMonth": "{{month}} op de tekening tonen",
+      "empty": "Nog geen bloeiende planten in het ontwerp.",
+      "emptyBed": "Nog geen bloeiende planten in dit bed.",
+      "emptyMonths": "Niets in bloei in {{months}}.",
+      "allMonths": "Er bloeit elke maand iets."
     },
     "settings": {
       "title": "Ontwerpinstellingen",

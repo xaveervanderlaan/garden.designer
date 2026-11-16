@@ -17,7 +17,7 @@ export type SymbolPart = {
   fillOpacity?: number
 }
 
-const TRUNK_COLOR = '#5b4632'
+export const TRUNK_COLOR = '#5b4632'
 const FRUIT_COLOR = '#c8372d'
 
 const r3 = (n: number) => Math.round(n * 1000) / 1000
@@ -88,7 +88,7 @@ export function symbolColor(plant: Plant): string {
 
 /**
  * The colours a symbol is drawn with: `main` (flowers or leaves, see symbolColor) and `foliage`.
- * The seasonal view (M14) passes other colours for a month.
+ * The seasonal view (M14) passes other colours for a month (see plantAppearance.ts).
  */
 export type SymbolColors = { main: string; foliage: string }
 

@@ -46,9 +46,17 @@
 }
 
 .canvasArea {
-  position: relative;
+  display: flex;
+  flex-direction: column;
   grid-area: canvas;
   min-width: 0;
+  min-height: 0;
+}
+
+/* The plan, below the view bar. */
+.plan {
+  position: relative;
+  flex: 1;
   min-height: 0;
 }
 

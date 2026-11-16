@@ -38,7 +38,8 @@ import { SELECTION_COLOR } from '../../../styles/elementStyles'
 import { plantAppearance } from '../../../styles/plantAppearance'
 import { PLANT_DRAG_TYPE } from '../../library/drag'
 import { useLibraryStore } from '../../library/libraryStore'
-import { currentSelection, editorActions } from '../actions'
+import { currentSelection, currentYear, editorActions } from '../actions'
+import { usePlantView } from '../view/plantView'
 import { BedOverlay } from './BedOverlay'
 import { CalibrationDraft, CalibrationLine } from './CalibrationOverlay'
 import { CalibrationPanel } from './CalibrationPanel'
@@ -74,6 +75,7 @@ export default function GardenCanvas() {
   const fill = useUiStore((s) => s.fill)
   const labelMode = useUiStore((s) => s.labelMode)
   const fit = useUiStore((s) => s.fit)
+  const view = usePlantView(project)
   const spaceHeld = useSpaceKey()
   const altHeld = useAltKey()
   const [panning, setPanning] = useState(false)
@@ -109,13 +111,13 @@ export default function GardenCanvas() {
     () =>
       new Map(
         project
-          ? [...warningsByPlanting(designWarnings(project))].map(([id, list]) => [
+          ? [...warningsByPlanting(designWarnings(project, view.year))].map(([id, list]) => [
               id,
               worstSeverity(list),
             ])
           : [],
       ),
-    [project],
+    [project, view.year],
   )
   const labelsVisible = !!project && isLayerVisible(project, 'labels')
   const labels = useMemo(
@@ -410,7 +412,8 @@ export default function GardenCanvas() {
   function previewOf() {
     if (!project) return null
     const of = (plantId: string, positions: Point[]) => ({
-      appearance: plantAppearance(findPlant(project, plantId)),
+      // New plants are planted this year.
+      appearance: plantAppearance(findPlant(project, plantId), view, currentYear()),
       positions,
     })
     if (dropAt) return of(dropAt.plantId, [dropAt.point])
@@ -498,6 +501,7 @@ export default function GardenCanvas() {
                   labels={labels}
                   labelMode={labelMode}
                   bedDraft={bedDraft}
+                  view={view}
                 />
                 {preview && (
                   <PlantPreview appearance={preview.appearance} positions={preview.positions} />

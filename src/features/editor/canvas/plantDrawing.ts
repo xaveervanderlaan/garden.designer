@@ -1,6 +1,6 @@
 import type { Point } from '../../../model/schema'
 import { PLANTING_MARKS } from '../../../styles/elementStyles'
-import type { PlantAppearance } from '../../../styles/plantAppearance'
+import { GHOST_STYLE, type PlantAppearance } from '../../../styles/plantAppearance'
 
 /**
  * Drawing plants with the canvas API, for Konva `sceneFunc`s: the symbols are SVG paths (see
@@ -35,8 +35,36 @@ export function drawnRadius(radiusM: number, pxPerM: number): number {
   return Math.max(radiusM, MIN_RADIUS_PX / pxPerM)
 }
 
-/** Draws a plant's symbol centred on `at`, `radius` metres in size. */
+/**
+ * Draws a plant's symbol centred on `at`, `radius` metres in size. A ghost (not planted yet in the
+ * viewed year) is drawn see-through with a dashed outline.
+ */
 export function drawPlantSymbol(
+  ctx: CanvasRenderingContext2D,
+  appearance: PlantAppearance,
+  at: Point,
+  radius: number,
+  pxPerM: number,
+): void {
+  if (!appearance.ghost) {
+    drawSymbol(ctx, appearance, at, radius, pxPerM)
+    return
+  }
+  ctx.save()
+  ctx.globalAlpha *= GHOST_STYLE.opacity
+  drawSymbol(ctx, appearance, at, radius, pxPerM)
+  ctx.restore()
+  ctx.save()
+  ctx.beginPath()
+  ctx.arc(at.x, at.y, drawnRadius(radius, pxPerM), 0, 2 * Math.PI)
+  ctx.setLineDash(GHOST_STYLE.dashPx.map((d) => d / pxPerM))
+  ctx.lineWidth = 1 / pxPerM
+  ctx.strokeStyle = GHOST_STYLE.ring
+  ctx.stroke()
+  ctx.restore()
+}
+
+function drawSymbol(
   ctx: CanvasRenderingContext2D,
   appearance: PlantAppearance,
   at: Point,
@@ -47,8 +75,10 @@ export function drawPlantSymbol(
   if (r * pxPerM < SIMPLE_SYMBOL_RADIUS_PX) {
     ctx.beginPath()
     ctx.arc(at.x, at.y, r, 0, 2 * Math.PI)
-    ctx.fillStyle = appearance.color
-    ctx.fill()
+    if (appearance.color) {
+      ctx.fillStyle = appearance.color
+      ctx.fill()
+    }
     ctx.lineWidth = 1 / pxPerM
     ctx.strokeStyle = appearance.outline
     ctx.stroke()

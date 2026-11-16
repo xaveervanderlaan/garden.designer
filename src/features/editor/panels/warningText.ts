@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next'
 import { currentLanguage } from '../../../i18n'
 import { formatPercent } from '../../../i18n/units'
+import type { GrowthView } from '../../../model/growth'
 import { findPlant, plantName } from '../../../model/plants'
 import type { Project } from '../../../model/schema'
 import type { Warning, WarningGroup } from '../../../model/warnings'
@@ -15,8 +16,14 @@ function useNameOf(project: Project): (plantId: string) => string {
   }
 }
 
-/** A warning about one planting (`about`), as shown in its properties. */
-export function useWarningText(project: Project): (warning: Warning, about: string) => string {
+/**
+ * A warning about one planting (`about`), as shown in its properties. `view` is the growth year the
+ * warnings were computed for (overlaps depend on it).
+ */
+export function useWarningText(
+  project: Project,
+  view: GrowthView,
+): (warning: Warning, about: string) => string {
   const { t } = useTranslation()
   const nameOf = useNameOf(project)
   const soil = t(`plants.soil.${project.settings.soil}`).toLowerCase()
@@ -25,10 +32,13 @@ export function useWarningText(project: Project): (warning: Warning, about: stri
       case 'overlap': {
         const otherId = warning.plantingId === about ? warning.otherId : warning.plantingId
         const other = project.plantings.find((p) => p.id === otherId)
-        return t('editor.warnings.overlapOne', {
+        const values = {
           name: other ? nameOf(other.plantId) : '',
           percent: formatPercent(warning.fraction),
-        })
+        }
+        return view === 'mature'
+          ? t('editor.warnings.overlapOne', values)
+          : t('editor.warnings.overlapOneYear', { ...values, year: view })
       }
       case 'outside-plot':
         return t('editor.warnings.outsideOne')

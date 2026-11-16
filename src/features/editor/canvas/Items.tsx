@@ -10,7 +10,11 @@ import type { GardenObject, Point, Project } from '../../../model/schema'
 import type { Severity } from '../../../model/warnings'
 import type { LabelMode } from '../../../store/uiStore'
 import { DEFAULT_STROKE_PX, OBJECT_STYLES, SELECTION_COLOR } from '../../../styles/elementStyles'
-import { type PlantAppearance, plantAppearance } from '../../../styles/plantAppearance'
+import {
+  type PlantAppearance,
+  type PlantView,
+  plantAppearance,
+} from '../../../styles/plantAppearance'
 import {
   drawLabel,
   drawPlantSymbol,
@@ -60,6 +64,8 @@ type ItemsProps = {
   labels: ReadonlyMap<string, string> | null
   labelMode: LabelMode
   bedDraft: BedDraft | null
+  /** The year and month plants are drawn for (view bar). */
+  view: PlantView
 }
 
 /**
@@ -76,11 +82,13 @@ export const Items = memo(function Items({
   labels,
   labelMode,
   bedDraft,
+  view,
 }: ItemsProps) {
   const plantings = project.plantings.flatMap((planting) => {
     const layer = plantingLayer(project, planting)
     if (!isLayerVisible(project, layer)) return []
-    const appearance = plantAppearance(findPlant(project, planting.plantId))
+    const plant = findPlant(project, planting.plantId)
+    const appearance = plantAppearance(plant, view, planting.plantedYear)
     return [{ planting, layer, appearance }]
   })
 

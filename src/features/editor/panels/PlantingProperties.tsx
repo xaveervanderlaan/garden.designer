@@ -14,6 +14,7 @@ import controls from '../../../styles/controls.module.css'
 import { cx } from '../../../styles/cx'
 import { useLibraryStore } from '../../library/libraryStore'
 import { editorActions } from '../actions'
+import { usePlantView } from '../view/plantView'
 import { useBedName } from './bedName'
 import { NumberField } from './NumberField'
 import { useWarningText } from './warningText'
@@ -32,7 +33,8 @@ export function PlantingProperties({
   const notesId = useId()
   const yearId = useId()
   const bedName = useBedName(project)
-  const warningText = useWarningText(project)
+  const { year: view } = usePlantView(project)
+  const warningText = useWarningText(project, view)
   const ids = plantings.map((p) => p.id)
   const single = plantings.length === 1 ? plantings[0]! : undefined
   const plantIds = new Set(plantings.map((p) => p.plantId))
@@ -41,7 +43,9 @@ export function PlantingProperties({
   const years = new Set(plantings.map((p) => p.plantedYear))
   const year = years.size === 1 ? plantings[0]!.plantedYear : undefined
   const bed = single?.bedId ? findBed(project, single.bedId) : undefined
-  const warnings = single ? (warningsByPlanting(designWarnings(project)).get(single.id) ?? []) : []
+  const warnings = single
+    ? (warningsByPlanting(designWarnings(project, view)).get(single.id) ?? [])
+    : []
 
   return (
     <>

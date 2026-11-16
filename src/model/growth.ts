@@ -114,9 +114,13 @@ export function plantingRadiusAtM(project: Project, planting: Planting, view: Gr
 /** Slider stops after the planting year (in years); the last stop is the mature size. */
 export const GROWTH_STOP_OFFSETS = [0, 1, 3, 5, 10] as const
 
+/** Stable keys of the slider stops. */
+export const GROWTH_STOP_IDS = ['planting', '+1', '+3', '+5', '+10', 'mature'] as const
+export type GrowthStopId = (typeof GROWTH_STOP_IDS)[number]
+
 export type GrowthStop = {
   /** Stable key: "planting", "+1", "+3", "+5", "+10" or "mature". */
-  id: string
+  id: GrowthStopId
   /** Years after the reference year; 0 is the planting year, null the mature size. */
   offsetYears: number | null
   view: GrowthView
@@ -125,8 +129,9 @@ export type GrowthStop = {
 /** The slider stops "planting year / +1 / +3 / +5 / +10 / mature" for a reference year. */
 export function growthStops(referenceYear: number): GrowthStop[] {
   return [
-    ...GROWTH_STOP_OFFSETS.map((offset) => ({
-      id: offset === 0 ? 'planting' : `+${offset}`,
+    ...GROWTH_STOP_OFFSETS.map((offset): GrowthStop => ({
+      id:
+        offset === 0 ? 'planting' : (`+${offset}` as Exclude<GrowthStopId, 'planting' | 'mature'>),
       offsetYears: offset,
       view: referenceYear + offset,
     })),

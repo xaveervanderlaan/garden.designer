@@ -6,14 +6,19 @@ import { validSelection } from '../../../model/edit'
 import type { Project } from '../../../model/schema'
 import { designWarnings, groupWarnings } from '../../../model/warnings'
 import { useUiStore } from '../../../store/uiStore'
+import { usePlantView } from '../view/plantView'
 import { CollapsibleSection } from './CollapsibleSection'
 import { useWarningGroupText } from './warningText'
 import styles from './panels.module.css'
 
-/** Every planting warning, one line per kind and species; a click selects the plants. */
+/**
+ * Every planting warning, one line per kind and species; a click selects the plants. Overlaps are
+ * for the year shown in the view bar.
+ */
 export function WarningsPanel({ project }: { project: Project }) {
   const { t } = useTranslation()
-  const warnings = designWarnings(project)
+  const { year } = usePlantView(project)
+  const warnings = designWarnings(project, year)
   const groups = useMemo(() => groupWarnings(project, warnings), [project, warnings])
   const text = useWarningGroupText(project)
 
@@ -56,9 +61,14 @@ export function WarningsPanel({ project }: { project: Project }) {
         </ul>
       )}
       <p className={styles.smallHint}>
-        {t('editor.warnings.thresholdHint', {
-          percent: formatPercent(project.settings.overlapThreshold),
-        })}
+        {year === 'mature'
+          ? t('editor.warnings.thresholdHint', {
+              percent: formatPercent(project.settings.overlapThreshold),
+            })
+          : t('editor.warnings.thresholdHintYear', {
+              percent: formatPercent(project.settings.overlapThreshold),
+              year,
+            })}
       </p>
     </CollapsibleSection>
   )

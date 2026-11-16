@@ -20,6 +20,8 @@ import { StatusBar } from './panels/StatusBar'
 import { WarningsPanel } from './panels/WarningsPanel'
 import { useEditorShortcuts } from './shortcuts'
 import { SitePlanImport } from './siteplan/SitePlanImport'
+import { BloomChartDialog } from './view/BloomChartDialog'
+import { ViewBar } from './view/ViewBar'
 
 // Konva is large: load the canvas only when a design is opened.
 const GardenCanvas = lazy(() => import('./canvas/GardenCanvas'))
@@ -83,9 +85,12 @@ function Workspace({ project }: { project: Project }) {
         <LibraryPanel project={project} />
       </aside>
       <div className={styles.canvasArea}>
-        <Suspense fallback={<p className={styles.canvasLoading}>{t('editor.loading')}</p>}>
-          <GardenCanvas />
-        </Suspense>
+        <ViewBar project={project} />
+        <div className={styles.plan}>
+          <Suspense fallback={<p className={styles.canvasLoading}>{t('editor.loading')}</p>}>
+            <GardenCanvas />
+          </Suspense>
+        </div>
       </div>
       <aside className={styles.right}>
         <PropertiesPanel project={project} />
@@ -101,6 +106,7 @@ function Workspace({ project }: { project: Project }) {
       <SettingsDialog />
       <SitePlanImport />
       <PlantFormDialog />
+      <BloomChartDialog />
     </div>
   )
 }

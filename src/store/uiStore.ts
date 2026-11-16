@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import type { Bounds } from '../geometry/bounds'
 import type { Size, Viewport } from '../geometry/viewport'
 import type { BedKind } from '../model/beds'
+import type { GrowthStopId } from '../model/growth'
 import type { Point } from '../model/schema'
 
 /**
@@ -54,6 +55,11 @@ type UiStore = {
   /** The bed being filled with plants, or null. */
   fill: Fill | null
   labelMode: LabelMode
+  /** The view bar's year (M13): plants are drawn at their size then. Default: mature. */
+  growthStop: GrowthStopId
+  /** The view bar's month (M14, 1–12): plants are drawn as they look then; null: usual look. */
+  month: number | null
+  bloomChartOpen: boolean
   settingsOpen: boolean
   /** The line being measured with the calibrate tool, or null. */
   calibration: Calibration | null
@@ -88,6 +94,9 @@ type UiStore = {
   setStamp: (stamp: Stamp | null) => void
   setFill: (fill: Fill | null) => void
   setLabelMode: (mode: LabelMode) => void
+  setGrowthStop: (stop: GrowthStopId) => void
+  setMonth: (month: number | null) => void
+  setBloomChartOpen: (open: boolean) => void
   setSettingsOpen: (open: boolean) => void
   setCalibration: (calibration: Calibration | null) => void
   setSnapToGrid: (on: boolean) => void
@@ -110,6 +119,9 @@ const initial = {
   stamp: null,
   fill: null,
   labelMode: 'name' as LabelMode,
+  growthStop: 'mature' as GrowthStopId,
+  month: null as number | null,
+  bloomChartOpen: false,
   settingsOpen: false,
   calibration: null,
   snapToGrid: true,
@@ -169,6 +181,9 @@ export const useUiStore = create<UiStore>()((set) => ({
   setStamp: (stamp) => set({ stamp }),
   setFill: (fill) => set({ fill }),
   setLabelMode: (labelMode) => set({ labelMode }),
+  setGrowthStop: (growthStop) => set({ growthStop }),
+  setMonth: (month) => set({ month }),
+  setBloomChartOpen: (bloomChartOpen) => set({ bloomChartOpen }),
   setSettingsOpen: (settingsOpen) => set({ settingsOpen }),
   setCalibration: (calibration) => set({ calibration }),
   setSnapToGrid: (snapToGrid) => set({ snapToGrid }),

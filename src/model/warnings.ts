@@ -1,11 +1,13 @@
 import { pointInPolygon } from '../geometry/polygon'
-import { findPlant, plantingRadiusM, soilSuitability } from './plants'
+import { type GrowthView, isPlanted, plantingRadiusAtM } from './growth'
+import { findPlant, soilSuitability } from './plants'
 import { hasPlot } from './plot'
 import type { Plant, Planting, Project } from './schema'
 
 /**
- * Planting warnings, computed from the design (never stored). Later milestones add kinds (sun
- * mismatch in M12) and options (sizes for a growth year in M13).
+ * Planting warnings, computed from the design (never stored). Overlaps are checked at the size the
+ * plants are drawn: mature by default, or in a year of the growth view (M13). Later milestones add
+ * kinds (sun mismatch in M12).
  */
 
 export type Warning =
@@ -34,7 +36,12 @@ export function worstSeverity(warnings: readonly Warning[]): Severity {
 }
 
 export type WarningOptions = {
-  /** Radius (m) each planting is checked at; default: half its mature spread. */
+  /**
+   * The growth view (M13): overlaps are checked at the plants' size in this year, between the
+   * plantings that are in the ground by then. Default: 'mature'.
+   */
+  view?: GrowthView
+  /** Radius (m) each planting is checked at; default: half its spread in `view`. */
   radiusM?: (planting: Planting) => number
 }
 
@@ -74,7 +81,9 @@ export function findOverlaps(
 
 /** All warnings for the design's plantings. */
 export function plantingWarnings(project: Project, options: WarningOptions = {}): Warning[] {
-  const radiusM = options.radiusM ?? ((planting: Planting) => plantingRadiusM(project, planting))
+  const view = options.view ?? 'mature'
+  const radiusM =
+    options.radiusM ?? ((planting: Planting) => plantingRadiusAtM(project, planting, view))
   const plants = new Map<string, Plant | undefined>()
   const plantOf = (planting: Planting) => {
     if (!plants.has(planting.plantId)) {
@@ -84,12 +93,16 @@ export function plantingWarnings(project: Project, options: WarningOptions = {})
   }
   const warnings: Warning[] = []
 
-  // Overlaps. A hedge is planted to close up, so hedging plants may overlap each other.
+  // Overlaps, between the plants in the ground in the viewed year. A hedge is planted to close up,
+  // so hedging plants may overlap each other.
   const categories = new Map<string, Plant['category'] | undefined>()
-  const circles = project.plantings.map((planting) => {
-    categories.set(planting.id, plantOf(planting)?.category)
-    return { id: planting.id, x: planting.position.x, y: planting.position.y, r: radiusM(planting) }
-  })
+  const circles = project.plantings
+    .filter((planting) => isPlanted(planting.plantedYear, view))
+    .map((planting) => {
+      categories.set(planting.id, plantOf(planting)?.category)
+      const { x, y } = planting.position
+      return { id: planting.id, x, y, r: radiusM(planting) }
+    })
   const bothHedges = (a: Circle, b: Circle) =>
     categories.get(a.id) === 'hedge' && categories.get(b.id) === 'hedge'
   const order = new Map(project.plantings.map((p, i) => [p.id, i]))
@@ -119,17 +132,22 @@ export function plantingWarnings(project: Project, options: WarningOptions = {})
   return warnings.sort((a, b) => order.get(a.plantingId)! - order.get(b.plantingId)!)
 }
 
-const cache = new WeakMap<Project, Warning[]>()
+const cache = new WeakMap<Project, Map<GrowthView, Warning[]>>()
 
 /**
- * plantingWarnings with the default options, remembered per project version (projects are never
- * changed in place), so the plan and the warnings list share the work.
+ * plantingWarnings for a growth view (default: mature), remembered per project version (projects
+ * are never changed in place) and view, so the plan and the warnings list share the work.
  */
-export function designWarnings(project: Project): Warning[] {
-  let warnings = cache.get(project)
+export function designWarnings(project: Project, view: GrowthView = 'mature'): Warning[] {
+  let perView = cache.get(project)
+  if (!perView) {
+    perView = new Map()
+    cache.set(project, perView)
+  }
+  let warnings = perView.get(view)
   if (!warnings) {
-    warnings = plantingWarnings(project)
-    cache.set(project, warnings)
+    warnings = plantingWarnings(project, { view })
+    perView.set(view, warnings)
   }
   return warnings
 }

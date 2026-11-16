@@ -140,9 +140,43 @@ describe('plantingWarnings', () => {
     expect(plantingWarnings(design([at('x', 'custom-gone', 5)]))).toEqual([])
   })
 
-  it('is remembered per project version', () => {
+  it('is remembered per project version and growth view', () => {
     const project = design([at('clay', clayPlant.id, 2)])
     expect(designWarnings(project)).toBe(designWarnings(project))
+    expect(designWarnings(project, 2027)).toBe(designWarnings(project, 2027))
+    expect(designWarnings(project, 2027)).not.toBe(designWarnings(project))
+  })
+})
+
+describe('plantingWarnings in a growth year', () => {
+  // Two 1 m shrubs 0.6 m apart (planted 2027, mature after 3 years): 40% overlap when grown,
+  // but at 0.3 m across when planted they don't touch.
+  const project = design([at('a', shrub.id, 2), at('b', shrub.id, 2.6)])
+  const overlaps = (view?: number | 'mature') =>
+    plantingWarnings(project, view === undefined ? {} : { view }).filter(
+      (w) => w.kind === 'overlap',
+    )
+
+  it('checks overlaps at the mature size by default', () => {
+    expect(overlaps()).toHaveLength(1)
+    expect(overlaps('mature')).toEqual(overlaps())
+  })
+
+  it('checks overlaps at the size in the viewed year', () => {
+    expect(overlaps(2027)).toEqual([])
+    expect(overlaps(2028)).toEqual([])
+    expect(overlaps(2030)).toHaveLength(1)
+  })
+
+  it('leaves out plants that are not in the ground yet, but still checks where they are', () => {
+    const later = design([
+      at('a', shrub.id, 2),
+      { ...at('b', shrub.id, 2.1), plantedYear: 2029 },
+      { ...at('c', clayPlant.id, 9), plantedYear: 2029 },
+    ])
+    const warnings = plantingWarnings(later, { view: 2028 })
+    expect(warnings.map((w) => [w.kind, w.plantingId])).toEqual([['soil', 'c']])
+    expect(plantingWarnings(later, { view: 2029 }).map((w) => w.kind)).toContain('overlap')
   })
 })
 

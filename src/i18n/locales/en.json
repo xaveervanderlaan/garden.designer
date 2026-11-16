@@ -481,7 +481,9 @@
       "selectHint": "Select these plants",
       "count": "{{count}}×",
       "thresholdHint": "Plants overlap when they do by more than {{percent}} of the smaller one at full size (design settings).",
+      "thresholdHintYear": "Plants overlap when they do by more than {{percent}} of the smaller one at their size in {{year}} (design settings).",
       "overlapOne": "Overlaps {{name}} by {{percent}} at full size.",
+      "overlapOneYear": "Overlaps {{name}} by {{percent}} in {{year}}.",
       "outsideOne": "Outside the plot.",
       "soilDryOne": "Isn’t drought tolerant, and sand dries out: water it in dry spells.",
       "soilUnsuitedOne": "Doesn’t suit your soil ({{soil}}).",
@@ -507,6 +509,41 @@
       "textTitle": "Planting list: {{name}}",
       "textLine": "{{code}}. {{name}} ({{latin}}): {{count}}",
       "textLineShort": "{{code}}. {{name}}: {{count}}"
+    },
+    "view": {
+      "label": "View",
+      "year": "Year",
+      "yearHint": "Show the plants at their size in a year after planting. Plants that go in later are drawn faint, with a dashed outline.",
+      "yearValue": {
+        "planting": "Planting year ({{year}})",
+        "after_one": "{{year}} (+{{count}} year)",
+        "after_other": "{{year}} (+{{count}} years)",
+        "mature": "Fully grown"
+      },
+      "month": "Month",
+      "monthHint": "Show how the plants look in a month: in flower, in leaf, in autumn colour or bare.",
+      "noMonth": "No month",
+      "previousMonth": "Previous month",
+      "nextMonth": "Next month",
+      "bloomChart": "Bloom chart"
+    },
+    "bloomChart": {
+      "title": "Bloom chart",
+      "close": "Close",
+      "scope": "Plants in",
+      "whole": "Whole design",
+      "caption": "Flowering plants per month",
+      "plant": "Plant",
+      "all": "In bloom",
+      "inBloom_one": "{{count}} plant in bloom",
+      "inBloom_other": "{{count}} plants in bloom",
+      "colorCount": "{{count}} {{color}}",
+      "count": "{{count}}×",
+      "showMonth": "Show {{month}} on the plan",
+      "empty": "No flowering plants in the design yet.",
+      "emptyBed": "No flowering plants in this bed yet.",
+      "emptyMonths": "Nothing in bloom in {{months}}.",
+      "allMonths": "Something is in bloom every month."
     },
     "settings": {
       "title": "Design settings",
