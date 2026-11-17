@@ -21,6 +21,9 @@ import panels from '../panels/panels.module.css'
 import styles from './ideas.module.css'
 import type { FollowUpRequest } from '../../../proposals/followUp'
 import { FollowUpPanel } from './FollowUpPanel'
+import { saveRunSet } from './bridge/bridgeActions'
+import { BridgeProgress } from './bridge/BridgeProgress'
+import { useBridgeRunStore } from '../../../store/bridgeRunStore'
 import { ProposalGallery } from './ProposalGallery'
 import { copyText } from './clipboard'
 import { addAnswerToSet, nowMs } from './proposalSet'
@@ -60,7 +63,21 @@ export function AnswerStep({ project }: { project: Project }) {
     }
   }, [project.id])
 
-  const active = sets.find((s) => s.id === activeId) ?? null
+  // A generation through the bridge fills its set as batches arrive: show it, and show it first.
+  const runSet = useBridgeRunStore((s) => (s.projectId === project.id ? s.set : null))
+  const runSetId = runSet?.id ?? null
+  const [seenRunSetId, setSeenRunSetId] = useState<string | null>(null)
+  if (runSetId !== seenRunSetId) {
+    setSeenRunSetId(runSetId)
+    if (runSetId) setActiveId(runSetId)
+  }
+  const shownSets = !runSet
+    ? sets
+    : sets.some((s) => s.id === runSet.id)
+      ? sets.map((s) => (s.id === runSet.id ? runSet : s))
+      : [runSet, ...sets]
+  const active = shownSets.find((s) => s.id === activeId) ?? null
+  const isRunSet = (record: ProposalSetRecord) => useBridgeRunStore.getState().set?.id === record.id
 
   async function read(answer: string) {
     setTruncated(false)
@@ -81,7 +98,8 @@ export function AnswerStep({ project }: { project: Project }) {
       nowMs(),
     )
     try {
-      await saveProposalSet(next)
+      if (isRunSet(next)) saveRunSet(next)
+      else await saveProposalSet(next)
     } catch (e) {
       console.warn('Saving the proposals failed', e)
       setError('saveFailed')
@@ -97,6 +115,10 @@ export function AnswerStep({ project }: { project: Project }) {
   /** Shows a changed set (stars, discards) at once and saves it. */
   function changeSet(next: ProposalSetRecord) {
     setSets((list) => list.map((s) => (s.id === next.id ? next : s)))
+    if (isRunSet(next)) {
+      saveRunSet(next)
+      return
+    }
     saveProposalSet(next).catch((e: unknown) => {
       console.warn('Saving the proposals failed', e)
       setError('saveFailed')
@@ -132,7 +154,8 @@ export function AnswerStep({ project }: { project: Project }) {
 
   return (
     <div>
-      {sets.length > 0 && (
+      <BridgeProgress projectId={project.id} />
+      {shownSets.length > 0 && (
         <div className={styles.row}>
           <label htmlFor={setId}>{t('proposals.answer.set')}</label>
           <select
@@ -145,7 +168,7 @@ export function AnswerStep({ project }: { project: Project }) {
             }}
           >
             {activeId === null && <option value="">{t('proposals.answer.newSetOption')}</option>}
-            {sets.map((s) => (
+            {shownSets.map((s) => (
               <option key={s.id} value={s.id}>
                 {t('proposals.answer.setOption', {
                   date: formatDate(s.createdAt),
@@ -169,7 +192,12 @@ export function AnswerStep({ project }: { project: Project }) {
       )}
 
       {followUp && (
-        <FollowUpPanel project={project} request={followUp} onClose={() => setFollowUp(null)} />
+        <FollowUpPanel
+          project={project}
+          request={followUp}
+          set={active}
+          onClose={() => setFollowUp(null)}
+        />
       )}
 
       <div

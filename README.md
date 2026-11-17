@@ -133,6 +133,32 @@ viewer: drag to move, pinch to zoom, tap something for its details, and use **La
 **Vegetable calendar**; editing is for a larger screen. Export a backup now and then: the browser's
 storage can be cleared, and if it fills up the app warns you and offers a backup.
 
+## Local bridge (one-click design ideas)
+
+By default **Design ideas** works by copy and paste: you copy a prompt into Claude and paste the
+answer back. If [Claude Code](https://claude.com/claude-code) is installed and logged in on the same
+computer as your browser, the local bridge lets the app do that in one click.
+
+1. In a terminal in this folder, run `npm run bridge`. It checks that Claude Code works, then prints
+   its address (`http://127.0.0.1:7387`) and a **pairing code**.
+2. In the app, open **Design ideas**, go to the **Prompt** tab and choose *Set up one-click
+   generation*. Enter the code and press **Pair**. The code is kept, so you pair once; `--new-code`
+   makes a new one.
+3. Choose the model (Sonnet by default, Opus if you want more) and press **Generate on this
+   computer**. Proposals appear as they are finished; **Cancel** stops everything.
+
+The bridge runs only while its terminal is open; stop it with Ctrl+C. Generating uses your own Claude
+plan and counts against its usage limits (a run of 12 proposals is about five requests); the app
+tells you when the limit is reached. Options: `--port`, `--model`, `--timeout` (minutes),
+`--origin <url>` (allow another web address), `--claude <path>`.
+
+What it refuses: it listens on this computer only, and answers only the app's own addresses
+(GitHub Pages and the local dev and preview servers; add others with `--origin`), and only with the
+pairing code. Claude is started without any tools (no files, no commands, no web) in an empty
+temporary folder; your prompts and answers are not logged. If the browser blocks the request,
+allow local network access for the site when it asks (Chrome); with WSL and a Windows browser, try
+`http://localhost:7387` as the address in the app.
+
 ## Install and offline use
 
 The app is a PWA: after the first visit it works without a connection (in the garden, say), and it

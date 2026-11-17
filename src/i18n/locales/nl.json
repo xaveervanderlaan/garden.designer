@@ -1186,6 +1186,60 @@
       "copy": "Prompt kopiëren",
       "copied": "Gekopieerd",
       "close": "Vervolgprompt sluiten"
+    },
+    "bridge": {
+      "setUp": "Genereren met één klik instellen",
+      "title": "Genereren op deze computer",
+      "intro": "Met Claude Code geïnstalleerd en ingelogd op deze computer kan de app Claude zelf om voorstellen vragen, via je eigen Claude-abonnement. Start de hulp in een terminal in de map van de app met „npm run bridge” en vul dan het adres en de koppelcode in die hij toont.",
+      "address": "Adres",
+      "code": "Koppelcode",
+      "pair": "Koppelen",
+      "pairing": "Koppelen…",
+      "paired": "Verbonden met Claude Code {{version}}",
+      "forget": "Koppeling vergeten",
+      "checking": "Zoeken naar de hulp op deze computer…",
+      "checkAgain": "Opnieuw controleren",
+      "change": "Koppeling wijzigen",
+      "model": "Model",
+      "models": {
+        "sonnet": "Sonnet (sneller, gebruikt minder van je abonnement)",
+        "opus": "Opus (grondiger, gebruikt meer van je abonnement)"
+      },
+      "usageNote": "Dit stuurt ongeveer {{requests}} verzoeken naar Claude via Claude Code. Ze tellen mee voor de gebruikslimieten van je Claude-abonnement.",
+      "generate": "{{count}} voorstellen genereren op deze computer",
+      "followUpGenerate": "Genereren op deze computer",
+      "phase": {
+        "concepts": "Claude om ideeën vragen…",
+        "details": "De voorstellen uitwerken…",
+        "followUp": "Claude om de nieuwe voorstellen vragen…"
+      },
+      "progress": "{{done}} van {{total}} verzoeken klaar",
+      "conceptState": {
+        "waiting": "wacht",
+        "working": "bezig",
+        "ready": "klaar",
+        "failed": "niet ontvangen"
+      },
+      "cancel": "Annuleren",
+      "cancelled": "Het genereren is geannuleerd.",
+      "done": "Klaar.",
+      "retryMissing": "Ontbrekende opnieuw proberen",
+      "failedIds_one": "{{count}} voorstel is niet aangekomen.",
+      "failedIds_other": "{{count}} voorstellen zijn niet aangekomen.",
+      "errors": {
+        "notRunning": "De hulp antwoordt niet op dit adres. Start hem met „npm run bridge” in een terminal. Draait hij al, dan blokkeert de browser misschien de toegang tot deze computer: sta toegang tot het lokale netwerk toe voor deze site.",
+        "blocked": "De hulp draait, maar de browser heeft het verzoek geblokkeerd. Sta toegang tot het lokale netwerk toe voor deze site, of start de hulp met --origin en het adres van deze pagina.",
+        "notPaired": "De koppelcode klopt niet. Vul de code in die de hulp in zijn terminal toont.",
+        "tooManyAttempts": "Te vaak een verkeerde code. Wacht een minuut en probeer het opnieuw.",
+        "notInstalled": "Claude Code is niet gevonden op deze computer. Installeer het en start de hulp opnieuw.",
+        "notLoggedIn": "Claude Code is niet ingelogd. Voer „claude” uit in een terminal en log in, en controleer dan opnieuw.",
+        "usageLimit": "De gebruikslimiet van je Claude-abonnement is bereikt. Probeer het opnieuw als die weer vrij is.",
+        "busy": "De hulp is bezig met andere verzoeken. Probeer het zo opnieuw.",
+        "timeout": "Claude deed er te lang over om te antwoorden.",
+        "tooLarge": "Het verzoek is te groot voor de hulp.",
+        "claudeFailed": "Claude Code meldde een fout.",
+        "badResponse": "Het antwoord van Claude kon niet worden gelezen."
+      }
     }
   }
 }

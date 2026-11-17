@@ -6,6 +6,7 @@ import type { BedKind } from '../model/beds'
 import type { GrowthStopId } from '../model/growth'
 import type { PaletteGroup, SymbolVariantId } from '../model/objectKinds'
 import type { ObjectKind, Point } from '../model/schema'
+import { resetBridgeRun } from './bridgeRunStore'
 import { resetSunMap } from './sunMapStore'
 
 /**
@@ -276,6 +277,7 @@ export const useUiStore = create<UiStore>()((set) => ({
   setObjectMenuOpen: (objectMenuOpen) => set({ objectMenuOpen }),
   reset: () => {
     resetSunMap()
+    resetBridgeRun()
     set({ ...initial })
   },
 }))

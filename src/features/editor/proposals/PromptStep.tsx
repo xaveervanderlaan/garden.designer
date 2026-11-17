@@ -5,10 +5,11 @@ import { formatNumber } from '../../../i18n/units'
 import { defaultBrief } from '../../../model/brief'
 import { hasPlot } from '../../../model/plot'
 import type { Project } from '../../../model/schema'
-import { buildPrompt, promptSize } from '../../../proposals/prompt'
+import { type PromptInput, buildPrompt, promptSize } from '../../../proposals/prompt'
 import controls from '../../../styles/controls.module.css'
 import { cx } from '../../../styles/cx'
 import panels from '../panels/panels.module.css'
+import { BridgePanel } from './bridge/BridgePanel'
 import { copyText } from './clipboard'
 import styles from './ideas.module.css'
 import { plantingYear } from './proposalSet'
@@ -20,19 +21,17 @@ export function PromptStep({ project, onNext }: { project: Project; onNext: () =
   const language = currentLanguage()
   const sunMap = useCurrentSunMap(project)
   const plot = hasPlot(project)
-  const prompt = useMemo(
-    () =>
-      plot
-        ? buildPrompt({
-            project,
-            brief: project.brief ?? defaultBrief(),
-            language,
-            sunMap,
-            year: plantingYear(),
-          })
-        : '',
-    [project, language, sunMap, plot],
+  const input = useMemo<PromptInput>(
+    () => ({
+      project,
+      brief: project.brief ?? defaultBrief(),
+      language,
+      sunMap,
+      year: plantingYear(),
+    }),
+    [project, language, sunMap],
   )
+  const prompt = useMemo(() => (plot ? buildPrompt(input) : ''), [input, plot])
   const size = promptSize(prompt)
   const [copied, setCopied] = useState<'yes' | 'failed' | null>(null)
   const text = useRef<HTMLTextAreaElement>(null)
@@ -53,6 +52,12 @@ export function PromptStep({ project, onNext }: { project: Project; onNext: () =
 
   return (
     <div>
+      <BridgePanel
+        input={input}
+        count={input.brief.count}
+        base={{ projectId: project.id, updatedAt: project.updatedAt }}
+        onStarted={onNext}
+      />
       <p className={styles.intro}>{t('proposals.prompt.intro')}</p>
       <textarea
         ref={text}

@@ -22,8 +22,20 @@ export default defineConfig({
   },
   plugins: [react(), pdfjsAssets(), pwa(BASE)],
   test: {
-    environment: 'jsdom',
-    setupFiles: ['./src/test/setup.ts'],
-    include: ['src/**/*.test.{ts,tsx}'],
+    projects: [
+      {
+        extends: true,
+        test: {
+          name: 'app',
+          environment: 'jsdom',
+          setupFiles: ['./src/test/setup.ts'],
+          include: ['src/**/*.test.{ts,tsx}'],
+        },
+      },
+      {
+        // The local bridge is plain Node: no DOM, no app setup.
+        test: { name: 'bridge', environment: 'node', include: ['bridge/**/*.test.ts'] },
+      },
+    ],
   },
 })

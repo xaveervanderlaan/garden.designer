@@ -6,7 +6,11 @@ import { formatNumber } from '../../../i18n/units'
 import { defaultBrief } from '../../../model/brief'
 import type { Project } from '../../../model/schema'
 import { type FollowUpRequest, buildFollowUpPrompt } from '../../../proposals/followUp'
-import { promptSize } from '../../../proposals/prompt'
+import { type PromptInput, promptSize } from '../../../proposals/prompt'
+import type { ProposalSetRecord } from '../../../persistence/proposalSets'
+import { useBridgeRunStore } from '../../../store/bridgeRunStore'
+import { startBridgeFollowUp } from './bridge/bridgeActions'
+import { useBridgeStatus } from './bridge/useBridgeStatus'
 import controls from '../../../styles/controls.module.css'
 import { cx } from '../../../styles/cx'
 import panels from '../panels/panels.module.css'
@@ -22,10 +26,13 @@ import { useCurrentSunMap } from './useCurrentSunMap'
 export function FollowUpPanel({
   project,
   request,
+  set,
   onClose,
 }: {
   project: Project
   request: FollowUpRequest
+  /** The set the request came from: proposals made through the bridge go into it. */
+  set: ProposalSetRecord | null
   onClose: () => void
 }) {
   const { t } = useTranslation()
@@ -37,20 +44,29 @@ export function FollowUpPanel({
   const copyButton = useRef<HTMLButtonElement>(null)
   const titleId = useId()
   const countId = useId()
-  const prompt = useMemo(
-    () =>
-      buildFollowUpPrompt(
-        {
-          project,
-          brief: project.brief ?? defaultBrief(),
-          language,
-          sunMap,
-          year: plantingYear(),
-        },
-        request.kind === 'moreLike' ? { ...request, count } : request,
-      ),
-    [project, language, sunMap, request, count],
+  const bridge = useBridgeStatus()
+  const input = useMemo<PromptInput>(
+    () => ({
+      project,
+      brief: project.brief ?? defaultBrief(),
+      language,
+      sunMap,
+      year: plantingYear(),
+    }),
+    [project, language, sunMap],
   )
+  const asked = useMemo<FollowUpRequest>(
+    () => (request.kind === 'moreLike' ? { ...request, count } : request),
+    [request, count],
+  )
+  const prompt = useMemo(() => buildFollowUpPrompt(input, asked), [input, asked])
+  const running = useBridgeRunStore((s) => s.status === 'running')
+
+  function generate() {
+    if (!set || !bridge.settings) return
+    startBridgeFollowUp({ input, request: asked, set, settings: bridge.settings })
+    onClose()
+  }
   const size = promptSize(prompt)
 
   // The panel opens above the paste box, far from the button that asked for it: bring it into view.
@@ -122,6 +138,11 @@ export function FollowUpPanel({
         >
           {t('proposals.followUp.copy')}
         </button>
+        {bridge.state === 'ready' && set && (
+          <button type="button" className={controls.button} disabled={running} onClick={generate}>
+            {t('proposals.bridge.followUpGenerate')}
+          </button>
+        )}
         <span className={styles.status} role="status">
           {copied === 'yes'
             ? t('proposals.followUp.copied')

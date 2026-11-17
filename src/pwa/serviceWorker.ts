@@ -69,6 +69,7 @@ export function createUpdater({
         return
       }
       const reg = registration
+      if (!reg) return // e.g. Playwright's blocked service workers resolve with nothing
       if (reg.waiting && container.controller) markUpdateReady()
       watch(reg.installing)
       reg.addEventListener('updatefound', () => watch(reg.installing))

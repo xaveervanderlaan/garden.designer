@@ -19,7 +19,8 @@
     "e2e": "playwright test",
     "verify": "bash scripts/verify.sh",
     "plants:review": "node scripts/plants-review.ts",
-    "icons": "node scripts/render-icons.ts"
+    "icons": "node scripts/render-icons.ts",
+    "bridge": "node bridge/bridge.ts"
   },
   "dependencies": {
     "dexie": "^4.4.7",

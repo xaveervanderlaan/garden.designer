@@ -514,3 +514,59 @@
     border-left: 0;
   }
 }
+
+.bridge {
+  margin-block-end: 12px;
+  padding: 8px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+}
+
+.bridge summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.bridgeSetup {
+  margin-block-start: 8px;
+}
+
+.codeInput {
+  width: 9em;
+  font-family: ui-monospace, monospace;
+  text-transform: uppercase;
+}
+
+.bridgeProgress {
+  margin-block-end: 12px;
+  padding: 8px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+}
+
+.conceptList {
+  display: grid;
+  gap: 2px;
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.875rem;
+}
+
+.conceptList li {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.conceptState {
+  color: var(--color-text-muted);
+}
+
+.conceptList li[data-state='ready'] .conceptState {
+  color: var(--color-primary);
+}
+
+.conceptList li[data-state='failed'] .conceptState {
+  color: var(--color-danger);
+}

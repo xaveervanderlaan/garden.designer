@@ -1186,6 +1186,60 @@
       "copy": "Copy prompt",
       "copied": "Copied",
       "close": "Close the follow-up prompt"
+    },
+    "bridge": {
+      "setUp": "Set up one-click generation",
+      "title": "Generate on this computer",
+      "intro": "With Claude Code installed and logged in on this computer, the app can ask Claude for proposals itself, using your own Claude plan. Start the helper in a terminal in the app's folder with “npm run bridge”, then enter the address and pairing code it shows.",
+      "address": "Address",
+      "code": "Pairing code",
+      "pair": "Pair",
+      "pairing": "Pairing…",
+      "paired": "Connected to Claude Code {{version}}",
+      "forget": "Forget pairing",
+      "checking": "Looking for the helper on this computer…",
+      "checkAgain": "Check again",
+      "change": "Change pairing",
+      "model": "Model",
+      "models": {
+        "sonnet": "Sonnet (faster, uses less of your plan)",
+        "opus": "Opus (more thorough, uses more of your plan)"
+      },
+      "usageNote": "This sends about {{requests}} requests to Claude through Claude Code. They count towards the usage limits of your Claude plan.",
+      "generate": "Generate {{count}} proposals on this computer",
+      "followUpGenerate": "Generate on this computer",
+      "phase": {
+        "concepts": "Asking Claude for ideas…",
+        "details": "Working out the proposals…",
+        "followUp": "Asking Claude for the new proposals…"
+      },
+      "progress": "{{done}} of {{total}} requests done",
+      "conceptState": {
+        "waiting": "waiting",
+        "working": "in progress",
+        "ready": "ready",
+        "failed": "not received"
+      },
+      "cancel": "Cancel",
+      "cancelled": "Generating was cancelled.",
+      "done": "Finished.",
+      "retryMissing": "Retry missing",
+      "failedIds_one": "{{count}} proposal did not arrive.",
+      "failedIds_other": "{{count}} proposals did not arrive.",
+      "errors": {
+        "notRunning": "The helper does not answer at this address. Start it with “npm run bridge” in a terminal. If it is running, the browser may be blocking access to this computer: allow local network access for this site.",
+        "blocked": "The helper is running, but the browser blocked the request. Allow local network access for this site, or start the helper with --origin and the address of this page.",
+        "notPaired": "The pairing code is not right. Enter the code the helper shows in its terminal.",
+        "tooManyAttempts": "Too many wrong codes. Wait a minute and try again.",
+        "notInstalled": "Claude Code was not found on this computer. Install it, then restart the helper.",
+        "notLoggedIn": "Claude Code is not logged in. Run “claude” in a terminal and log in, then check again.",
+        "usageLimit": "The usage limit of your Claude plan has been reached. Try again when it resets.",
+        "busy": "The helper is busy with other requests. Try again in a moment.",
+        "timeout": "Claude took too long to answer.",
+        "tooLarge": "The request is too large for the helper.",
+        "claudeFailed": "Claude Code reported an error.",
+        "badResponse": "Claude's answer could not be read."
+      }
     }
   }
 }

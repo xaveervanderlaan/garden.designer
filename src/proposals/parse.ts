@@ -59,11 +59,11 @@ function candidates(text: string): string[] {
   return out
 }
 
-/** Splits the complete top-level objects of the `"proposals": [` array of a damaged answer. */
-function salvage(text: string): unknown[] {
-  const key = text.search(/"proposals"\s*:\s*\[/)
-  if (key < 0) return []
-  let i = text.indexOf('[', key) + 1
+/** Splits the complete top-level objects of the `"<key>": [` array of a damaged answer. */
+export function salvage(text: string, key = 'proposals'): unknown[] {
+  const at = text.search(new RegExp(`"${key}"\\s*:\\s*\\[`))
+  if (at < 0) return []
+  let i = text.indexOf('[', at) + 1
   const found: unknown[] = []
   let depth = 0
   let start = -1
