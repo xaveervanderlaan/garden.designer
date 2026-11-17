@@ -191,6 +191,34 @@ describe('warnings', () => {
   })
 })
 
+describe('structure overlap', () => {
+  it('lists a plant that grows over a structure', async () => {
+    const base = design()
+    const catmint = base.plantings.find((p) => p.position.x === 10)!
+    const project: Project = {
+      ...base,
+      plantings: [catmint],
+      objects: [
+        {
+          id: 'terrace',
+          kind: 'terrace',
+          shape: { type: 'polygon', points: rect(10.1, 3, 4, 4) },
+          status: 'new',
+          layer: 'hardscape',
+        },
+      ],
+    }
+    const user = await openEditor(project)
+    const item = within(region(/^Warnings/)).getByRole('button', { name: /structure or paving/ })
+    expect(item).toHaveTextContent('Catmint too close to a structure or paving (terrace)')
+    await user.click(item)
+    const properties = region(/^Properties/)
+    expect(
+      within(properties).getByText(/Grows \d+\s?% over a structure or paving \(terrace\)/),
+    ).toBeInTheDocument()
+  })
+})
+
 describe('planting properties', () => {
   it('shows the bed and warnings of a plant and swaps its species', async () => {
     const project = design()

@@ -3,12 +3,13 @@ import { samplePlant } from '../test/fixtures'
 import { addBed } from './beds'
 import { newProject } from './defaults'
 import { addPlantings } from './plantings'
-import type { Plant, Planting, Project } from './schema'
+import type { GardenObject, ObjectKind, Plant, Planting, Project, Shape } from './schema'
 import {
   designWarnings,
   findOverlaps,
   groupWarnings,
   overlapFraction,
+  structureOverlapFraction,
   warningSeverity,
   plantingWarnings,
   warningsByPlanting,
@@ -300,5 +301,187 @@ describe('sun warnings', () => {
     const project = sunny([at('a', 'custom-herb', 2.5)])
     expect(designWarnings(project, 'mature', shaded)).toHaveLength(1)
     expect(designWarnings(project, 'mature', null)).toHaveLength(0)
+  })
+})
+
+describe('structure overlaps', () => {
+  const box = (x: number, y: number, w: number, h: number): Shape => ({
+    type: 'polygon',
+    points: [
+      { x, y },
+      { x: x + w, y },
+      { x: x + w, y: y + h },
+      { x, y: y + h },
+    ],
+  })
+  const fenceLine = (x: number, thicknessM = 0.1): Shape => ({
+    type: 'polyline',
+    points: [
+      { x, y: 0 },
+      { x, y: 10 },
+    ],
+    thicknessM,
+  })
+  const object = (
+    id: string,
+    kind: ObjectKind,
+    shape: Shape,
+    status: GardenObject['status'] = 'new',
+  ): GardenObject => ({ id, kind, shape, status, layer: 'hardscape' })
+  const withObjects = (project: Project, ...objects: GardenObject[]): Project => ({
+    ...project,
+    objects: [...project.objects, ...objects],
+  })
+  const objectWarnings = (project: Project, view?: number | 'mature') =>
+    plantingWarnings(project, view === undefined ? {} : { view }).filter(
+      (w) => w.kind === 'overlap-object',
+    )
+  // A 1 m shrub (radius 0.5) at x = 5 next to a structure whose edge is at x = 5 + offset.
+
+  it('measures how far a plant reaches into a structure, as a fraction of its diameter', () => {
+    const c = { x: 5, y: 5, r: 0.5 }
+    const terrace = (left: number) => box(left, 0, 5, 10)
+    expect(structureOverlapFraction(c, terrace(6))).toBe(0)
+    expect(structureOverlapFraction(c, terrace(5.5))).toBe(0)
+    expect(structureOverlapFraction(c, terrace(5))).toBeCloseTo(0.5)
+    expect(structureOverlapFraction(c, terrace(5.3))).toBeCloseTo(0.2)
+    expect(structureOverlapFraction(c, terrace(2))).toBe(1)
+    // A fence's thickness counts: its edge is 0.2 m from the line.
+    expect(structureOverlapFraction(c, fenceLine(5.6, 0.4))).toBeCloseTo(0.1)
+    expect(structureOverlapFraction(c, fenceLine(5.6, 0.1))).toBe(0)
+    expect(structureOverlapFraction(c, { type: 'point', position: c, rotationDeg: 0 })).toBe(0)
+  })
+
+  it('warns when a plant grows over a building, wall, fence or paving beyond the threshold', () => {
+    const kinds: ObjectKind[] = ['house', 'shed', 'greenhouse', 'carport', 'terrace', 'path']
+    for (const kind of kinds) {
+      const project = withObjects(
+        design([at('a', shrub.id, 5)]),
+        object('o', kind, box(5.2, 0, 3, 10)),
+      )
+      expect(objectWarnings(project)).toEqual([
+        { kind: 'overlap-object', plantingId: 'a', objectId: 'o', fraction: expect.any(Number) },
+      ])
+    }
+    for (const kind of ['wall', 'fence', 'gate', 'driveway'] as ObjectKind[]) {
+      const shape = kind === 'driveway' ? box(5.2, 0, 3, 10) : fenceLine(5.2)
+      const project = withObjects(design([at('a', shrub.id, 5)]), object('o', kind, shape))
+      expect(objectWarnings(project)).toHaveLength(1)
+    }
+    // 0.1 of the diameter is not beyond the 0.2 threshold; clear of it is fine.
+    const edge = withObjects(
+      design([at('a', shrub.id, 5)]),
+      object('o', 'house', box(5.4, 0, 3, 10)),
+    )
+    expect(objectWarnings(edge)).toEqual([])
+    const clear = withObjects(
+      design([at('a', shrub.id, 5)]),
+      object('o', 'house', box(6, 0, 3, 10)),
+    )
+    expect(objectWarnings(clear)).toEqual([])
+    expect(
+      warningSeverity(
+        objectWarnings(
+          withObjects(design([at('a', shrub.id, 5)]), object('o', 'house', box(4, 0, 3, 10))),
+        )[0]!,
+      ),
+    ).toBe('warning')
+  })
+
+  it('ignores beds, lawn, gravel, ponds, hedges, pergolas, raised beds and symbols', () => {
+    const kinds: ObjectKind[] = [
+      'bed-ornamental',
+      'bed-vegetable',
+      'raised-bed',
+      'lawn',
+      'gravel',
+      'pond',
+      'hedge',
+      'pergola',
+    ]
+    for (const kind of kinds) {
+      const project = withObjects(
+        design([at('a', shrub.id, 5)]),
+        object('o', kind, box(4, 0, 3, 10)),
+      )
+      expect(objectWarnings(project), kind).toEqual([])
+    }
+    const symbol: Shape = { type: 'point', position: { x: 5, y: 5 }, rotationDeg: 0 }
+    expect(
+      objectWarnings(withObjects(design([at('a', shrub.id, 5)]), object('o', 'furniture', symbol))),
+    ).toEqual([])
+  })
+
+  it('lets climbers grow against structures', () => {
+    const climber: Plant = { ...shrub, id: 'custom-climber', category: 'climber' }
+    const project = withObjects(
+      { ...design([at('a', climber.id, 5), at('b', shrub.id, 8)]), customPlants: [climber, shrub] },
+      object('o', 'house', box(4, 0, 6, 10)),
+    )
+    expect(objectWarnings(project).map((w) => w.plantingId)).toEqual(['b'])
+  })
+
+  it('checks at the size in the viewed year and skips plants not in the ground yet', () => {
+    const project = withObjects(
+      design([at('a', shrub.id, 5)]),
+      object('o', 'house', box(5.2, 0, 3, 10)),
+    )
+    expect(objectWarnings(project, 2027)).toEqual([])
+    expect(objectWarnings(project, 2030)).toHaveLength(1)
+    const later = withObjects(
+      design([{ ...at('a', shrub.id, 5), plantedYear: 2030 }]),
+      object('o', 'house', box(5.2, 0, 3, 10)),
+    )
+    expect(objectWarnings(later, 2028)).toEqual([])
+    expect(objectWarnings(later, 2033)).toHaveLength(1)
+  })
+
+  it('skips an existing plant by an existing structure, not a new one', () => {
+    const old = { ...at('a', shrub.id, 5), status: 'existing' as const }
+    const house = (status: GardenObject['status']) =>
+      object('o', 'house', box(5.2, 0, 3, 10), status)
+    expect(objectWarnings(withObjects(design([old]), house('existing')))).toEqual([])
+    expect(objectWarnings(withObjects(design([old]), house('new')))).toHaveLength(1)
+    expect(
+      objectWarnings(withObjects(design([at('a', shrub.id, 5)]), house('existing'))),
+    ).toHaveLength(1)
+  })
+
+  it('counts structures outside the plot', () => {
+    const project = withObjects(
+      design([at('a', shrub.id, 19.8)]),
+      object('o', 'shed', box(20, 0, 3, 10)),
+    )
+    expect(objectWarnings(project)).toHaveLength(1)
+  })
+
+  it('groups per species and kind of structure, under the plant only', () => {
+    const project = withObjects(
+      design([at('a', shrub.id, 5), at('b', shrub.id, 8, 5), at('c', big.id, 12)]),
+      object('h', 'house', box(4, 0, 6, 10)),
+      object('t', 'terrace', box(11.5, 0, 3, 10)),
+    )
+    const warnings = objectWarnings(project)
+    const groups = groupWarnings(project, warnings)
+    expect(groups.map((g) => [g.key, g.objectKind, g.count])).toEqual([
+      ['overlap-object:house:custom-shrub', 'house', 2],
+      ['overlap-object:terrace:custom-big', 'terrace', 1],
+    ])
+    const byPlanting = warningsByPlanting(warnings)
+    expect(byPlanting.get('o')).toBeUndefined()
+    expect(byPlanting.get('a')).toHaveLength(1)
+  })
+
+  it('stays fast for 1000 plantings and 100 structures', () => {
+    const plantings = Array.from({ length: 1000 }, (_, i) =>
+      at(`p${i}`, shrub.id, (i % 40) * 2.5, Math.floor(i / 40) * 4),
+    )
+    const objects = Array.from({ length: 100 }, (_, i) =>
+      object(`o${i}`, 'terrace', box((i % 10) * 10 + 1, Math.floor(i / 10) * 10 + 1, 2, 2)),
+    )
+    const project = withObjects(design(plantings), ...objects)
+    const start = performance.now()
+    plantingWarnings(project)
+    expect(performance.now() - start).toBeLessThan(500)
   })
 })

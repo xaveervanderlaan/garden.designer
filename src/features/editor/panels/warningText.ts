@@ -40,6 +40,16 @@ export function useWarningText(
           ? t('editor.warnings.overlapOne', values)
           : t('editor.warnings.overlapOneYear', { ...values, year: view })
       }
+      case 'overlap-object': {
+        const object = project.objects.find((o) => o.id === warning.objectId)
+        const values = {
+          object: object ? t(`editor.objectKinds.${object.kind}`).toLowerCase() : '',
+          percent: formatPercent(warning.fraction),
+        }
+        return view === 'mature'
+          ? t('editor.warnings.overlapObjectOne', values)
+          : t('editor.warnings.overlapObjectOneYear', { ...values, year: view })
+      }
       case 'outside-plot':
         return t('editor.warnings.outsideOne')
       case 'soil':
@@ -72,6 +82,11 @@ export function useWarningGroupText(project: Project): (group: WarningGroup) => 
         return b === undefined
           ? t('editor.warnings.overlapSame', { name: nameOf(a) })
           : t('editor.warnings.overlapPair', { a: nameOf(a), b: nameOf(b) })
+      case 'overlap-object':
+        return t('editor.warnings.overlapObject', {
+          name: nameOf(a),
+          object: t(`editor.objectKinds.${group.objectKind ?? 'house'}`).toLowerCase(),
+        })
       case 'outside-plot':
         return t('editor.warnings.outside', { name: nameOf(a) })
       case 'soil':

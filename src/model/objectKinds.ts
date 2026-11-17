@@ -286,3 +286,23 @@ export function hasHeight(kind: ObjectKind): boolean {
 export function editedByCorners(kind: ObjectKind): boolean {
   return OBJECT_PRESETS[kind].editing === 'corners'
 }
+
+/**
+ * Kinds a plant must not grow over (the overlap-object warning): buildings, hard paving (whatever
+ * the material: a path is walked on) and boundaries. Not counted: beds and raised beds (they hold
+ * plants), lawn and gravel (planted gravel and bark gardens), ponds (marginal plants), hedges
+ * (living), pergolas (built for climbers; their shade is on the sun map), symbols (movable, sizes
+ * approximate) and dimensions.
+ */
+export const STRUCTURE_OVERLAP_KINDS: ReadonlySet<ObjectKind> = new Set<ObjectKind>([
+  'house',
+  'shed',
+  'greenhouse',
+  'carport',
+  'terrace',
+  'path',
+  'driveway',
+  'wall',
+  'fence',
+  'gate',
+])

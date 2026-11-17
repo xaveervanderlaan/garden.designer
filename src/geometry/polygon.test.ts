@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   angleDeg,
   direction,
+  distanceToPolyline,
   edgeLengths,
   isSelfIntersecting,
   labelPoint,
@@ -135,5 +136,21 @@ describe('labelPoint', () => {
     ]
     const p = labelPoint(u)
     expect(pointInPolygon(p, u)).toBe(true)
+  })
+})
+
+describe('distanceToPolyline', () => {
+  const line = [
+    { x: 0, y: 0 },
+    { x: 4, y: 0 },
+    { x: 4, y: 3 },
+  ]
+  it('gives the distance to the nearest segment, open or closed', () => {
+    expect(distanceToPolyline({ x: 2, y: 1 }, line)).toBe(1)
+    expect(distanceToPolyline({ x: 6, y: 3 }, line)).toBe(2)
+    // Closing adds the segment from (4, 3) back to (0, 0).
+    expect(distanceToPolyline({ x: 0, y: 3 }, line)).toBe(3)
+    expect(distanceToPolyline({ x: 0, y: 3 }, line, true)).toBeCloseTo(2.4)
+    expect(distanceToPolyline({ x: 0, y: 0 }, [{ x: 1, y: 1 }])).toBe(Infinity)
   })
 })

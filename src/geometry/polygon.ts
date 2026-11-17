@@ -177,3 +177,15 @@ export function labelPoint(points: readonly Point[]): Point {
   }
   return best ?? mean
 }
+
+/** Distance from p to the nearest segment of a polyline (closed: also last to first). */
+export function distanceToPolyline(p: Point, points: readonly Point[], closed = false): number {
+  if (points.length < 2) return Infinity
+  let best = Infinity
+  const count = closed ? points.length : points.length - 1
+  for (let i = 0; i < count; i++) {
+    const d = nearestPointOnSegment(p, points[i]!, points[(i + 1) % points.length]!).distance
+    if (d < best) best = d
+  }
+  return best
+}
