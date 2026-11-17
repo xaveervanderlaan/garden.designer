@@ -20,9 +20,9 @@ export type BridgeRunState = {
   kind: 'generate' | 'followUp' | null
   phase: 'concepts' | 'details' | null
   concepts: ConceptProgress[]
-  /** Requests finished and planned. */
-  done: number
-  total: number
+  /** Proposals received in this run, and how many it asks for. */
+  ready: number
+  wanted: number
   /** What stopped the run, or what made the last failed batch fail. */
   failure: BridgeFailure | null
   detail?: string
@@ -38,8 +38,8 @@ const initial: BridgeRunState = {
   kind: null,
   phase: null,
   concepts: [],
-  done: 0,
-  total: 0,
+  ready: 0,
+  wanted: 0,
   failure: null,
   failedIds: [],
   projectId: null,

@@ -1213,7 +1213,7 @@
         "details": "De voorstellen uitwerken…",
         "followUp": "Claude om de nieuwe voorstellen vragen…"
       },
-      "progress": "{{done}} van {{total}} verzoeken klaar",
+      "progress": "{{ready}} van {{total}} klaar",
       "conceptState": {
         "waiting": "wacht",
         "working": "bezig",
@@ -1222,7 +1222,10 @@
       },
       "cancel": "Annuleren",
       "cancelled": "Het genereren is geannuleerd.",
-      "done": "Klaar.",
+      "done_one": "Klaar: {{count}} voorstel.",
+      "done_other": "Klaar: {{count}} voorstellen.",
+      "donePartly_one": "Klaar: {{ready}} van {{count}} voorstel.",
+      "donePartly_other": "Klaar: {{ready}} van {{count}} voorstellen.",
       "retryMissing": "Ontbrekende opnieuw proberen",
       "failedIds_one": "{{count}} voorstel is niet aangekomen.",
       "failedIds_other": "{{count}} voorstellen zijn niet aangekomen.",

@@ -1213,7 +1213,7 @@
         "details": "Working out the proposals…",
         "followUp": "Asking Claude for the new proposals…"
       },
-      "progress": "{{done}} of {{total}} requests done",
+      "progress": "{{ready}} of {{total}} ready",
       "conceptState": {
         "waiting": "waiting",
         "working": "in progress",
@@ -1222,7 +1222,10 @@
       },
       "cancel": "Cancel",
       "cancelled": "Generating was cancelled.",
-      "done": "Finished.",
+      "done_one": "Finished: {{count}} proposal.",
+      "done_other": "Finished: {{count}} proposals.",
+      "donePartly_one": "Finished: {{ready}} of {{count}} proposal.",
+      "donePartly_other": "Finished: {{ready}} of {{count}} proposals.",
       "retryMissing": "Retry missing",
       "failedIds_one": "{{count}} proposal did not arrive.",
       "failedIds_other": "{{count}} proposals did not arrive.",

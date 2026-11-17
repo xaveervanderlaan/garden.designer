@@ -84,7 +84,7 @@ function addBatch(proposals: Proposal[], problems: AnswerProblem[], base: SetBas
     base,
     nowMs(),
   )
-  set({ set: next })
+  set((s) => ({ set: next, ready: s.ready + proposals.length }))
   enqueueSave(next)
   markConcepts(
     proposals.map((p) => p.id),
@@ -97,7 +97,10 @@ function addBatch(proposals: Proposal[], problems: AnswerProblem[], base: SetBas
 }
 
 function begin(
-  state: Pick<ReturnType<typeof get>, 'kind' | 'phase' | 'concepts' | 'projectId' | 'set'>,
+  state: Pick<
+    ReturnType<typeof get>,
+    'kind' | 'phase' | 'concepts' | 'projectId' | 'set' | 'ready' | 'wanted'
+  >,
 ) {
   current?.controller.abort()
   const controller = new AbortController()
@@ -107,8 +110,6 @@ function begin(
   set({
     ...state,
     status: 'running',
-    done: 0,
-    total: 0,
     failure: null,
     detail: undefined,
     failedIds: [],
@@ -120,13 +121,11 @@ function handler(id: number, base: SetBase, onConcepts?: (concepts: Concept[]) =
   return (event: RunEvent) => {
     if (current?.id !== id) return
     switch (event.type) {
-      case 'progress':
-        set({ done: event.done, total: event.total })
-        break
       case 'concepts':
         onConcepts?.(event.concepts)
         set({
           phase: 'details',
+          wanted: event.concepts.length,
           concepts: event.concepts.map((c) => ({ id: c.id, title: c.title, state: 'waiting' })),
         })
         break
@@ -207,6 +206,8 @@ export function startBridgeRun(options: {
     concepts: [],
     projectId: base.projectId,
     set: null,
+    ready: 0,
+    wanted: options.count,
   })
   const run = runBridgeGeneration({
     input: options.input,
@@ -234,6 +235,8 @@ export function retryMissing() {
     concepts: state.concepts.map((c) => (failed.has(c.id) ? { ...c, state: 'waiting' } : c)),
     projectId: state.projectId,
     set: state.set,
+    ready: state.concepts.filter((c) => c.state === 'ready').length,
+    wanted: state.concepts.length,
   })
   const run = runBridgeDetails({
     input: generation.input,
@@ -268,6 +271,8 @@ export function startBridgeFollowUp(options: {
         : [],
     projectId: record.projectId,
     set: record,
+    ready: 0,
+    wanted: request.kind === 'regenerate' ? request.proposals.length : request.count,
   })
   const run = runBridgeFollowUp({
     input: options.input,

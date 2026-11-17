@@ -173,13 +173,16 @@ describe('BridgePanel', () => {
     const progress = await screen.findByTestId('bridge-progress')
     await waitFor(() => expect(details).toHaveLength(2))
     expect(within(progress).getAllByRole('listitem')).toHaveLength(6)
-    expect(within(progress).getByRole('status')).toHaveTextContent('1 of 3 requests done')
+    expect(within(progress).getByRole('status')).toHaveTextContent(
+      'Working out the proposals… 0 of 6 ready',
+    )
 
     await act(async () => details[0]!.release())
     await waitFor(() => expect(screen.getAllByTestId('proposal')).toHaveLength(3))
+    expect(within(progress).getByRole('status')).toHaveTextContent('3 of 6 ready')
     await act(async () => details[1]!.release())
     await waitFor(() => expect(screen.getAllByTestId('proposal')).toHaveLength(6))
-    expect(within(progress).getByRole('status')).toHaveTextContent('Finished. 3 of 3 requests done')
+    expect(within(progress).getByRole('status')).toHaveTextContent('Finished: 6 proposals.')
 
     const bodies = fetchFn.mock.calls
       .filter(([url]) => String(url).endsWith('/generate'))

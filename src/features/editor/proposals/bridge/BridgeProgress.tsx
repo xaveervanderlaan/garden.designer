@@ -14,26 +14,29 @@ export function BridgeProgress({ projectId }: { projectId: string }) {
   if (run.status === 'idle' || run.projectId !== projectId) return null
   const running = run.status === 'running'
 
-  const phase = running
-    ? run.kind === 'followUp'
-      ? t('proposals.bridge.phase.followUp')
-      : run.phase === 'concepts'
-        ? t('proposals.bridge.phase.concepts')
-        : t('proposals.bridge.phase.details')
+  // Counts proposals, not requests: those are an internal step.
+  const progress = t('proposals.bridge.progress', { ready: run.ready, total: run.wanted })
+  const status = running
+    ? `${
+        run.kind === 'followUp'
+          ? t('proposals.bridge.phase.followUp')
+          : run.phase === 'concepts'
+            ? t('proposals.bridge.phase.concepts')
+            : t('proposals.bridge.phase.details')
+      } ${progress}`
     : run.status === 'done'
-      ? t('proposals.bridge.done')
+      ? run.ready >= run.wanted
+        ? t('proposals.bridge.done', { count: run.ready })
+        : t('proposals.bridge.donePartly', { ready: run.ready, count: run.wanted })
       : run.status === 'cancelled'
-        ? t('proposals.bridge.cancelled')
+        ? `${t('proposals.bridge.cancelled')} ${progress}`
         : ''
 
   return (
     <section className={styles.bridgeProgress} data-testid="bridge-progress">
       <div className={styles.actions}>
         <span className={styles.status} role="status" data-testid="bridge-status">
-          {phase}
-          {run.total > 0 &&
-            run.status !== 'failed' &&
-            ` ${t('proposals.bridge.progress', { done: run.done, total: run.total })}`}
+          {status}
         </span>
         {running && (
           <button
