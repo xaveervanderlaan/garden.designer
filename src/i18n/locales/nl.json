@@ -1115,6 +1115,77 @@
       "counts": "{{objects}} onderdelen · {{plantings}} planten · {{species}} soorten",
       "empty": "Nog geen geldige voorstellen.",
       "failed": "Het ontwerp kon niet worden gemaakt."
+    },
+    "gallery": {
+      "sort": "Sorteren op",
+      "sortBy": {
+        "order": "Zoals ontvangen",
+        "paved": "Meeste verharding",
+        "lawn": "Meeste gazon",
+        "planted": "Meeste beplanting",
+        "plants": "Meeste planten",
+        "species": "Meeste soorten",
+        "native": "Meeste inheemse planten",
+        "bloom": "Langste bloei",
+        "evergreen": "Meest wintergroen",
+        "warnings": "Minste waarschuwingen"
+      },
+      "starredOnly": "Alleen met ster",
+      "star": "Ster geven aan {{title}}",
+      "unstar": "Ster weghalen bij {{title}}",
+      "noneStarred": "Nog geen voorstellen met een ster. Geef je favorieten een ster op hun kaart.",
+      "thumbLoading": "Tekenen…",
+      "select": "{{title}} selecteren",
+      "useSelected": "Selectie gebruiken ({{count}})",
+      "regenerateSelected": "Selectie opnieuw laten maken",
+      "discardSelected": "Selectie weggooien",
+      "moreLike": "Meer zoals dit",
+      "moreLikeNamed": "Meer zoals {{title}}",
+      "discard": "Weggooien",
+      "discardNamed": "{{title}} weggooien"
+    },
+    "figures": {
+      "paved": "Verhard",
+      "lawn": "Gazon",
+      "planted": "Beplant",
+      "plants": "Planten",
+      "species": "Soorten",
+      "native": "Inheems",
+      "bloom": "Maanden in bloei",
+      "evergreen": "Wintergroen",
+      "warnings": "Waarschuwingen"
+    },
+    "checklist": {
+      "title": "Vergeleken met de wensen",
+      "met": "Voldaan",
+      "partly": "Deels",
+      "missing": "Ontbreekt",
+      "placeUnchecked": "plek niet gecontroleerd: {{place}}",
+      "placeMissed": "niet op de gevraagde plek: {{place}}",
+      "screening": "Afscherming {{edge}}",
+      "include": "Bevat {{plant}}",
+      "avoid": "Zonder {{plant}}",
+      "toxic": "Geen giftige planten",
+      "found": "{{found}} van {{wanted}}"
+    },
+    "preview": {
+      "open": "{{title}} groot bekijken",
+      "previous": "Vorige",
+      "next": "Volgende",
+      "position": "{{n}} van {{total}}",
+      "layers": "Lagen",
+      "year": "Jaar",
+      "month": "Maand",
+      "close": "Voorbeeld sluiten"
+    },
+    "followUp": {
+      "titleMore": "Meer zoals “{{title}}”",
+      "titleRegenerate": "Nieuwe versies van {{count}} voorstellen",
+      "intro": "Kopieer deze prompt naar Claude (een nieuwe chat kan ook) en plak het antwoord in het vak hieronder. De nieuwe voorstellen komen bij deze reeks.",
+      "count": "Aantal varianten",
+      "copy": "Prompt kopiëren",
+      "copied": "Gekopieerd",
+      "close": "Vervolgprompt sluiten"
     }
   }
 }

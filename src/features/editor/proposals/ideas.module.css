@@ -236,3 +236,281 @@
   padding-left: 1.25rem;
   font-size: 0.8125rem;
 }
+
+.wide {
+  width: min(1200px, 96vw);
+}
+
+.galleryBar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.375rem 0.75rem;
+  margin: 0.5rem 0;
+  font-size: 0.875rem;
+}
+
+.gallery {
+  grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+  align-items: start;
+}
+
+.gallery .card {
+  display: flex;
+  flex-direction: column;
+  padding: 0.5rem;
+}
+
+.thumbBox {
+  position: relative;
+  margin-bottom: 0.5rem;
+}
+
+.thumb {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  aspect-ratio: 3 / 2;
+  border-radius: 6px;
+  background: var(--color-bg);
+  color: var(--color-text-muted);
+  font-size: 0.8125rem;
+  object-fit: contain;
+}
+
+.star {
+  position: absolute;
+  top: 0.25rem;
+  right: 0.25rem;
+  display: inline-flex;
+  padding: 0.25rem;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  background: var(--color-surface);
+  color: var(--color-text-muted);
+  cursor: pointer;
+}
+
+.starOn {
+  color: #c98a00;
+}
+
+.concept {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+}
+
+.figures {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.25rem 0.5rem;
+  margin: 0 0 0.5rem;
+  font-size: 0.75rem;
+}
+
+.figures dt {
+  color: var(--color-text-muted);
+}
+
+.figures dd {
+  margin: 0;
+  font-weight: 600;
+}
+
+.checklist {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  margin: 0 0 0.5rem;
+  padding: 0;
+  list-style: none;
+  font-size: 0.75rem;
+}
+
+.checklist li {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.0625rem 0.5rem 0.0625rem 0.375rem;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+}
+
+.met svg {
+  color: var(--color-primary);
+}
+
+.partly svg {
+  color: #b26a00;
+}
+
+.missing svg {
+  color: var(--color-danger);
+}
+
+.use {
+  align-self: flex-start;
+  margin-top: auto;
+}
+
+.cardActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  margin: auto 0 0.375rem;
+}
+
+.cardActions + .use {
+  margin-top: 0;
+}
+
+.selected {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 1px var(--color-primary);
+}
+
+.thumbButton {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  cursor: zoom-in;
+}
+
+.select {
+  position: absolute;
+  top: 0.5rem;
+  left: 0.5rem;
+  width: 1.125rem;
+  height: 1.125rem;
+  margin: 0;
+}
+
+.followUp {
+  margin: 0.5rem 0 0.75rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--color-primary);
+  border-radius: 10px;
+}
+
+.followUpHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.followUpHeader h3 {
+  margin: 0;
+  font-size: 0.9375rem;
+}
+
+.followUpText {
+  width: 100%;
+  height: 8rem;
+  font-family: ui-monospace, monospace;
+  font-size: 0.75rem;
+  resize: vertical;
+}
+
+/* The preview covers the whole window, above the design ideas dialog. */
+.previewBackdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 110;
+  display: flex;
+  padding: 1rem;
+  background: rgba(31, 42, 31, 0.5);
+}
+
+.preview {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
+  border-radius: 10px;
+  background: var(--color-surface);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+}
+
+.previewHeader {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.375rem 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.previewHeader h2 {
+  flex: 1 1 12rem;
+  margin: 0;
+  font-size: 1.0625rem;
+}
+
+.previewStar {
+  display: inline-flex;
+  padding: 0.25rem;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  background: var(--color-surface);
+  color: var(--color-text-muted);
+  cursor: pointer;
+}
+
+.previewBody {
+  display: grid;
+  flex: 1;
+  grid-template-columns: minmax(0, 1fr) 20rem;
+  min-height: 0;
+}
+
+.previewPlan {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.previewSide {
+  overflow-y: auto;
+  padding: 0.5rem 0.75rem;
+  border-left: 1px solid var(--color-border);
+  font-size: 0.875rem;
+}
+
+.previewSide p {
+  margin: 0 0 0.5rem;
+}
+
+.previewSide fieldset {
+  margin: 0 0 0.5rem;
+  padding: 0.25rem 0.5rem 0.5rem;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+}
+
+.previewLayers {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.125rem 0.5rem;
+}
+
+@media (max-width: 700px) {
+  .previewBody {
+    grid-template-columns: 1fr;
+    grid-template-rows: minmax(16rem, 1fr) auto;
+  }
+
+  .previewSide {
+    max-height: 40vh;
+    border-top: 1px solid var(--color-border);
+    border-left: 0;
+  }
+}

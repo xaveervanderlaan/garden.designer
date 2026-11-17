@@ -1115,6 +1115,77 @@
       "counts": "{{objects}} objects · {{plantings}} plants · {{species}} species",
       "empty": "No valid proposals yet.",
       "failed": "Couldn't create the design."
+    },
+    "gallery": {
+      "sort": "Sort by",
+      "sortBy": {
+        "order": "As received",
+        "paved": "Most paving",
+        "lawn": "Most lawn",
+        "planted": "Most planted area",
+        "plants": "Most plants",
+        "species": "Most species",
+        "native": "Most native plants",
+        "bloom": "Longest in bloom",
+        "evergreen": "Most evergreen",
+        "warnings": "Fewest warnings"
+      },
+      "starredOnly": "Starred only",
+      "star": "Star {{title}}",
+      "unstar": "Remove the star from {{title}}",
+      "noneStarred": "No starred proposals yet. Use the star on a card to mark your favourites.",
+      "thumbLoading": "Drawing…",
+      "select": "Select {{title}}",
+      "useSelected": "Use selected ({{count}})",
+      "regenerateSelected": "Regenerate selected",
+      "discardSelected": "Discard selected",
+      "moreLike": "More like this",
+      "moreLikeNamed": "More like {{title}}",
+      "discard": "Discard",
+      "discardNamed": "Discard {{title}}"
+    },
+    "figures": {
+      "paved": "Paved",
+      "lawn": "Lawn",
+      "planted": "Planted",
+      "plants": "Plants",
+      "species": "Species",
+      "native": "Native",
+      "bloom": "Months in bloom",
+      "evergreen": "Evergreen",
+      "warnings": "Warnings"
+    },
+    "checklist": {
+      "title": "Against the brief",
+      "met": "Met",
+      "partly": "Partly",
+      "missing": "Missing",
+      "placeUnchecked": "place not checked: {{place}}",
+      "placeMissed": "not at the place asked for: {{place}}",
+      "screening": "Screening {{edge}}",
+      "include": "Includes {{plant}}",
+      "avoid": "Avoids {{plant}}",
+      "toxic": "No toxic plants",
+      "found": "{{found}} of {{wanted}}"
+    },
+    "preview": {
+      "open": "Preview {{title}}",
+      "previous": "Previous",
+      "next": "Next",
+      "position": "{{n}} of {{total}}",
+      "layers": "Layers",
+      "year": "Year",
+      "month": "Month",
+      "close": "Close the preview"
+    },
+    "followUp": {
+      "titleMore": "More like “{{title}}”",
+      "titleRegenerate": "New versions of {{count}} proposals",
+      "intro": "Copy this prompt into Claude (a new chat works too), then paste the answer in the box below. The new proposals are added to this set.",
+      "count": "Number of variations",
+      "copy": "Copy prompt",
+      "copied": "Copied",
+      "close": "Close the follow-up prompt"
     }
   }
 }

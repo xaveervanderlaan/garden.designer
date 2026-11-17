@@ -42,3 +42,32 @@ export function addAnswerToSet(
 export const plantingYear = (): number => new Date().getFullYear()
 
 export const nowMs = (): number => Date.now()
+
+/** Stars a proposal, or removes its star. */
+export function toggleStar(set: ProposalSetRecord, id: string, now: number): ProposalSetRecord {
+  const starred = set.starred ?? []
+  return {
+    ...set,
+    updatedAt: now,
+    starred: starred.includes(id) ? starred.filter((s) => s !== id) : [...starred, id],
+  }
+}
+
+/** Removes proposals and their stars from a set. */
+export function discardProposals(
+  set: ProposalSetRecord,
+  ids: readonly string[],
+  now: number,
+): ProposalSetRecord {
+  const gone = new Set(ids)
+  return {
+    ...set,
+    updatedAt: now,
+    proposals: set.proposals.filter((p) => !gone.has(p.id)),
+    starred: (set.starred ?? []).filter((s) => !gone.has(s)),
+  }
+}
+
+/** How many variations "More like this" can ask for, and the default. */
+export const MORE_LIKE_COUNTS = [1, 2, 3, 4, 5, 6, 7, 8] as const
+export const MORE_LIKE_DEFAULT = 4

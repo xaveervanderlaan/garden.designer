@@ -19,7 +19,9 @@ import controls from '../../../styles/controls.module.css'
 import { cx } from '../../../styles/cx'
 import panels from '../panels/panels.module.css'
 import styles from './ideas.module.css'
-import { ProposalList } from './ProposalList'
+import type { FollowUpRequest } from '../../../proposals/followUp'
+import { FollowUpPanel } from './FollowUpPanel'
+import { ProposalGallery } from './ProposalGallery'
 import { copyText } from './clipboard'
 import { addAnswerToSet, nowMs } from './proposalSet'
 
@@ -41,6 +43,7 @@ export function AnswerStep({ project }: { project: Project }) {
   const [truncated, setTruncated] = useState(false)
   const [continueCopied, setContinueCopied] = useState(false)
   const [dragOver, setDragOver] = useState(false)
+  const [followUp, setFollowUp] = useState<FollowUpRequest | null>(null)
   const fileInput = useRef<HTMLInputElement>(null)
   const answerId = useId()
   const setId = useId()
@@ -91,6 +94,15 @@ export function AnswerStep({ project }: { project: Project }) {
     setActiveId(next.id)
   }
 
+  /** Shows a changed set (stars, discards) at once and saves it. */
+  function changeSet(next: ProposalSetRecord) {
+    setSets((list) => list.map((s) => (s.id === next.id ? next : s)))
+    saveProposalSet(next).catch((e: unknown) => {
+      console.warn('Saving the proposals failed', e)
+      setError('saveFailed')
+    })
+  }
+
   async function readFile(file: File | undefined) {
     if (!file) return
     if (file.size > MAX_ANSWER_CHARS) {
@@ -127,7 +139,10 @@ export function AnswerStep({ project }: { project: Project }) {
             id={setId}
             className={controls.input}
             value={activeId ?? ''}
-            onChange={(e) => setActiveId(e.target.value || null)}
+            onChange={(e) => {
+              setActiveId(e.target.value || null)
+              setFollowUp(null)
+            }}
           >
             {activeId === null && <option value="">{t('proposals.answer.newSetOption')}</option>}
             {sets.map((s) => (
@@ -143,11 +158,18 @@ export function AnswerStep({ project }: { project: Project }) {
             type="button"
             className={cx(controls.button, controls.small)}
             disabled={activeId === null}
-            onClick={() => setActiveId(null)}
+            onClick={() => {
+              setActiveId(null)
+              setFollowUp(null)
+            }}
           >
             {t('proposals.answer.newSet')}
           </button>
         </div>
+      )}
+
+      {followUp && (
+        <FollowUpPanel project={project} request={followUp} onClose={() => setFollowUp(null)} />
       )}
 
       <div
@@ -215,7 +237,10 @@ export function AnswerStep({ project }: { project: Project }) {
         <>
           <div className={styles.actions}>
             <span className={styles.status} role="status" data-testid="answer-status">
-              {t('proposals.answer.status', { count, requested: active.requested })}
+              {t('proposals.answer.status', {
+                count,
+                requested: Math.max(active.requested, count),
+              })}
             </span>
             {incomplete && (
               <button
@@ -235,7 +260,12 @@ export function AnswerStep({ project }: { project: Project }) {
             <p className={panels.smallHint}>{t('proposals.answer.changedSince')}</p>
           )}
           {active.problems.length > 0 && <Problems problems={active.problems} />}
-          <ProposalList project={project} proposals={active.proposals} />
+          <ProposalGallery
+            project={project}
+            set={active}
+            onSetChange={changeSet}
+            onFollowUp={setFollowUp}
+          />
         </>
       )}
     </div>

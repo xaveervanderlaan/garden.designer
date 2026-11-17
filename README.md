@@ -117,6 +117,13 @@ answer in the **Proposals** tab: valid proposals are listed, problems are explai
 cut-off answer keeps what is complete, and a "continue" prompt asks for the rest. **Use this
 design** creates a new design from the original plus the proposal; your original is not changed.
 
+To compare proposals, each card shows a thumbnail plan, key figures (paved, lawn and planted area,
+plants, species, native and evergreen share, flowering months, warnings) and, if your brief has
+must-haves or screening, a checklist of what is met. Sort or filter by a figure, star favourites and
+show **Starred only**. Click a thumbnail to preview the plan with layers, year and month, and step
+through proposals with the arrow keys. **More like this** and **Regenerate selected** make a follow-up
+prompt to copy into Claude; **Use selected** creates several designs at once.
+
 ### Backups and the phone
 
 **Export** on the start page saves a design as a `.garden.json` file, including its site plan. **Import

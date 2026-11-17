@@ -21,6 +21,8 @@ export const proposalSetSchema = z.object({
   baseUpdatedAt: z.number(),
   requested: z.number().int().min(1),
   proposals: z.array(proposalSchema),
+  /** Ids of the proposals the user starred. */
+  starred: z.array(z.string()).optional(),
   problems: z.array(problemSchema),
 })
 

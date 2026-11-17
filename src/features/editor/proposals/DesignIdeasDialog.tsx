@@ -55,7 +55,8 @@ function IdeasDialog() {
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
+      // The proposal preview closes itself first and marks the key as handled.
+      if (event.key === 'Escape' && !event.defaultPrevented) {
         event.preventDefault()
         close()
       }
@@ -67,7 +68,7 @@ function IdeasDialog() {
   return (
     <div className={panels.backdrop} onMouseDown={(e) => e.target === e.currentTarget && close()}>
       <div
-        className={cx(panels.dialog, styles.dialog)}
+        className={cx(panels.dialog, styles.dialog, tab === 'proposals' && styles.wide)}
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}

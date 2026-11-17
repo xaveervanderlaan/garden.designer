@@ -1,12 +1,18 @@
 import { act, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import i18n from '../../../i18n'
 import { db } from '../../../persistence/db'
 import { useProjectStore } from '../../../store/projectStore'
 import { useUiStore } from '../../../store/uiStore'
 import { sampleProjectWithAsset } from '../../../test/fixtures'
 import { DesignIdeasDialog } from './DesignIdeasDialog'
+
+// jsdom has no canvas: thumbnails are covered by the e2e tests.
+vi.mock('./thumbnails', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('./thumbnails')>()),
+  useThumbnail: () => null,
+}))
 
 const proposal = (id: string, title: string, elements: unknown[]) => ({
   id,

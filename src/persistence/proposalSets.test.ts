@@ -56,3 +56,10 @@ describe('proposal sets', () => {
     expect((await listProposalSets('p')).map((r) => r.id)).toEqual(['a'])
   })
 })
+
+describe('proposal set stars', () => {
+  it('keeps stars', async () => {
+    await saveProposalSet({ ...record('s', 'p', 1), starred: ['p2', 'p5'] })
+    expect((await listProposalSets('p'))[0]?.starred).toEqual(['p2', 'p5'])
+  })
+})
