@@ -20,6 +20,13 @@ describe('parseHash', () => {
   })
 })
 
+it('parses and builds viewer links', () => {
+  expect(parseHash('#/v/abc')).toEqual({ name: 'viewer', projectId: 'abc' })
+  expect(parseHash('#/v/%E0%A4%A')).toEqual({ name: 'notFound' })
+  expect(parseHash('#/v/')).toEqual({ name: 'notFound' })
+  expect(hrefFor({ name: 'viewer', projectId: 'a b' })).toBe('#/v/a%20b')
+})
+
 describe('hrefFor', () => {
   it('builds hrefs that parse back to the same route', () => {
     expect(hrefFor({ name: 'projects' })).toBe('#/')

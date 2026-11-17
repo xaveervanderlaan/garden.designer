@@ -1,10 +1,10 @@
 import type Konva from 'konva'
-import { useEffect, useRef } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 import { Group, Layer, Rect, Stage } from 'react-konva'
 import type { Size, Viewport } from '../geometry/viewport'
 import type { Language } from '../i18n'
 import { isLayerVisible } from '../model/edit'
-import { PLOT_LAYER } from '../model/plot'
+import { PLOT_ID, PLOT_LAYER } from '../model/plot'
 import type { Background, Project } from '../model/schema'
 import type { Severity } from '../model/warnings'
 import type { LabelMode } from '../store/uiStore'
@@ -48,7 +48,9 @@ const NOT_HELD = { current: false }
 export type PrintStageProps = RenderPlanOptions & {
   background: Background | null
   image: HTMLImageElement | null
-  onReady: (stage: Konva.Stage) => void
+  onReady?: (stage: Konva.Stage) => void
+  /** Items drawn as selected (`PLOT_ID` highlights the plot). */
+  selection?: ReadonlySet<string>
 }
 
 /** The plan as the editor draws it, without grid, selection, handles or warning badges. */
@@ -63,13 +65,17 @@ export function PrintStage({
   background,
   image,
   onReady,
+  selection = NO_SELECTION,
 }: PrintStageProps) {
   const stage = useRef<Konva.Stage>(null)
   useEffect(() => {
-    if (stage.current) onReady(stage.current)
+    if (stage.current) onReady?.(stage.current)
   }, [onReady])
 
-  const { labels, planLabels } = itemLabels(project, labelMode, lang)
+  const { labels, planLabels } = useMemo(
+    () => itemLabels(project, labelMode, lang),
+    [project, labelMode, lang],
+  )
   const outline = project.plot.outline
   const plotVisible = isLayerVisible(project, PLOT_LAYER)
   const world = { x: viewport.x, y: viewport.y, scaleX: viewport.scale, scaleY: viewport.scale }
@@ -89,7 +95,7 @@ export function PrintStage({
             <PlotShape
               outline={outline}
               selectable={false}
-              selected={false}
+              selected={selection.has(PLOT_ID)}
               warning={false}
               onMouseDown={noop}
               onHover={noop}
@@ -97,7 +103,7 @@ export function PrintStage({
           )}
           <Items
             project={project}
-            selection={NO_SELECTION}
+            selection={selection}
             interactive={false}
             handlers={HANDLERS}
             warned={NO_WARNINGS}

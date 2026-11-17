@@ -4,6 +4,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { exportProject } from '../../persistence/gardenFile'
 import { db } from '../../persistence/db'
 import { createProject, listProjects } from '../../persistence/projects'
+import { mockPhoneScreen } from '../../test/phone'
 import { ProjectsPage } from './ProjectsPage'
 
 const itemFor = async (name: string) =>
@@ -110,5 +111,29 @@ describe('ProjectsPage', () => {
     add.mockRestore()
     expect(await listProjects()).toHaveLength(1)
     vi.restoreAllMocks()
+  })
+
+  it('on a phone hides creating, renaming and duplicating and opens an imported design in the viewer', async () => {
+    mockPhoneScreen(true)
+    const project = await createProject('Tuin')
+    const { json } = await exportProject(project.id)
+    const user = userEvent.setup()
+    render(<ProjectsPage />)
+
+    expect(await screen.findByRole('link', { name: 'Tuin' })).toHaveAttribute(
+      'href',
+      `#/v/${project.id}`,
+    )
+    expect(screen.queryByRole('button', { name: 'New design' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Rename' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Duplicate' })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Export' })).toBeInTheDocument()
+
+    await user.upload(
+      screen.getByTestId('import-input'),
+      new File([json], 'tuin.garden.json', { type: 'application/json' }),
+    )
+    const imported = (await listProjects()).find((p) => p.id !== project.id)
+    expect(window.location.hash).toBe(`#/v/${imported?.id}`)
   })
 })

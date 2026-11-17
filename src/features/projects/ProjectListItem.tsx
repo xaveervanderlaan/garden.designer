@@ -15,11 +15,20 @@ type Props = {
   onDuplicate: () => Promise<void>
   onExport: () => Promise<void>
   onDelete: () => Promise<void>
+  /** On a phone designs open in the viewer and can't be renamed or duplicated. */
+  phone: boolean
 }
 
 type Mode = 'view' | 'rename' | 'confirmDelete'
 
-export function ProjectListItem({ project, onRename, onDuplicate, onExport, onDelete }: Props) {
+export function ProjectListItem({
+  project,
+  onRename,
+  onDuplicate,
+  onExport,
+  onDelete,
+  phone,
+}: Props) {
   const { t } = useTranslation()
   const [mode, setMode] = useState<Mode>('view')
   const [draftName, setDraftName] = useState(project.name)
@@ -123,7 +132,10 @@ export function ProjectListItem({ project, onRename, onDuplicate, onExport, onDe
   return (
     <li className={styles.item}>
       <div className={styles.summary}>
-        <a className={styles.name} href={hrefFor({ name: 'editor', projectId: project.id })}>
+        <a
+          className={styles.name}
+          href={hrefFor({ name: phone ? 'viewer' : 'editor', projectId: project.id })}
+        >
           {project.name}
         </a>
         <span className={styles.meta}>
@@ -131,17 +143,21 @@ export function ProjectListItem({ project, onRename, onDuplicate, onExport, onDe
         </span>
       </div>
       <div className={styles.actions} role="group" aria-label={project.name}>
-        <button type="button" className={small} onClick={startRename}>
-          {t('projects.actions.rename')}
-        </button>
-        <button
-          type="button"
-          className={small}
-          disabled={busy}
-          onClick={() => void act(onDuplicate)}
-        >
-          {t('projects.actions.duplicate')}
-        </button>
+        {!phone && (
+          <>
+            <button type="button" className={small} onClick={startRename}>
+              {t('projects.actions.rename')}
+            </button>
+            <button
+              type="button"
+              className={small}
+              disabled={busy}
+              onClick={() => void act(onDuplicate)}
+            >
+              {t('projects.actions.duplicate')}
+            </button>
+          </>
+        )}
         <button type="button" className={small} disabled={busy} onClick={() => void act(onExport)}>
           {t('projects.actions.export')}
         </button>

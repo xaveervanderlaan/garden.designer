@@ -59,7 +59,8 @@
       "importNotGardenFile": "Dit bestand is geen ontwerp van de Tuinontwerper (.garden.json).",
       "importNewerVersion": "Dit ontwerp is gemaakt met een nieuwere versie van de app. Herlaad de pagina om de app bij te werken en probeer het opnieuw.",
       "importInvalid": "Dit ontwerpbestand is beschadigd of onvolledig."
-    }
+    },
+    "emptyHintPhone": "Importeer een .garden.json-bestand om hier een ontwerp te bekijken."
   },
   "editor": {
     "back": "Terug naar je ontwerpen",
@@ -924,5 +925,35 @@
     "title": "Pagina niet gevonden",
     "text": "Deze pagina bestaat niet.",
     "back": "Terug naar je ontwerpen"
+  },
+  "viewer": {
+    "back": "Terug naar je ontwerpen",
+    "plan": "Tuinplattegrond",
+    "fit": "Plattegrond passend maken",
+    "openInEditor": "Bewerken",
+    "hint": "Sleep om te verschuiven, knijp om te zoomen, tik ergens op voor details",
+    "sheet": {
+      "close": "Sluiten",
+      "plot": "Perceel",
+      "type": "Soort",
+      "size": "Afmeting",
+      "flowers": "Bloei",
+      "plantedYear": "Geplant in",
+      "existing": "Bestaand",
+      "bed": "Border",
+      "area": "Oppervlakte",
+      "length": "Lengte",
+      "perimeter": "Omtrek",
+      "height": "Hoogte",
+      "material": "Materiaal",
+      "plants": "Planten",
+      "hedgePlant": "Haagplant",
+      "notes": "Notities",
+      "kind": "Soort",
+      "status": "Status"
+    },
+    "layers": "Lagen",
+    "layersTitle": "Lagen",
+    "calendar": "Moestuinkalender"
   }
 }

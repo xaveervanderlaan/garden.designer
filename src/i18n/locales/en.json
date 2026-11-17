@@ -59,7 +59,8 @@
       "importNotGardenFile": "This file isn’t a Garden Designer design (.garden.json).",
       "importNewerVersion": "This design was made with a newer version of the app. Reload the page to update the app, then try again.",
       "importInvalid": "This design file is damaged or incomplete."
-    }
+    },
+    "emptyHintPhone": "Import a .garden.json file to look at a design here."
   },
   "editor": {
     "back": "Back to your designs",
@@ -924,5 +925,35 @@
     "title": "Page not found",
     "text": "This page doesn’t exist.",
     "back": "Back to your designs"
+  },
+  "viewer": {
+    "back": "Back to your designs",
+    "plan": "Garden plan",
+    "fit": "Fit the plan to the screen",
+    "openInEditor": "Edit",
+    "hint": "Drag to move, pinch to zoom, tap something for its details",
+    "sheet": {
+      "close": "Close",
+      "plot": "Plot",
+      "type": "Type",
+      "size": "Size",
+      "flowers": "Flowers",
+      "plantedYear": "Planted in",
+      "existing": "Existing",
+      "bed": "Bed",
+      "area": "Area",
+      "length": "Length",
+      "perimeter": "Perimeter",
+      "height": "Height",
+      "material": "Material",
+      "plants": "Plants",
+      "hedgePlant": "Hedge plant",
+      "notes": "Notes",
+      "kind": "Kind",
+      "status": "Status"
+    },
+    "layers": "Layers",
+    "layersTitle": "Layers",
+    "calendar": "Vegetable calendar"
   }
 }

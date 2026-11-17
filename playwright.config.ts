@@ -3,6 +3,7 @@ import { defineConfig, devices } from '@playwright/test'
 // E2E_PORT lets several checkouts (git worktrees) run their e2e tests side by side.
 const PORT = Number(process.env.E2E_PORT) || 4173
 const BASE_URL = `http://localhost:${PORT}/garden.designer/`
+const PHONE_SPEC = '**/phone.spec.ts'
 const isCI = !!process.env.CI
 
 export default defineConfig({
@@ -17,12 +18,18 @@ export default defineConfig({
     trace: 'on-first-retry',
   },
   projects: [
-    { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
+    { name: 'chromium', use: { ...devices['Desktop Chrome'] }, testIgnore: PHONE_SPEC },
+    // A phone (touch, small screen): only the viewer tests.
+    {
+      name: 'phone',
+      testMatch: PHONE_SPEC,
+      use: (({ defaultBrowserType: _browser, ...phone }) => phone)(devices['Pixel 7']),
+    },
     // Opt-in: needs the Firefox/WebKit system libraries (gtk, gstreamer, ...).
     ...(process.env.E2E_ALL_BROWSERS === '1'
       ? [
-          { name: 'firefox', use: { ...devices['Desktop Firefox'] } },
-          { name: 'webkit', use: { ...devices['Desktop Safari'] } },
+          { name: 'firefox', use: { ...devices['Desktop Firefox'] }, testIgnore: PHONE_SPEC },
+          { name: 'webkit', use: { ...devices['Desktop Safari'] }, testIgnore: PHONE_SPEC },
         ]
       : []),
   ],

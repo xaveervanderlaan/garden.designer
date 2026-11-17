@@ -5,20 +5,29 @@ import { useMemo, useSyncExternalStore } from 'react'
  * fallbacks: `#/` is the project list, `#/p/<id>` opens a project in the editor.
  */
 export type Route =
-  { name: 'projects' } | { name: 'editor'; projectId: string } | { name: 'notFound' }
+  | { name: 'projects' }
+  | { name: 'editor'; projectId: string }
+  | { name: 'viewer'; projectId: string }
+  | { name: 'notFound' }
 
 const EDITOR_PATH = /^\/p\/([^/]+)\/?$/
+const VIEWER_PATH = /^\/v\/([^/]+)\/?$/
 
 export function parseHash(hash: string): Route {
   const path = hash.replace(/^#/, '')
   if (path === '' || path === '/') return { name: 'projects' }
 
-  const match = EDITOR_PATH.exec(path)
-  if (match?.[1]) {
-    try {
-      return { name: 'editor', projectId: decodeURIComponent(match[1]) }
-    } catch {
-      return { name: 'notFound' } // malformed percent-encoding
+  for (const [pattern, name] of [
+    [EDITOR_PATH, 'editor'],
+    [VIEWER_PATH, 'viewer'],
+  ] as const) {
+    const match = pattern.exec(path)
+    if (match?.[1]) {
+      try {
+        return { name, projectId: decodeURIComponent(match[1]) }
+      } catch {
+        return { name: 'notFound' } // malformed percent-encoding
+      }
     }
   }
   return { name: 'notFound' }
@@ -30,7 +39,14 @@ export function hrefFor(route: Exclude<Route, { name: 'notFound' }>): string {
       return '#/'
     case 'editor':
       return `#/p/${encodeURIComponent(route.projectId)}`
+    case 'viewer':
+      return `#/v/${encodeURIComponent(route.projectId)}`
   }
+}
+
+/** Goes to a route without adding a history entry (the back button skips the redirecting one). */
+export function replaceRoute(route: Exclude<Route, { name: 'notFound' }>): void {
+  window.location.replace(hrefFor(route))
 }
 
 export function navigate(route: Exclude<Route, { name: 'notFound' }>): void {

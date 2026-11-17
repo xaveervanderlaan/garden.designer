@@ -2,9 +2,11 @@ import { act, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import App from './App'
+import { mockPhoneScreen } from './test/phone'
 
 // jsdom has no real <canvas>; the plan itself is covered by the Playwright tests.
 vi.mock('./features/editor/canvas/GardenCanvas', () => ({ default: () => null }))
+vi.mock('./features/viewer/ViewerPage', () => ({ default: () => <p>Viewer stub</p> }))
 import { LANGUAGE_STORAGE_KEY } from './i18n'
 import { createProject } from './persistence/projects'
 
@@ -16,6 +18,16 @@ function navigate(hash: string) {
 }
 
 describe('App shell', () => {
+  it('sends a phone from an editor link to the viewer', async () => {
+    mockPhoneScreen(true)
+    const project = await createProject('Back garden')
+    render(<App />)
+
+    navigate(`#/p/${project.id}`)
+    expect(await screen.findByText('Viewer stub')).toBeInTheDocument()
+    expect(window.location.hash).toBe(`#/v/${project.id}`)
+  })
+
   it('shows the (empty) project list in English by default', async () => {
     render(<App />)
     expect(
