@@ -106,6 +106,17 @@ scale; you are warned when the plan does not fit, and a scale is suggested) or a
 plan or current view, up to a size). Page 1 of the PDF is the plan with a scale bar and north arrow;
 page 2 has the legend and the planting list.
 
+### Design ideas
+
+**Design ideas…** in the toolbar helps you get proposals from Claude, with copy and paste: the app
+sends nothing anywhere. In the **Brief** tab, pick styles, must-haves (terrace, lawn, pond, …),
+plot edges that need screening, plant wishes and how many proposals you want, and optionally draw
+a design area and tick which existing items may change. The **Prompt** tab shows a prompt (without
+your design's name, location or site plan) to copy into a chat with Claude. Paste or drop Claude's
+answer in the **Proposals** tab: valid proposals are listed, problems are explained per proposal, a
+cut-off answer keeps what is complete, and a "continue" prompt asks for the rest. **Use this
+design** creates a new design from the original plus the proposal; your original is not changed.
+
 ### Backups and the phone
 
 **Export** on the start page saves a design as a `.garden.json` file, including its site plan. **Import

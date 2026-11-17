@@ -118,3 +118,26 @@ describe('project repository', () => {
     expect(await listAssets(project.id)).toHaveLength(0)
   })
 })
+
+describe('duplicateProject change hook', () => {
+  it('duplicates with a change applied', async () => {
+    const { project } = await storeSample()
+    const copy = await duplicateProject(project.id, 'Variant', (p) => ({
+      ...p,
+      customPlants: [],
+      brief: undefined,
+    }))
+    expect((await loadProject(copy.id))?.customPlants).toEqual([])
+    expect((await loadProject(project.id))?.customPlants).toEqual(project.customPlants)
+  })
+
+  it('a failing change leaves nothing behind', async () => {
+    const { project } = await storeSample()
+    const assetsBefore = await db.assets.count()
+    await expect(
+      duplicateProject(project.id, 'Broken', (p) => ({ ...p, name: '' })),
+    ).rejects.toThrow()
+    expect(await db.projects.count()).toBe(1)
+    expect(await db.assets.count()).toBe(assetsBefore)
+  })
+})

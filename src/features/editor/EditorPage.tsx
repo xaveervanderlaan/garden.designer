@@ -19,6 +19,7 @@ import { PropertiesPanel } from './panels/PropertiesPanel'
 import { RectangleDialog } from './panels/RectangleDialog'
 import { SettingsDialog } from './panels/SettingsDialog'
 import { ExportDialog } from './export/ExportDialog'
+import { DesignIdeasDialog } from './proposals/DesignIdeasDialog'
 import { ShortcutHelp } from './panels/ShortcutHelp'
 import { StatusBar } from './panels/StatusBar'
 import { WarningsPanel } from './panels/WarningsPanel'
@@ -124,6 +125,7 @@ function Workspace({ project }: { project: Project }) {
       <RectangleDialog />
       <SettingsDialog />
       <ExportDialog />
+      <DesignIdeasDialog />
       <SitePlanImport />
       <PlantFormDialog />
       <BloomChartDialog />

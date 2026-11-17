@@ -27,6 +27,10 @@ export type DrawTarget =
   | { kind: 'row'; plantId: string; spacingM: number }
   | { kind: 'object'; objectKind: ObjectKind; variant?: SymbolVariantId }
   | { kind: 'measure' }
+  | { kind: 'design-area' }
+
+/** The steps of the design ideas dialog. */
+export type IdeasTab = 'brief' | 'prompt' | 'proposals'
 
 /** An outline or line being drawn: what it's for and the corners placed so far (world metres). */
 export type Drawing = { target: DrawTarget; points: Point[] }
@@ -89,6 +93,9 @@ type UiStore = {
   settingsOpen: boolean
   /** The image/PDF export dialog (M16). */
   exportOpen: boolean
+  /** The design ideas dialog (M19) and its open tab. */
+  ideasOpen: boolean
+  ideasTab: IdeasTab
   /** The line being measured with the calibrate tool, or null. */
   calibration: Calibration | null
   /** Snap to the grid while drawing and dragging corners (off while tracing the site plan). */
@@ -138,6 +145,8 @@ type UiStore = {
   closeVegCalendar: () => void
   setSettingsOpen: (open: boolean) => void
   setExportOpen: (open: boolean) => void
+  setIdeasOpen: (open: boolean, tab?: IdeasTab) => void
+  setIdeasTab: (tab: IdeasTab) => void
   setCalibration: (calibration: Calibration | null) => void
   setSnapToGrid: (on: boolean) => void
   setActiveCorner: (index: number | null) => void
@@ -169,6 +178,8 @@ const initial = {
   vegCalendar: null,
   settingsOpen: false,
   exportOpen: false,
+  ideasOpen: false,
+  ideasTab: 'brief' as IdeasTab,
   calibration: null,
   snapToGrid: true,
   activeCorner: null,
@@ -252,6 +263,8 @@ export const useUiStore = create<UiStore>()((set) => ({
   closeVegCalendar: () => set({ vegCalendar: null }),
   setSettingsOpen: (settingsOpen) => set({ settingsOpen }),
   setExportOpen: (exportOpen) => set({ exportOpen }),
+  setIdeasOpen: (ideasOpen, tab) => set(tab ? { ideasOpen, ideasTab: tab } : { ideasOpen }),
+  setIdeasTab: (ideasTab) => set({ ideasTab }),
   setCalibration: (calibration) => set({ calibration }),
   setSnapToGrid: (snapToGrid) => set({ snapToGrid }),
   setActiveCorner: (activeCorner) => set({ activeCorner }),

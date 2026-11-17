@@ -26,6 +26,7 @@ import {
   findBed,
   setBedKind,
 } from '../../model/beds'
+import { setBriefArea } from '../../model/brief'
 import { type ReorderDirection, reorderItems } from '../../model/drawOrder'
 import {
   type Clipboard,
@@ -423,6 +424,11 @@ export const editorActions = {
   startMeasure() {
     editorActions.startDrawing({ kind: 'measure' })
   },
+  /** Closes the design ideas dialog and starts drawing the design area (reopens when done). */
+  startDesignArea() {
+    ui().setIdeasOpen(false)
+    editorActions.startDrawing({ kind: 'design-area' })
+  },
   /** Starts drawing a bed of the given kind. */
   drawBed(kind: BedKind) {
     editorActions.startDrawing({ kind: 'bed', bedKind: kind })
@@ -576,11 +582,18 @@ export const editorActions = {
         ui().setSelection([id])
         break
       }
+      case 'design-area':
+        useProjectStore.getState().update((p) => setBriefArea(p, points))
+        ui().setTool('select')
+        ui().setIdeasOpen(true, 'brief')
+        break
     }
     return true
   },
   cancelDrawing() {
+    const designArea = ui().drawing?.target.kind === 'design-area'
     ui().setTool('select')
+    if (designArea) ui().setIdeasOpen(true, 'brief')
   },
 
   // --- Beds --------------------------------------------------------------------------------------

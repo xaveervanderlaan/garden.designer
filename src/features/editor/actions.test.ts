@@ -461,6 +461,35 @@ describe('editorActions', () => {
     expect(project().settings.soil).toBe('sand')
   })
 
+  it('drawing a design area saves it in the brief', () => {
+    useUiStore.getState().setIdeasOpen(true, 'prompt')
+    editorActions.startDesignArea()
+    expect(useUiStore.getState().ideasOpen).toBe(false)
+    const area = [
+      { x: 1, y: 1 },
+      { x: 9, y: 1 },
+      { x: 9, y: 6 },
+    ]
+    for (const point of area.slice(0, 2)) editorActions.addDrawingPoint(point)
+    expect(editorActions.finishDrawing()).toBe(false) // an area needs three corners
+    editorActions.addDrawingPoint(area[2]!)
+    expect(editorActions.finishDrawing()).toBe(true)
+
+    expect(project().brief?.area).toEqual(area)
+    expect(project().brief?.count).toBe(12)
+    expect(useUiStore.getState()).toMatchObject({
+      tool: 'select',
+      ideasOpen: true,
+      ideasTab: 'brief',
+    })
+    editorActions.undo()
+    expect(project().brief).toBeUndefined()
+
+    editorActions.startDesignArea()
+    editorActions.cancelDrawing()
+    expect(useUiStore.getState().ideasOpen).toBe(true)
+  })
+
   describe('the site plan', () => {
     const background = () => project().background!
     const calibration = () => useUiStore.getState().calibration

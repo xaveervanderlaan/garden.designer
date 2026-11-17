@@ -15,6 +15,7 @@ import {
   RulerDimensionLine,
   Scan,
   Printer,
+  Lightbulb,
   Settings,
   Undo2,
   ZoomIn,
@@ -40,11 +41,20 @@ type ToolButtonProps = {
   shortcut?: ShortcutId
   pressed?: boolean
   disabled?: boolean
+  testId?: string
   onClick: () => void
   children: React.ReactNode
 }
 
-function ToolButton({ label, shortcut, pressed, disabled, onClick, children }: ToolButtonProps) {
+function ToolButton({
+  label,
+  shortcut,
+  pressed,
+  disabled,
+  testId,
+  onClick,
+  children,
+}: ToolButtonProps) {
   const hint = shortcut ? `${label} (${shortcutLabel(shortcut)})` : label
   return (
     <button
@@ -54,6 +64,7 @@ function ToolButton({ label, shortcut, pressed, disabled, onClick, children }: T
       title={hint}
       aria-pressed={pressed}
       disabled={disabled}
+      data-testid={testId}
       onClick={onClick}
     >
       {children}
@@ -243,6 +254,13 @@ export function EditorToolbar({ project }: { project: Project }) {
             onClick={() => useUiStore.getState().setExportOpen(true)}
           >
             <Printer {...icon} />
+          </ToolButton>
+          <ToolButton
+            label={t('proposals.button')}
+            testId="design-ideas"
+            onClick={() => useUiStore.getState().setIdeasOpen(true)}
+          >
+            <Lightbulb {...icon} />
           </ToolButton>
         </div>
         <div className={styles.toolGroup}>

@@ -958,5 +958,163 @@
     "layers": "Layers",
     "layersTitle": "Layers",
     "calendar": "Vegetable calendar"
+  },
+  "proposals": {
+    "button": "Design ideas…",
+    "title": "Design ideas",
+    "close": "Close",
+    "intro": "Describe what you would like. The app turns this into a prompt to copy into a chat with Claude; you then paste Claude's answer back here. The app itself sends nothing anywhere.",
+    "tabs": {
+      "brief": "1. Brief",
+      "prompt": "2. Prompt",
+      "proposals": "3. Proposals"
+    },
+    "brief": {
+      "styles": {
+        "label": "Style",
+        "natural": "Natural",
+        "cottage": "Cottage garden",
+        "modern": "Modern",
+        "mediterranean": "Mediterranean",
+        "japanese": "Japanese",
+        "edible": "Edible",
+        "formal": "Formal"
+      },
+      "mustHaves": {
+        "label": "Must-haves",
+        "add": "Add a must-have",
+        "remove": "Remove",
+        "kind": "What",
+        "size": "Size",
+        "place": "Where (optional)",
+        "m2": "m²",
+        "count": "pcs",
+        "kinds": {
+          "terrace": "Terrace",
+          "lawn": "Lawn",
+          "vegetable-beds": "Vegetable beds",
+          "fruit-trees": "Fruit trees",
+          "pond": "Pond",
+          "shed": "Shed",
+          "greenhouse": "Greenhouse",
+          "play-area": "Play area",
+          "compost": "Compost",
+          "paths": "Paths",
+          "seating": "Seating area"
+        }
+      },
+      "maintenance": {
+        "label": "Maintenance",
+        "low": "Low",
+        "medium": "Medium",
+        "high": "High"
+      },
+      "priorities": {
+        "label": "Priorities",
+        "biodiversity": "Biodiversity",
+        "year-round": "Interest all year",
+        "food": "Food",
+        "low-water": "Little watering"
+      },
+      "colours": "Flower colours",
+      "include": "Plants to include",
+      "avoid": "Plants to avoid",
+      "search": "Search {{list}}",
+      "searchPlaceholder": "Search by name…",
+      "addPlant": "Add {{name}}",
+      "removePlant": "Remove {{name}}",
+      "avoidToxic": "No toxic plants",
+      "screening": "Screen off along these plot edges",
+      "edge": "Edge {{edge}}",
+      "area": {
+        "label": "Design area",
+        "whole": "The whole plot",
+        "drawn": "A drawn area of {{area}}",
+        "draw": "Draw area",
+        "redraw": "Redraw",
+        "clear": "Clear"
+      },
+      "mayChange": "Existing items that may change",
+      "mayChangeHint": "Everything you don't tick stays as it is.",
+      "noItems": "The design has no items yet.",
+      "item": "{{ref}} · {{name}}",
+      "notes": "Other wishes",
+      "count": "Number of proposals",
+      "variety": {
+        "label": "Proposals",
+        "varied": "As different as possible",
+        "variations": "Variations on one idea"
+      },
+      "save": "Save brief",
+      "saved": "Saved",
+      "next": "Next: prompt"
+    },
+    "area": {
+      "drawTitle": "Design area:",
+      "drawHint": "click the corners of the part of the plot the proposals may change."
+    },
+    "prompt": {
+      "intro": "Copy this prompt into a new chat with Claude. It contains the plot, the existing items, the plant list and your brief, but not the design's name, location or site plan.",
+      "label": "Prompt",
+      "size": "{{chars}} characters, about {{tokens}} tokens",
+      "copy": "Copy prompt",
+      "copied": "Copied",
+      "copyFailed": "Couldn't copy. The text is selected: press Ctrl+C.",
+      "sunMapHint": "Tip: compute a sun-hours map first (Sun hours panel) to include sun and shade in the prompt.",
+      "sunMapIncluded": "The sun-hours map is included.",
+      "noPlot": "Draw the plot outline first: the prompt needs it.",
+      "next": "Next: paste the answer"
+    },
+    "answer": {
+      "paste": "Paste Claude's answer",
+      "drop": "or drop a file here",
+      "chooseFile": "Choose file…",
+      "read": "Read answer",
+      "status": "{{count}} of {{requested}} proposals",
+      "truncated": "The answer was cut off; its complete proposals were kept.",
+      "continue": "Copy continue prompt",
+      "newSet": "New set",
+      "newSetOption": "(new set)",
+      "set": "Proposal set",
+      "setOption": "{{date}} ({{count}})",
+      "changedSince": "The design has changed since this set was made; a proposal is applied to the design as it is now.",
+      "problems": "Rejected proposals",
+      "proposalN": "Proposal {{number}}",
+      "errors": {
+        "empty": "Paste an answer first.",
+        "noJson": "There is no JSON in this text. Paste Claude's whole answer.",
+        "notProposals": "This JSON contains no proposals.",
+        "tooLarge": "The answer is too large (at most 5 MB).",
+        "readFailed": "Couldn't read the file.",
+        "saveFailed": "Couldn't save the proposals."
+      }
+    },
+    "issues": {
+      "required": "{{path}} is missing",
+      "type": "{{path}} has the wrong type",
+      "range": "{{path}} is out of range",
+      "enum": "{{path}} has an unknown value",
+      "geometry": "{{path}}: the shape doesn't fit this kind",
+      "material": "{{path}}: unknown material",
+      "variant": "{{path}}: unknown variant",
+      "mix": "{{path}}: mix or crops on the wrong kind of bed",
+      "other": "{{path}} is not valid"
+    },
+    "report": {
+      "outside": "outside the area: {{count}}",
+      "overlap": "overlapping: {{count}}",
+      "unknownPlant": "unknown plants: {{count}}",
+      "fixed": "fixed items kept: {{count}}",
+      "unknownRef": "unknown references: {{count}}",
+      "tooSmall": "too small: {{count}}",
+      "matched": "plant names matched: {{count}}"
+    },
+    "list": {
+      "use": "Use this design",
+      "useNamed": "Use this design: {{title}}",
+      "counts": "{{objects}} objects · {{plantings}} plants · {{species}} species",
+      "empty": "No valid proposals yet.",
+      "failed": "Couldn't create the design."
+    }
   }
 }

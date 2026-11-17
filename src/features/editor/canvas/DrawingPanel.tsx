@@ -32,6 +32,7 @@ const NO_POINTS: readonly Point[] = []
 function tooFewError(target: DrawTarget): ErrorKey | null {
   switch (target.kind) {
     case 'plot':
+    case 'design-area':
       return 'editor.drawing.needMoreCorners'
     case 'bed':
       return 'editor.beds.needMoreCorners'
@@ -139,7 +140,9 @@ export function DrawingPanel({ towards }: { towards: Point | null }) {
                 ? 'editor.objects.drawing.hintStartLine'
                 : 'editor.objects.drawing.hintStartPoint',
           )
-        : t('editor.drawing.hintStart')
+        : target.kind === 'design-area'
+          ? t('proposals.area.drawHint')
+          : t('editor.drawing.hintStart')
       : corners < minimum
         ? t('editor.drawing.hintNext')
         : target.kind === 'row'
@@ -270,9 +273,11 @@ function DrawingTitle({ target }: { target: DrawTarget }) {
             })
           : target.kind === 'measure'
             ? t('editor.measure.title')
-            : t('editor.placing.rowTitle', {
-                name: plant ? plantName(plant, currentLanguage()) : '',
-              })
+            : target.kind === 'design-area'
+              ? t('proposals.area.drawTitle')
+              : t('editor.placing.rowTitle', {
+                  name: plant ? plantName(plant, currentLanguage()) : '',
+                })
   return <span className={styles.drawingTitle}>{title}</span>
 }
 

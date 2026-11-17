@@ -7,7 +7,7 @@ import { z } from 'zod'
  *
  * Changing the shape of stored data? Bump SCHEMA_VERSION and add a migration (see migrations.ts).
  */
-export const SCHEMA_VERSION = 9
+export const SCHEMA_VERSION = 10
 
 export const idSchema = z.string().min(1).max(100)
 
@@ -329,6 +329,71 @@ const layerStateSchema = z.object({ visible: z.boolean(), locked: z.boolean() })
 export const layersSchema = z.record(z.enum(LAYER_IDS), layerStateSchema)
 export type Layers = z.infer<typeof layersSchema>
 
+// --- Design brief (M19) ---------------------------------------------------------------------
+
+export const BRIEF_STYLES = [
+  'natural',
+  'cottage',
+  'modern',
+  'mediterranean',
+  'japanese',
+  'edible',
+  'formal',
+] as const
+export type BriefStyle = (typeof BRIEF_STYLES)[number]
+
+export const MUST_HAVE_KINDS = [
+  'terrace',
+  'lawn',
+  'vegetable-beds',
+  'fruit-trees',
+  'pond',
+  'shed',
+  'greenhouse',
+  'play-area',
+  'compost',
+  'paths',
+  'seating',
+] as const
+export type MustHaveKind = (typeof MUST_HAVE_KINDS)[number]
+
+export const MAINTENANCE_LEVELS = ['low', 'medium', 'high'] as const
+export type MaintenanceLevel = (typeof MAINTENANCE_LEVELS)[number]
+
+export const BRIEF_PRIORITIES = ['biodiversity', 'year-round', 'food', 'low-water'] as const
+export type BriefPriority = (typeof BRIEF_PRIORITIES)[number]
+
+export const mustHaveSchema = z.object({
+  id: idSchema,
+  kind: z.enum(MUST_HAVE_KINDS),
+  /** Area in m², or a count for fruit trees and vegetable beds. */
+  size: positiveLength.optional(),
+  place: z.string().max(200).optional(),
+})
+export type MustHave = z.infer<typeof mustHaveSchema>
+
+export const briefSchema = z.object({
+  styles: uniqueList(z.enum(BRIEF_STYLES)),
+  mustHaves: z.array(mustHaveSchema).max(30),
+  /** Plot edge indices to screen off (edge i runs from corner i to corner i + 1). */
+  screening: uniqueList(z.number().int().nonnegative()),
+  maintenance: z.enum(MAINTENANCE_LEVELS),
+  priorities: uniqueList(z.enum(BRIEF_PRIORITIES)),
+  colours: uniqueList(z.enum(FLOWER_COLORS)),
+  includePlants: uniqueList(idSchema).refine((l) => l.length <= 50, 'Too many'),
+  avoidPlants: uniqueList(idSchema).refine((l) => l.length <= 50, 'Too many'),
+  avoidToxic: z.boolean(),
+  notes: z.string().max(5000),
+  /** How many proposals to ask for. */
+  count: z.number().int().min(1).max(20),
+  variety: z.enum(['varied', 'variations']),
+  /** The part of the plot the proposals may change (absent = the whole plot). */
+  area: z.array(pointSchema).min(3).optional(),
+  /** Ids of base items (objects and plantings) a proposal may change or remove. */
+  mayChange: uniqueList(idSchema),
+})
+export type Brief = z.infer<typeof briefSchema>
+
 export const PROJECT_NAME_MAX_LENGTH = 100
 
 export const projectSchema = z.object({
@@ -344,5 +409,6 @@ export const projectSchema = z.object({
   plantings: z.array(plantingSchema),
   customPlants: z.array(plantSchema),
   layers: layersSchema,
+  brief: briefSchema.optional(),
 })
 export type Project = z.infer<typeof projectSchema>

@@ -958,5 +958,163 @@
     "layers": "Lagen",
     "layersTitle": "Lagen",
     "calendar": "Moestuinkalender"
+  },
+  "proposals": {
+    "button": "Ontwerpideeën…",
+    "title": "Ontwerpideeën",
+    "close": "Sluiten",
+    "intro": "Beschrijf wat je wilt. De app maakt hier een prompt van die je in een chat met Claude plakt; daarna plak je het antwoord van Claude hier terug. De app zelf verstuurt niets.",
+    "tabs": {
+      "brief": "1. Wensen",
+      "prompt": "2. Prompt",
+      "proposals": "3. Voorstellen"
+    },
+    "brief": {
+      "styles": {
+        "label": "Stijl",
+        "natural": "Natuurlijk",
+        "cottage": "Cottagetuin",
+        "modern": "Modern",
+        "mediterranean": "Mediterraan",
+        "japanese": "Japans",
+        "edible": "Eetbaar",
+        "formal": "Formeel"
+      },
+      "mustHaves": {
+        "label": "Moet erin",
+        "add": "Iets toevoegen",
+        "remove": "Verwijderen",
+        "kind": "Wat",
+        "size": "Grootte",
+        "place": "Waar (optioneel)",
+        "m2": "m²",
+        "count": "st.",
+        "kinds": {
+          "terrace": "Terras",
+          "lawn": "Gazon",
+          "vegetable-beds": "Moestuinbedden",
+          "fruit-trees": "Fruitbomen",
+          "pond": "Vijver",
+          "shed": "Schuur",
+          "greenhouse": "Kas",
+          "play-area": "Speelplek",
+          "compost": "Compost",
+          "paths": "Paden",
+          "seating": "Zithoek"
+        }
+      },
+      "maintenance": {
+        "label": "Onderhoud",
+        "low": "Weinig",
+        "medium": "Gemiddeld",
+        "high": "Veel"
+      },
+      "priorities": {
+        "label": "Prioriteiten",
+        "biodiversity": "Biodiversiteit",
+        "year-round": "Het hele jaar mooi",
+        "food": "Eten",
+        "low-water": "Weinig water geven"
+      },
+      "colours": "Bloemkleuren",
+      "include": "Planten die erin moeten",
+      "avoid": "Planten die er niet in mogen",
+      "search": "Zoek {{list}}",
+      "searchPlaceholder": "Zoek op naam…",
+      "addPlant": "{{name}} toevoegen",
+      "removePlant": "{{name}} verwijderen",
+      "avoidToxic": "Geen giftige planten",
+      "screening": "Afschermen langs deze perceelranden",
+      "edge": "Rand {{edge}}",
+      "area": {
+        "label": "Ontwerpgebied",
+        "whole": "Het hele perceel",
+        "drawn": "Een getekend gebied van {{area}}",
+        "draw": "Gebied tekenen",
+        "redraw": "Opnieuw tekenen",
+        "clear": "Wissen"
+      },
+      "mayChange": "Bestaande onderdelen die mogen veranderen",
+      "mayChangeHint": "Alles wat je niet aanvinkt blijft zoals het is.",
+      "noItems": "Het ontwerp heeft nog geen onderdelen.",
+      "item": "{{ref}} · {{name}}",
+      "notes": "Andere wensen",
+      "count": "Aantal voorstellen",
+      "variety": {
+        "label": "Voorstellen",
+        "varied": "Zo verschillend mogelijk",
+        "variations": "Variaties op één idee"
+      },
+      "save": "Wensen opslaan",
+      "saved": "Opgeslagen",
+      "next": "Volgende: prompt"
+    },
+    "area": {
+      "drawTitle": "Ontwerpgebied:",
+      "drawHint": "klik de hoeken van het deel van het perceel dat de voorstellen mogen veranderen."
+    },
+    "prompt": {
+      "intro": "Kopieer deze prompt naar een nieuwe chat met Claude. Hij bevat het perceel, de bestaande onderdelen, de plantenlijst en je wensen, maar niet de naam, locatie of plattegrond van het ontwerp.",
+      "label": "Prompt",
+      "size": "{{chars}} tekens, ongeveer {{tokens}} tokens",
+      "copy": "Prompt kopiëren",
+      "copied": "Gekopieerd",
+      "copyFailed": "Kopiëren lukte niet. De tekst is geselecteerd: druk op Ctrl+C.",
+      "sunMapHint": "Tip: bereken eerst een zonurenkaart (paneel Zonuren) om zon en schaduw mee te geven in de prompt.",
+      "sunMapIncluded": "De zonurenkaart is meegegeven.",
+      "noPlot": "Teken eerst de perceelgrens: de prompt heeft die nodig.",
+      "next": "Volgende: antwoord plakken"
+    },
+    "answer": {
+      "paste": "Plak het antwoord van Claude",
+      "drop": "of sleep een bestand hierheen",
+      "chooseFile": "Bestand kiezen…",
+      "read": "Antwoord inlezen",
+      "status": "{{count}} van {{requested}} voorstellen",
+      "truncated": "Het antwoord was afgebroken; de complete voorstellen zijn bewaard.",
+      "continue": "Vervolgprompt kopiëren",
+      "newSet": "Nieuwe reeks",
+      "newSetOption": "(nieuwe reeks)",
+      "set": "Reeks voorstellen",
+      "setOption": "{{date}} ({{count}})",
+      "changedSince": "Het ontwerp is veranderd sinds deze reeks is gemaakt; een voorstel wordt toegepast op het ontwerp zoals het nu is.",
+      "problems": "Afgekeurde voorstellen",
+      "proposalN": "Voorstel {{number}}",
+      "errors": {
+        "empty": "Plak eerst een antwoord.",
+        "noJson": "Deze tekst bevat geen JSON. Plak het hele antwoord van Claude.",
+        "notProposals": "Deze JSON bevat geen voorstellen.",
+        "tooLarge": "Het antwoord is te groot (maximaal 5 MB).",
+        "readFailed": "Het bestand kon niet worden gelezen.",
+        "saveFailed": "De voorstellen konden niet worden opgeslagen."
+      }
+    },
+    "issues": {
+      "required": "{{path}} ontbreekt",
+      "type": "{{path}} heeft het verkeerde type",
+      "range": "{{path}} valt buiten het bereik",
+      "enum": "{{path}} heeft een onbekende waarde",
+      "geometry": "{{path}}: de vorm past niet bij deze soort",
+      "material": "{{path}}: onbekend materiaal",
+      "variant": "{{path}}: onbekende variant",
+      "mix": "{{path}}: mix of gewassen bij de verkeerde soort bed",
+      "other": "{{path}} is niet geldig"
+    },
+    "report": {
+      "outside": "buiten het gebied: {{count}}",
+      "overlap": "overlappend: {{count}}",
+      "unknownPlant": "onbekende planten: {{count}}",
+      "fixed": "vaste onderdelen behouden: {{count}}",
+      "unknownRef": "onbekende verwijzingen: {{count}}",
+      "tooSmall": "te klein: {{count}}",
+      "matched": "plantnamen herkend: {{count}}"
+    },
+    "list": {
+      "use": "Dit ontwerp gebruiken",
+      "useNamed": "Dit ontwerp gebruiken: {{title}}",
+      "counts": "{{objects}} onderdelen · {{plantings}} planten · {{species}} soorten",
+      "empty": "Nog geen geldige voorstellen.",
+      "failed": "Het ontwerp kon niet worden gemaakt."
+    }
   }
 }

@@ -47,7 +47,11 @@ export async function renameProject(id: string, name: string): Promise<void> {
  * Deep copy under a new id. Assets are copied too (with new ids), so the copy is fully independent
  * of the original.
  */
-export async function duplicateProject(id: string, name: string): Promise<Project> {
+export async function duplicateProject(
+  id: string,
+  name: string,
+  change?: (project: Project) => Project,
+): Promise<Project> {
   return db.transaction('rw', db.projects, db.assets, async () => {
     const original = await loadProject(id)
     if (!original) throw new Error(`Project ${id} not found`)
@@ -75,13 +79,17 @@ export async function duplicateProject(id: string, name: string): Promise<Projec
       copy.background.assetId = newAssetIds.get(copy.background.assetId) ?? copy.background.assetId
     }
 
-    await db.projects.add(copy)
-    return copy
+    // The change runs inside the transaction and the result is validated: a throw undoes the
+    // copy, including its assets.
+    const result = change ? projectSchema.parse(change(copy)) : copy
+    await db.projects.add(result)
+    return result
   })
 }
 
 export async function deleteProject(id: string): Promise<void> {
-  await db.transaction('rw', db.projects, db.assets, async () => {
+  await db.transaction('rw', db.projects, db.assets, db.proposalSets, async () => {
+    await db.proposalSets.where('projectId').equals(id).delete()
     await db.assets.where('projectId').equals(id).delete()
     await db.projects.delete(id)
   })

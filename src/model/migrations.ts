@@ -78,6 +78,8 @@ export const MIGRATIONS: Readonly<Record<number, Migration>> = {
   }),
   // v8 → v9 (M15): optional rowAngleDeg on vegetable beds; no data changes.
   8: (project) => project,
+  // v9 → v10 (M19): adds the optional design brief; no data changes.
+  9: (project) => project,
 }
 
 const isOneOf = <T extends string>(list: readonly T[], value: unknown): value is T =>
