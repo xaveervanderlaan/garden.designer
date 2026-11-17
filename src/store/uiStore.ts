@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import type { Bounds } from '../geometry/bounds'
+import type { LocalDate } from '../geometry/sun'
 import type { Size, Viewport } from '../geometry/viewport'
 import type { BedKind } from '../model/beds'
 import type { GrowthStopId } from '../model/growth'
@@ -10,6 +11,8 @@ import type { ObjectKind, Point } from '../model/schema'
  * select/pan: the usual. draw: drawing an outline or line (see DrawTarget). calibrate: measuring
  * the site plan's scale. stamp: every click places a plant. fill: filling a bed with a plant.
  */
+export type SunMoment = { date: LocalDate; minutes: number }
+
 export type Tool = 'select' | 'pan' | 'draw' | 'calibrate' | 'stamp' | 'fill'
 
 /**
@@ -66,6 +69,10 @@ type UiStore = {
   growthStop: GrowthStopId
   /** The view bar's month (M14, 1–12): plants are drawn as they look then; null: usual look. */
   month: number | null
+  /** The sun's moment (M11): date and minutes after local midnight; null: sun off, no shadows. */
+  sun: SunMoment | null
+  /** Whether the sun's time is playing through the day (not saved). */
+  sunPlaying: boolean
   bloomChartOpen: boolean
   settingsOpen: boolean
   /** The line being measured with the calibrate tool, or null. */
@@ -110,6 +117,8 @@ type UiStore = {
   setLabelMode: (mode: LabelMode) => void
   setGrowthStop: (stop: GrowthStopId) => void
   setMonth: (month: number | null) => void
+  setSun: (sun: SunMoment | null) => void
+  setSunPlaying: (playing: boolean) => void
   setBloomChartOpen: (open: boolean) => void
   setSettingsOpen: (open: boolean) => void
   setCalibration: (calibration: Calibration | null) => void
@@ -137,6 +146,8 @@ const initial = {
   labelMode: 'name' as LabelMode,
   growthStop: 'mature' as GrowthStopId,
   month: null as number | null,
+  sun: null as SunMoment | null,
+  sunPlaying: false,
   bloomChartOpen: false,
   settingsOpen: false,
   calibration: null,
@@ -215,6 +226,8 @@ export const useUiStore = create<UiStore>()((set) => ({
   setLabelMode: (labelMode) => set({ labelMode }),
   setGrowthStop: (growthStop) => set({ growthStop }),
   setMonth: (month) => set({ month }),
+  setSun: (sun) => set({ sun }),
+  setSunPlaying: (sunPlaying) => set({ sunPlaying }),
   setBloomChartOpen: (bloomChartOpen) => set({ bloomChartOpen }),
   setSettingsOpen: (settingsOpen) => set({ settingsOpen }),
   setCalibration: (calibration) => set({ calibration }),

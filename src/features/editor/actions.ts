@@ -94,6 +94,7 @@ import type {
 import { useProjectStore } from '../../store/projectStore'
 import { type DrawTarget, type LabelMode, type Tool, useUiStore } from '../../store/uiStore'
 import { pickSitePlanFile } from './siteplan/picker'
+import { defaultSunMoment, normaliseAngle } from './view/sunView'
 
 /**
  * Editor commands, shared by the toolbar, keyboard shortcuts and panels. They read the stores
@@ -733,6 +734,27 @@ export const editorActions = {
   },
 
   // --- Design settings ---------------------------------------------------------------------------
+
+  /** Rotates the plan's north (degrees clockwise from up); a keyboard nudge coalesces. */
+  setNorthAngle(deg: number, options: { coalesce?: boolean } = {}) {
+    const northAngleDeg = normaliseAngle(deg)
+    useProjectStore
+      .getState()
+      .update(
+        (p) => ({ ...p, settings: { ...p.settings, northAngleDeg } }),
+        options.coalesce ? { coalesce: 'north-angle' } : undefined,
+      )
+  },
+  /** Turns the sun (and its shadows) on at the default moment, or off. View state, no undo. */
+  setSunOn(on: boolean) {
+    const project = useProjectStore.getState().project
+    if (!on || !project) {
+      useUiStore.getState().setSun(null)
+      return
+    }
+    useUiStore.getState().setSun(defaultSunMoment(project.settings.location))
+    showLayer('shadows')
+  },
 
   /** Saves the design settings dialog (one undo step). */
   saveSettings(name: string, settings: Settings) {

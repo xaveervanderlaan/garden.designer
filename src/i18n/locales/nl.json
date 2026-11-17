@@ -581,7 +581,15 @@
       "overlap": "Overlapwaarschuwing (%)",
       "invalidGrid": "Vul een rastermaat in tussen 0,01 en 100 m.",
       "invalidOverlap": "Vul een percentage in tussen 0 en 100.",
-      "overlapHint": "Twee planten krijgen een waarschuwing als ze volgroeid meer dan dit deel van de breedte van de kleinste plant overlappen."
+      "overlapHint": "Twee planten krijgen een waarschuwing als ze volgroeid meer dan dit deel van de breedte van de kleinste plant overlappen.",
+      "latitude": "Breedtegraad (°)",
+      "longitude": "Lengtegraad (°)",
+      "northAngle": "Noorden (°)",
+      "locationHint": "Voor de stand van de zon; standaard het midden van Nederland.",
+      "northHint": "Hoek van het noorden: graden met de klok mee van de bovenkant van het plan naar het noorden.",
+      "latitudeError": "Vul een breedtegraad in tussen −90 en 90.",
+      "longitudeError": "Vul een lengtegraad in tussen −180 en 180.",
+      "northError": "Vul de hoek van het noorden in graden in."
     },
     "objects": {
       "groups": {
@@ -697,6 +705,28 @@
       "empty": "Nog niets te tonen.",
       "plot": "Perceel",
       "existing": "Bestaand (gedempt getoond)"
+    },
+    "sun": {
+      "toggle": "Zon",
+      "toggleHint": "Toon de schaduwen op een datum en tijdstip",
+      "date": "Datum",
+      "time": "Tijd",
+      "quickPick": "Snelkeuze",
+      "quick": {
+        "3": "21 mrt",
+        "6": "21 jun",
+        "9": "21 sep",
+        "12": "21 dec"
+      },
+      "play": "Speel de dag af",
+      "pause": "Pauzeer",
+      "position": "Zon {{altitude}}° hoog, uit {{azimuth}}°",
+      "down": "Zon is onder"
+    },
+    "northArrow": {
+      "label": "Noordrichting",
+      "hint": "Sleep of gebruik de pijltoetsen om het noorden te draaien (Shift: stappen van 15°)",
+      "letter": "N"
     }
   },
   "plants": {

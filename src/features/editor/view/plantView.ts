@@ -16,8 +16,8 @@ import { currentYear } from '../actions'
  * (`growthReferenceYear`), so "planting year" stays the year the garden is planted.
  *
  * Anything else that depends on plant sizes uses the same year, e.g. tree shadows:
- * `plantedSizeAt(plant, planting.plantedYear, currentPlantView(project).year)` (null: not planted
- * yet, so no shadow).
+ * `plantSizeAt(plant, planting.plantedYear, year)` when `isPlanted(planting.plantedYear, year)`
+ * (not planted yet: no shadow), see `designShadow`.
  */
 
 /** The growth year a slider stop shows for a design. */

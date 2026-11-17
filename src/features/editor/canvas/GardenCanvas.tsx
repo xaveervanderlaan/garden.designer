@@ -63,6 +63,8 @@ import { type ItemHandlers, Items, type ObjectDraft } from './Items'
 import { PlantPreview } from './PlantPreview'
 import { PlotOverlay, PlotShape } from './Plot'
 import { useRectangleDrag } from './rectangleDrag'
+import { NorthArrow } from './NorthArrow'
+import { ShadowLayer } from './ShadowLayer'
 import { SitePlanLayer } from './SitePlan'
 import { snapContext } from './snapTargets'
 import { StampPanel } from './StampPanel'
@@ -572,6 +574,7 @@ export default function GardenCanvas() {
                 onTransformEnd={onTransformEnd}
               />
             </Layer>
+            <ShadowLayer project={project} viewport={viewport} year={view.year} />
             <Layer>
               {plotVisible && (
                 <PlotOverlay
@@ -621,6 +624,8 @@ export default function GardenCanvas() {
             </Layer>
           </Stage>
         )}
+
+        <NorthArrow />
 
         {hint && (
           <p className={styles.emptyHint}>

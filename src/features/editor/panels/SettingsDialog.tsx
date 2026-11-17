@@ -9,6 +9,7 @@ import { useUiStore } from '../../../store/uiStore'
 import controls from '../../../styles/controls.module.css'
 import { cx } from '../../../styles/cx'
 import { editorActions } from '../actions'
+import { normaliseAngle } from '../view/sunView'
 import styles from './panels.module.css'
 
 const MIN_GRID_M = 0.01
@@ -22,7 +23,14 @@ export function SettingsDialog() {
   return <SettingsForm />
 }
 
-type Errors = { name?: boolean; grid?: boolean; overlap?: boolean }
+type Errors = {
+  name?: boolean
+  grid?: boolean
+  overlap?: boolean
+  lat?: boolean
+  lng?: boolean
+  north?: boolean
+}
 
 function SettingsForm() {
   const { t } = useTranslation()
@@ -34,12 +42,18 @@ function SettingsForm() {
   const [overlap, setOverlap] = useState(() =>
     formatDecimal(project.settings.overlapThreshold * 100, 1),
   )
+  const [lat, setLat] = useState(() => formatDecimal(project.settings.location.lat, 4))
+  const [lng, setLng] = useState(() => formatDecimal(project.settings.location.lng, 4))
+  const [north, setNorth] = useState(() => formatDecimal(project.settings.northAngleDeg, 0))
   const [errors, setErrors] = useState<Errors>({})
   const titleId = useId()
   const nameId = useId()
   const soilId = useId()
   const gridId = useId()
   const overlapId = useId()
+  const latId = useId()
+  const lngId = useId()
+  const northId = useId()
   const firstInput = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -59,12 +73,18 @@ function SettingsForm() {
     const cleanName = normaliseName(name)
     const gridM = parseNumber(grid)
     const overlapPercent = parseNumber(overlap)
+    const latDeg = parseNumber(lat)
+    const lngDeg = parseNumber(lng)
+    const northDeg = parseNumber(north)
     const next: Errors = {
       name: !cleanName,
       grid: gridM === undefined || gridM < MIN_GRID_M || gridM > MAX_GRID_M,
       overlap: overlapPercent === undefined || overlapPercent < 0 || overlapPercent > 100,
+      lat: latDeg === undefined || latDeg < -90 || latDeg > 90,
+      lng: lngDeg === undefined || lngDeg < -180 || lngDeg > 180,
+      north: northDeg === undefined,
     }
-    if (next.name || next.grid || next.overlap) {
+    if (Object.values(next).some(Boolean)) {
       setErrors(next)
       return
     }
@@ -74,6 +94,8 @@ function SettingsForm() {
       soil,
       gridSizeM: gridM!,
       overlapThreshold: Math.round(overlapPercent! * 10) / 1000,
+      location: { lat: latDeg!, lng: lngDeg! },
+      northAngleDeg: normaliseAngle(northDeg!),
     })
   }
 
@@ -184,6 +206,74 @@ function SettingsForm() {
           </p>
         )}
         <p className={styles.smallHint}>{t('editor.settings.overlapHint')}</p>
+
+        <div className={styles.fieldRow}>
+          <div>
+            <label className={controls.label} htmlFor={latId}>
+              {t('editor.settings.latitude')}
+            </label>
+            <input
+              id={latId}
+              className={cx(controls.input, styles.field)}
+              inputMode="decimal"
+              value={lat}
+              aria-invalid={!!errors.lat}
+              onChange={(e) => {
+                setLat(e.target.value)
+                setErrors({ ...errors, lat: false })
+              }}
+            />
+          </div>
+          <div>
+            <label className={controls.label} htmlFor={lngId}>
+              {t('editor.settings.longitude')}
+            </label>
+            <input
+              id={lngId}
+              className={cx(controls.input, styles.field)}
+              inputMode="decimal"
+              value={lng}
+              aria-invalid={!!errors.lng}
+              onChange={(e) => {
+                setLng(e.target.value)
+                setErrors({ ...errors, lng: false })
+              }}
+            />
+          </div>
+          <div>
+            <label className={controls.label} htmlFor={northId}>
+              {t('editor.settings.northAngle')}
+            </label>
+            <input
+              id={northId}
+              className={cx(controls.input, styles.field)}
+              inputMode="decimal"
+              value={north}
+              aria-invalid={!!errors.north}
+              onChange={(e) => {
+                setNorth(e.target.value)
+                setErrors({ ...errors, north: false })
+              }}
+            />
+          </div>
+        </div>
+        {errors.lat && (
+          <p className={cx(controls.fieldError, styles.fieldErrorTight)} role="alert">
+            {t('editor.settings.latitudeError')}
+          </p>
+        )}
+        {errors.lng && (
+          <p className={cx(controls.fieldError, styles.fieldErrorTight)} role="alert">
+            {t('editor.settings.longitudeError')}
+          </p>
+        )}
+        {errors.north && (
+          <p className={cx(controls.fieldError, styles.fieldErrorTight)} role="alert">
+            {t('editor.settings.northError')}
+          </p>
+        )}
+        <p className={styles.smallHint}>{t('editor.settings.locationHint')}</p>
+        <p className={styles.smallHint}>{t('editor.settings.northHint')}</p>
 
         <div className={styles.dialogActions}>
           <button type="button" className={cx(controls.button, controls.quiet)} onClick={close}>

@@ -223,3 +223,6 @@ export const PLANTING_MARKS = {
 
 /** Grid line colours on the canvas. */
 export const GRID_COLORS = { minor: '#e6ebe1', major: '#cdd6c6', background: '#f7f9f4' }
+
+/** The shadow layer (M11): semi-transparent over the items. */
+export const SHADOW_STYLE = { color: '#1f2a44', opacity: 0.3 }

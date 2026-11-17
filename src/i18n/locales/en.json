@@ -581,7 +581,15 @@
       "overlap": "Overlap warning (%)",
       "invalidGrid": "Enter a grid size between 0,01 and 100 m.",
       "invalidOverlap": "Enter a percentage between 0 and 100.",
-      "overlapHint": "Two plants get a warning when, at full size, they overlap by more than this share of the smaller plant’s width."
+      "overlapHint": "Two plants get a warning when, at full size, they overlap by more than this share of the smaller plant’s width.",
+      "latitude": "Latitude (°)",
+      "longitude": "Longitude (°)",
+      "northAngle": "North (°)",
+      "locationHint": "Used for the sun’s position; the default is the middle of the Netherlands.",
+      "northHint": "North angle: degrees clockwise from the top of the plan to north.",
+      "latitudeError": "Enter a latitude between −90 and 90.",
+      "longitudeError": "Enter a longitude between −180 and 180.",
+      "northError": "Enter the north angle in degrees."
     },
     "objects": {
       "groups": {
@@ -697,6 +705,28 @@
       "empty": "Nothing to show yet.",
       "plot": "Plot",
       "existing": "Existing (shown muted)"
+    },
+    "sun": {
+      "toggle": "Sun",
+      "toggleHint": "Show the shadows at a date and time",
+      "date": "Date",
+      "time": "Time",
+      "quickPick": "Quick pick",
+      "quick": {
+        "3": "21 Mar",
+        "6": "21 Jun",
+        "9": "21 Sep",
+        "12": "21 Dec"
+      },
+      "play": "Play the day",
+      "pause": "Pause",
+      "position": "Sun {{altitude}}° high, from {{azimuth}}°",
+      "down": "Sun is down"
+    },
+    "northArrow": {
+      "label": "North direction",
+      "hint": "Drag or use the arrow keys to turn north (Shift: steps of 15°)",
+      "letter": "N"
     }
   },
   "plants": {

@@ -9,6 +9,7 @@ import controls from '../../../styles/controls.module.css'
 import { cx } from '../../../styles/cx'
 import { currentYear } from '../actions'
 import { stepMonth } from './plantView'
+import { SunControls } from './SunControls'
 import styles from './view.module.css'
 
 /**
@@ -121,6 +122,8 @@ export function ViewBar({ project }: { project: Project }) {
         <ChartGantt {...icon} />
         {t('editor.view.bloomChart')}
       </button>
+
+      <SunControls project={project} />
     </div>
   )
 }

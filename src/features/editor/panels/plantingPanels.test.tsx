@@ -141,6 +141,31 @@ describe('warnings', () => {
     })
     expect(within(region(/^Warnings/)).getByTestId('no-warnings')).toBeInTheDocument()
   })
+  it('saves the location and north angle; rejects an out-of-range latitude', async () => {
+    const user = await openEditor()
+    await user.click(screen.getByRole('button', { name: 'Design settings' }))
+    const dialog = screen.getByRole('dialog', { name: 'Design settings' })
+    const lat = within(dialog).getByLabelText('Latitude (°)')
+    await user.clear(lat)
+    await user.type(lat, '95')
+    await user.click(within(dialog).getByRole('button', { name: 'Save' }))
+    expect(within(dialog).getByRole('alert')).toHaveTextContent('between −90 and 90')
+
+    await user.clear(lat)
+    await user.type(lat, '51.5')
+    const lng = within(dialog).getByLabelText('Longitude (°)')
+    await user.clear(lng)
+    await user.type(lng, '4,25')
+    const north = within(dialog).getByLabelText('North (°)')
+    await user.clear(north)
+    await user.type(north, '-90')
+    await user.click(within(dialog).getByRole('button', { name: 'Save' }))
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    expect(useProjectStore.getState().project!.settings).toMatchObject({
+      location: { lat: 51.5, lng: 4.25 },
+      northAngleDeg: 270,
+    })
+  })
 })
 
 describe('planting properties', () => {

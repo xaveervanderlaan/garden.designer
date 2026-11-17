@@ -1,4 +1,5 @@
 import { type Page, expect, test } from '@playwright/test'
+import { type Bounds, type Point, collectErrors, fitted, openPlant, pixelAt } from './helpers.ts'
 
 /**
  * Growth over the years (M13) and the seasons (M14): the view bar's year and month change how the
@@ -6,73 +7,7 @@ import { type Page, expect, test } from '@playwright/test'
  * drawing is checked by reading its pixels.
  */
 
-/** Must match fitBounds' default padding in src/geometry/viewport.ts. */
-const FIT_PADDING = 48
-type Bounds = { minX: number; minY: number; maxX: number; maxY: number }
-type Point = { x: number; y: number }
 const PLOT: Bounds = { minX: 0, minY: 0, maxX: 20, maxY: 15 }
-
-function collectErrors(page: Page): string[] {
-  const errors: string[] = []
-  page.on('console', (msg) => msg.type() === 'error' && errors.push(msg.text()))
-  page.on('pageerror', (err) => errors.push(err.message))
-  return errors
-}
-
-/** Waits two frames, so a re-fit after the plan area changed size has been drawn. */
-async function settled(page: Page) {
-  await page.evaluate(
-    () => new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done))),
-  )
-}
-
-/** Screen mapping after "zoom to fit" of `bounds` (call it once the panels are as they will be). */
-async function fitted(page: Page, bounds: Bounds) {
-  await settled(page)
-  const box = (await page.getByTestId('plan-area').boundingBox())!
-  const width = Math.floor(box.width)
-  const height = Math.floor(box.height)
-  const w = bounds.maxX - bounds.minX
-  const h = bounds.maxY - bounds.minY
-  const scale = Math.min((width - 2 * FIT_PADDING) / w, (height - 2 * FIT_PADDING) / h)
-  const centre = { x: (bounds.minX + bounds.maxX) / 2, y: (bounds.minY + bounds.maxY) / 2 }
-  /** Screen position of a world point (metres). */
-  const at = (x: number, y: number) => ({
-    x: box.x + width / 2 + (x - centre.x) * scale,
-    y: box.y + height / 2 + (y - centre.y) * scale,
-  })
-  return { at, scale }
-}
-
-/** Opens a plant from the library (search, first result). */
-async function openPlant(page: Page, search: string) {
-  const back = page.getByRole('button', { name: 'Back to the list' })
-  if (await back.isVisible()) await back.click()
-  await page.getByRole('searchbox', { name: 'Search plants' }).fill(search)
-  await page.getByRole('list', { name: 'Plants' }).getByRole('button').first().click()
-}
-
-/** The colour on screen at a point of the plan: all canvas layers over a white background. */
-async function pixelAt(page: Page, point: Point) {
-  return page.evaluate(({ x, y }) => {
-    const layers = [
-      ...document.querySelectorAll<HTMLCanvasElement>('[data-testid="plan-area"] canvas'),
-    ]
-    const rect = layers[0]!.getBoundingClientRect()
-    const ratio = layers[0]!.width / rect.width
-    const out = document.createElement('canvas')
-    out.width = layers[0]!.width
-    out.height = layers[0]!.height
-    const ctx = out.getContext('2d')!
-    ctx.fillStyle = '#ffffff'
-    ctx.fillRect(0, 0, out.width, out.height)
-    for (const layer of layers) ctx.drawImage(layer, 0, 0)
-    const px = Math.round((x - rect.left) * ratio)
-    const py = Math.round((y - rect.top) * ratio)
-    const [r = 0, g = 0, b = 0] = ctx.getImageData(px, py, 1, 1).data
-    return { r, g, b }
-  }, point)
-}
 
 /** Leaves (green fill), a blue flower, or neither (the plot, grid lines, a pale dormant plant). */
 async function colourAt(page: Page, point: Point): Promise<'green' | 'blue' | 'brown' | 'pale'> {
