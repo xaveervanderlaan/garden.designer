@@ -14,6 +14,7 @@ import {
   Ruler,
   RulerDimensionLine,
   Scan,
+  Printer,
   Settings,
   Undo2,
   ZoomIn,
@@ -234,6 +235,14 @@ export function EditorToolbar({ project }: { project: Project }) {
             onClick={editorActions.zoomToFit}
           >
             <Scan {...icon} />
+          </ToolButton>
+        </div>
+        <div className={styles.toolGroup}>
+          <ToolButton
+            label={t('editor.toolbar.export')}
+            onClick={() => useUiStore.getState().setExportOpen(true)}
+          >
+            <Printer {...icon} />
           </ToolButton>
         </div>
         <div className={styles.toolGroup}>

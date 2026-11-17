@@ -56,16 +56,21 @@ export function buildGardenFile(
   }
 }
 
-/** A safe, readable file name, e.g. "Achtertuin – versie 2" → "achtertuin-versie-2.garden.json". */
-export function gardenFileName(projectName: string): string {
+/** A safe, readable file name part, e.g. "Achtertuin – versie 2" → "achtertuin-versie-2". */
+export function fileSlug(projectName: string): string {
   const slug = projectName
     .normalize('NFKD')
-    .replace(/[̀-ͯ]/g, '')
+    .replace(/[\u0300-\u036f]/g, '')
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '')
     .slice(0, 60)
-  return `${slug || 'garden-design'}${GARDEN_FILE_EXTENSION}`
+  return slug || 'garden-design'
+}
+
+/** A safe, readable file name, e.g. "Achtertuin – versie 2" → "achtertuin-versie-2.garden.json". */
+export function gardenFileName(projectName: string): string {
+  return `${fileSlug(projectName)}${GARDEN_FILE_EXTENSION}`
 }
 
 export async function exportProject(id: string): Promise<{ fileName: string; json: string }> {

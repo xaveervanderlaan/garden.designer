@@ -87,7 +87,8 @@
       "help": "Keyboard shortcuts",
       "drawPlot": "Draw plot outline",
       "rectanglePlot": "Rectangular plot",
-      "snapToGrid": "Snap to grid"
+      "snapToGrid": "Snap to grid",
+      "export": "Export image or PDF"
     },
     "canvas": {
       "label": "Garden plan",
@@ -788,6 +789,45 @@
       "emptyBed": "No vegetables, herbs or fruit in this bed yet.",
       "showMonth": "Show {{month}} on the plan",
       "caption": "What to sow, plant out and harvest per month"
+    },
+    "export": {
+      "title": "Export",
+      "area": "Area",
+      "areaPlan": "Whole plan",
+      "areaView": "Current view",
+      "size": "Size",
+      "sizeOption": "{{factor}}× ({{width}} × {{height}} px)",
+      "tooBig": "Larger sizes are too big to export.",
+      "export": "Export",
+      "exporting": "Exporting…",
+      "cancel": "Cancel",
+      "failed": "The export failed. Try a smaller size.",
+      "format": "Format",
+      "pdf": "PDF for printing",
+      "png": "PNG image",
+      "paper": "Paper",
+      "orientation": "Orientation",
+      "portrait": "Portrait",
+      "landscape": "Landscape",
+      "scale": "Scale",
+      "scaleOption": "1:{{scale}}",
+      "suggested": "{{option}} (suggested)",
+      "notFit": "The plan is {{width}} × {{height}} m; at 1:{{scale}} the page shows {{areaWidth}} × {{areaHeight}} m, so the edges are cut off.",
+      "pages": "Page 1: plan. Page 2: legend and planting list.",
+      "pdfDoc": {
+        "scaleLine": "Scale 1:{{scale}} on {{paper}} · {{date}}",
+        "yearView": "Year {{year}}",
+        "matureView": "Fully grown",
+        "legendOnPage2": "Legend and planting list: page 2",
+        "plantingList": "Planting list",
+        "legend": "Legend",
+        "code": "No.",
+        "name": "Name",
+        "latin": "Latin name",
+        "count": "Number",
+        "total": "Total",
+        "page": "Page {{page}} of {{pages}}"
+      }
     }
   },
   "plants": {

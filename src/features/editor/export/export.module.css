@@ -1,0 +1,22 @@
+.choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1rem;
+  margin: 0 0 0.75rem;
+  padding: 0;
+  border: 0;
+  font-size: 0.875rem;
+}
+
+.choices legend {
+  width: 100%;
+  margin-bottom: 0.25rem;
+  padding: 0;
+  font-weight: 600;
+}
+
+.choices label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+}

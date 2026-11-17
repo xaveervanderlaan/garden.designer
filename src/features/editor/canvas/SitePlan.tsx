@@ -5,7 +5,7 @@ import { normaliseDegrees } from '../../../geometry/transform'
 import type { Viewport } from '../../../geometry/viewport'
 import { BACKGROUND_ID, placeBackground } from '../../../model/background'
 import type { Background } from '../../../model/schema'
-import { getAsset } from '../../../persistence/projects'
+import { loadAssetImage } from './assetImage'
 import { useProjectStore } from '../../../store/projectStore'
 import { useUiStore } from '../../../store/uiStore'
 import { SELECTION_COLOR } from '../../../styles/elementStyles'
@@ -19,21 +19,39 @@ function useAssetImage(assetId: string): HTMLImageElement | null {
 
   useEffect(() => {
     let cancelled = false
-    let url: string | undefined
-    void getAsset(assetId).then((asset) => {
-      if (cancelled || !asset) return
-      url = URL.createObjectURL(new Blob([asset.data], { type: asset.mimeType }))
-      const image = new window.Image()
-      image.onload = () => !cancelled && setLoaded({ assetId, image })
-      image.src = url
+    void loadAssetImage(assetId).then((image) => {
+      if (!cancelled && image) setLoaded({ assetId, image })
     })
     return () => {
       cancelled = true
-      if (url) URL.revokeObjectURL(url)
     }
   }, [assetId])
 
   return loaded?.assetId === assetId ? loaded.image : null
+}
+
+/** The site plan image, placed in world coordinates (not interactive). */
+export function SitePlanImage({
+  background,
+  image,
+}: {
+  background: Background
+  image: HTMLImageElement
+}) {
+  return (
+    <KonvaImage
+      image={image}
+      x={background.offset.x}
+      y={background.offset.y}
+      rotation={background.rotationDeg}
+      scaleX={background.metresPerPixel}
+      scaleY={background.metresPerPixel}
+      width={background.widthPx}
+      height={background.heightPx}
+      opacity={background.opacity}
+      listening={false}
+    />
+  )
 }
 
 type Props = {

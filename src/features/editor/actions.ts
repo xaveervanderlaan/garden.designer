@@ -1,9 +1,5 @@
-import {
-  type Bounds,
-  DEFAULT_VIEW_BOUNDS,
-  boundsCentre,
-  projectBounds,
-} from '../../geometry/bounds'
+import { type Bounds, DEFAULT_VIEW_BOUNDS, boundsCentre } from '../../geometry/bounds'
+import { designBounds } from '../../export/exportOptions'
 import { worldToImage } from '../../geometry/calibration'
 import { rectangleFromCorners } from '../../geometry/frame'
 import { rowPositions } from '../../geometry/planting'
@@ -370,8 +366,7 @@ export const editorActions = {
   zoomToFit() {
     const project = currentProject()
     if (!project) return
-    const sitePlan = isLayerVisible(project, BACKGROUND_LAYER) ? backgroundBounds(project) : null
-    zoomTo(projectBounds(project) ?? sitePlan ?? DEFAULT_VIEW_BOUNDS)
+    zoomTo(designBounds(project))
   },
   /** Once a design is open and the canvas measured: fit it, and set the snapping default. */
   designOpened() {

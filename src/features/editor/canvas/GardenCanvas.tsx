@@ -31,7 +31,6 @@ import { BACKGROUND_ID, BACKGROUND_LAYER } from '../../../model/background'
 import { editedByCorners } from '../../../model/objectKinds'
 import { findObject } from '../../../model/objects'
 import { findPlant } from '../../../model/plants'
-import { plantingLabels } from '../../../model/plantings'
 import { type BedFill, bedFill } from '../../../model/vegRows'
 import { PLOT_ID, PLOT_LAYER, hasPlot } from '../../../model/plot'
 import type { Point } from '../../../model/schema'
@@ -60,7 +59,7 @@ import styles from './GardenCanvas.module.css'
 import { FillPanel } from './FillPanel'
 import { Grid } from './Grid'
 import { useDeferredHitGraph } from './hitGraph'
-import { planLabels } from '../../../model/areas'
+import { itemLabels } from './itemLabels'
 import { type ItemHandlers, Items, type ObjectDraft } from './Items'
 import { PlantPreview } from './PlantPreview'
 import { PlotOverlay, PlotShape } from './Plot'
@@ -141,19 +140,9 @@ export default function GardenCanvas() {
       ),
     [project, view.year, sunMap],
   )
-  const labelsVisible = !!project && isLayerVisible(project, 'labels')
-  const labels = useMemo(
-    () => (project && labelsVisible ? plantingLabels(project, labelMode, lang) : null),
-    [project, labelsVisible, labelMode, lang],
-  )
-  const areasVisible = !!project && isLayerVisible(project, 'measurements')
-  const areaLabels = !!project && project.settings.areaLabels
-  const planLabelList = useMemo(
-    () =>
-      project && (labelsVisible || (areasVisible && areaLabels))
-        ? planLabels(project, { names: labelsVisible, areas: areasVisible && areaLabels }, lang)
-        : null,
-    [project, labelsVisible, areasVisible, areaLabels, lang],
+  const { labels, planLabels: planLabelList } = useMemo(
+    () => (project ? itemLabels(project, labelMode, lang) : { labels: null, planLabels: null }),
+    [project, labelMode, lang],
   )
   const fillResult = useMemo<BedFill>(
     () =>

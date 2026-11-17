@@ -87,6 +87,8 @@ type UiStore = {
   /** The vegetable calendar dialog: open, optionally preset to one bed (M15). */
   vegCalendar: { bedId: string | null } | null
   settingsOpen: boolean
+  /** The image/PDF export dialog (M16). */
+  exportOpen: boolean
   /** The line being measured with the calibrate tool, or null. */
   calibration: Calibration | null
   /** Snap to the grid while drawing and dragging corners (off while tracing the site plan). */
@@ -135,6 +137,7 @@ type UiStore = {
   openVegCalendar: (bedId?: string) => void
   closeVegCalendar: () => void
   setSettingsOpen: (open: boolean) => void
+  setExportOpen: (open: boolean) => void
   setCalibration: (calibration: Calibration | null) => void
   setSnapToGrid: (on: boolean) => void
   setActiveCorner: (index: number | null) => void
@@ -165,6 +168,7 @@ const initial = {
   bloomChartOpen: false,
   vegCalendar: null,
   settingsOpen: false,
+  exportOpen: false,
   calibration: null,
   snapToGrid: true,
   activeCorner: null,
@@ -247,6 +251,7 @@ export const useUiStore = create<UiStore>()((set) => ({
   openVegCalendar: (bedId) => set({ vegCalendar: { bedId: bedId ?? null } }),
   closeVegCalendar: () => set({ vegCalendar: null }),
   setSettingsOpen: (settingsOpen) => set({ settingsOpen }),
+  setExportOpen: (exportOpen) => set({ exportOpen }),
   setCalibration: (calibration) => set({ calibration }),
   setSnapToGrid: (snapToGrid) => set({ snapToGrid }),
   setActiveCorner: (activeCorner) => set({ activeCorner }),

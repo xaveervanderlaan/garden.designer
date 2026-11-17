@@ -7,3 +7,8 @@ export function formatDateTime(epochMs: number): string {
     timeStyle: 'short',
   }).format(epochMs)
 }
+
+/** A date in the UI language, e.g. "13 November 2026" / "13 november 2026". */
+export function formatDate(epochMs: number): string {
+  return new Intl.DateTimeFormat(currentLanguage(), { dateStyle: 'long' }).format(epochMs)
+}

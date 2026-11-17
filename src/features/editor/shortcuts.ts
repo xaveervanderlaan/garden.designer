@@ -207,6 +207,7 @@ export function useEditorShortcuts(): void {
         rectangleDialogOpen,
         sitePlanDialogOpen,
         settingsOpen,
+        exportOpen,
         objectMenuOpen,
         drawing,
         calibration,
@@ -217,6 +218,7 @@ export function useEditorShortcuts(): void {
         rectangleDialogOpen ||
         sitePlanDialogOpen ||
         settingsOpen ||
+        exportOpen ||
         objectMenuOpen !== null
       ) {
         return

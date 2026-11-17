@@ -87,7 +87,8 @@
       "help": "Sneltoetsen",
       "drawPlot": "Perceelgrens tekenen",
       "rectanglePlot": "Rechthoekig perceel",
-      "snapToGrid": "Uitlijnen op raster"
+      "snapToGrid": "Uitlijnen op raster",
+      "export": "Afbeelding of pdf exporteren"
     },
     "canvas": {
       "label": "Tuinplattegrond",
@@ -788,6 +789,45 @@
       "emptyBed": "Nog geen groenten, kruiden of fruit in deze border.",
       "showMonth": "Toon {{month}} op het plan",
       "caption": "Wat je per maand zaait, uitplant en oogst"
+    },
+    "export": {
+      "title": "Exporteren",
+      "area": "Gebied",
+      "areaPlan": "Hele plan",
+      "areaView": "Huidige weergave",
+      "size": "Grootte",
+      "sizeOption": "{{factor}}× ({{width}} × {{height}} px)",
+      "tooBig": "Grotere formaten zijn te groot om te exporteren.",
+      "export": "Exporteren",
+      "exporting": "Bezig met exporteren…",
+      "cancel": "Annuleren",
+      "failed": "Exporteren is mislukt. Probeer een kleiner formaat.",
+      "format": "Formaat",
+      "pdf": "PDF om te printen",
+      "png": "PNG-afbeelding",
+      "paper": "Papier",
+      "orientation": "Richting",
+      "portrait": "Staand",
+      "landscape": "Liggend",
+      "scale": "Schaal",
+      "scaleOption": "1:{{scale}}",
+      "suggested": "{{option}} (voorgesteld)",
+      "notFit": "Het plan is {{width}} × {{height}} m; op 1:{{scale}} toont de pagina {{areaWidth}} × {{areaHeight}} m, dus de randen worden afgesneden.",
+      "pages": "Pagina 1: plan. Pagina 2: legenda en beplantingslijst.",
+      "pdfDoc": {
+        "scaleLine": "Schaal 1:{{scale}} op {{paper}} · {{date}}",
+        "yearView": "Jaar {{year}}",
+        "matureView": "Volgroeid",
+        "legendOnPage2": "Legenda en beplantingslijst: pagina 2",
+        "plantingList": "Beplantingslijst",
+        "legend": "Legenda",
+        "code": "Nr.",
+        "name": "Naam",
+        "latin": "Latijnse naam",
+        "count": "Aantal",
+        "total": "Totaal",
+        "page": "Pagina {{page}} van {{pages}}"
+      }
     }
   },
   "plants": {
