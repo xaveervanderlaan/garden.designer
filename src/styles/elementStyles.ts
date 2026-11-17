@@ -19,7 +19,8 @@ export type ElementStyle = {
  * Spacings are in metres. Except for `rows`, a pattern that would be denser than
  * PATTERN_MIN_SPACING_PX on screen is drawn at 2×, 4×, … its spacing, so it stays readable when
  * zoomed out and at print scale; line widths are in screen pixels.
- * - `rows`: lines along the longest edge (a vegetable bed's rows); left out when too dense.
+ * - `rows`: lines along `angleDeg` (map-style; default the longest edge), a vegetable bed's rows;
+ *   left out when too dense.
  * - `hatch`: parallel lines at `angleDeg` (clockwise from the frame's x axis), e.g. a house.
  * - `grid`: lines along both axes, from a corner (glass panes, tiles).
  * - `beams`: lines across the short side (a pergola's open beams).
@@ -30,7 +31,7 @@ export type ElementStyle = {
  * - `planks`: lines parallel to the frame box's long side (a wooden deck).
  */
 export type ElementPattern =
-  | { kind: 'rows'; spacingM: number; color: string }
+  | { kind: 'rows'; spacingM: number; color: string; angleDeg?: number }
   | { kind: 'hatch'; spacingM: number; angleDeg: number; color: string; widthPx?: number }
   | { kind: 'grid'; spacingM: number; color: string; widthPx?: number }
   | { kind: 'beams'; spacingM: number; color: string; widthPx?: number }

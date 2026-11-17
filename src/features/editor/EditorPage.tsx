@@ -25,6 +25,7 @@ import { useEditorShortcuts } from './shortcuts'
 import { SitePlanImport } from './siteplan/SitePlanImport'
 import { StorageErrorBanner } from './StorageErrorBanner'
 import { BloomChartDialog } from './view/BloomChartDialog'
+import { VegCalendarDialog } from './view/VegCalendarDialog'
 import { ViewBar } from './view/ViewBar'
 
 // Konva is large: load the canvas only when a design is opened.
@@ -124,6 +125,7 @@ function Workspace({ project }: { project: Project }) {
       <SitePlanImport />
       <PlantFormDialog />
       <BloomChartDialog />
+      <VegCalendarDialog />
     </div>
   )
 }

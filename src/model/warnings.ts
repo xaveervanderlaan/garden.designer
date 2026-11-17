@@ -4,6 +4,7 @@ import { dominantSunLevel, type SunHoursResult } from '../geometry/sunHours'
 import { type GrowthView, isPlanted, plantingRadiusAtM, plantSizeAt } from './growth'
 import { findPlant, soilSuitability } from './plants'
 import { hasPlot } from './plot'
+import { isRowCrop } from './vegRows'
 import type { Plant, Planting, Project, SunLevel } from './schema'
 
 /**
@@ -124,8 +125,10 @@ export function plantingWarnings(project: Project, options: WarningOptions = {})
       const { x, y } = planting.position
       return { id: planting.id, x, y, r: radiusM(planting) }
     })
+  const rowBeds = new Map(project.plantings.map((p) => [p.id, isRowCrop(project, p)]))
   const bothHedges = (a: Circle, b: Circle) =>
-    categories.get(a.id) === 'hedge' && categories.get(b.id) === 'hedge'
+    (categories.get(a.id) === 'hedge' && categories.get(b.id) === 'hedge') ||
+    (rowBeds.get(a.id) !== undefined && rowBeds.get(a.id) === rowBeds.get(b.id))
   const order = new Map(project.plantings.map((p, i) => [p.id, i]))
   const existing = new Set(
     project.plantings.filter((p) => p.status === 'existing').map((p) => p.id),

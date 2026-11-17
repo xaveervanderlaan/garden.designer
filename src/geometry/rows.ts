@@ -19,6 +19,19 @@ export type RowOptions = {
   inRowSpacingM: number
   /** Stop after this many plant positions: a safety net against tiny spacings. */
   maxPositions?: number
+  /** Stop after this many rows. */
+  maxRows?: number
+  /**
+   * When set, rows are packed from max(this, the outline's near edge) instead of centred: the
+   * first row lies half a row spacing beyond that line. -Infinity packs from the near edge.
+   */
+  startAcrossM?: number
+}
+
+/** A point's coordinate across the rows, in the frame layoutRows uses (increases with the row). */
+export function acrossRows(p: Point, angleDeg: number): number {
+  const v = direction(angleDeg - 90)
+  return p.x * v.x + p.y * v.y
 }
 
 export type RowPiece = {
@@ -62,11 +75,15 @@ export function layoutRows(outline: readonly Point[], options: RowOptions): RowP
     rMin = Math.min(rMin, r)
     rMax = Math.max(rMax, r)
   }
-  const room = rMax - rMin - rowSpacingM
+  const packed = options.startAcrossM !== undefined
+  const rStart = Math.max(rMin, options.startAcrossM ?? rMin)
+  const room = rMax - rStart - rowSpacingM
   if (room < -EPSILON) return []
   const fittingRows = Math.floor(room / rowSpacingM + EPSILON) + 1
-  const firstRow = rMin + halfRow + Math.max(0, room - (fittingRows - 1) * rowSpacingM) / 2
-  const rowCount = Math.min(fittingRows, maxPositions)
+  const firstRow = packed
+    ? rStart + halfRow
+    : rMin + halfRow + Math.max(0, room - (fittingRows - 1) * rowSpacingM) / 2
+  const rowCount = Math.min(fittingRows, options.maxRows ?? Infinity, maxPositions)
 
   const edges = points.map((p, i) => [p, points[(i + 1) % points.length]!] as const)
   const pieces: RowPiece[] = []

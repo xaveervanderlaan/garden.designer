@@ -35,7 +35,16 @@ export type Drawing = { target: DrawTarget; points: Point[] }
 export type Stamp = { plantId: string; placed: number }
 
 /** Filling a bed: the plant, the bed (null until one is clicked) and the spacing in metres. */
-export type Fill = { plantId: string; bedId: string | null; spacingM: number }
+export type Fill = {
+  plantId: string
+  bedId: string | null
+  /** Between plants (in a row, for rows mode). */
+  spacingM: number
+  /** Rows mode: distance between rows. */
+  rowSpacingM?: number
+  /** Rows mode: how many rows; absent = all that fit. */
+  rows?: number
+}
 
 /** Plant labels on the plan: the plant's name, or its numbered species code. */
 export type LabelMode = 'name' | 'code'
@@ -75,6 +84,8 @@ type UiStore = {
   /** Whether the sun's time is playing through the day (not saved). */
   sunPlaying: boolean
   bloomChartOpen: boolean
+  /** The vegetable calendar dialog: open, optionally preset to one bed (M15). */
+  vegCalendar: { bedId: string | null } | null
   settingsOpen: boolean
   /** The line being measured with the calibrate tool, or null. */
   calibration: Calibration | null
@@ -121,6 +132,8 @@ type UiStore = {
   setSun: (sun: SunMoment | null) => void
   setSunPlaying: (playing: boolean) => void
   setBloomChartOpen: (open: boolean) => void
+  openVegCalendar: (bedId?: string) => void
+  closeVegCalendar: () => void
   setSettingsOpen: (open: boolean) => void
   setCalibration: (calibration: Calibration | null) => void
   setSnapToGrid: (on: boolean) => void
@@ -150,6 +163,7 @@ const initial = {
   sun: null as SunMoment | null,
   sunPlaying: false,
   bloomChartOpen: false,
+  vegCalendar: null,
   settingsOpen: false,
   calibration: null,
   snapToGrid: true,
@@ -230,6 +244,8 @@ export const useUiStore = create<UiStore>()((set) => ({
   setSun: (sun) => set({ sun }),
   setSunPlaying: (sunPlaying) => set({ sunPlaying }),
   setBloomChartOpen: (bloomChartOpen) => set({ bloomChartOpen }),
+  openVegCalendar: (bedId) => set({ vegCalendar: { bedId: bedId ?? null } }),
+  closeVegCalendar: () => set({ vegCalendar: null }),
   setSettingsOpen: (settingsOpen) => set({ settingsOpen }),
   setCalibration: (calibration) => set({ calibration }),
   setSnapToGrid: (snapToGrid) => set({ snapToGrid }),

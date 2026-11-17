@@ -5,7 +5,8 @@ import {
   rotationOf,
   translation,
 } from '../geometry/transform'
-import { roundPoint } from '../geometry/polygon'
+import { angleDeg, direction, roundPoint } from '../geometry/polygon'
+import { normaliseRowAngle } from '../geometry/rows'
 import { BACKGROUND_ID, BACKGROUND_LAYER, hasBackground } from './background'
 import { isBed, relinkBeds, withPlantsInBeds } from './beds'
 import { newId } from './ids'
@@ -140,7 +141,7 @@ export function transformObjects(
     ...project,
     objects: project.objects.map((o) => {
       const m = transforms.get(o.id)
-      return m ? { ...o, shape: transformShape(o.shape, m) } : o
+      return m ? transformObject(o, m) : o
     }),
     plantings: bedTransformed
       ? project.plantings.map((p) => {
@@ -150,6 +151,15 @@ export function transformObjects(
       : project.plantings,
   }
   return bedTransformed ? relinkBeds(transformed) : transformed
+}
+
+function transformObject(object: GardenObject, m: Matrix): GardenObject {
+  const shape = transformShape(object.shape, m)
+  if (object.rowAngleDeg === undefined) return { ...object, shape }
+  const origin = applyMatrix(m, { x: 0, y: 0 })
+  const d = direction(object.rowAngleDeg)
+  const turned = applyMatrix(m, d)
+  return { ...object, shape, rowAngleDeg: normaliseRowAngle(angleDeg(origin, turned)) }
 }
 
 // --- Item fields ------------------------------------------------------------------------------

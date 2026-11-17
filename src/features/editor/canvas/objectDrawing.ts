@@ -54,9 +54,18 @@ export function readableSpacing(spacingM: number, pxPerM: number): number {
   return spacing
 }
 
-/** Parallel lines across the polygon, `spacing` apart, along its longest edge. */
-function drawRows(ctx: CanvasRenderingContext2D, points: readonly Point[], spacing: number) {
-  const angle = longestEdgeAngle(points)
+/**
+ * Parallel lines across the polygon, `spacing` apart: in the direction `angleDeg` (map-style
+ * degrees), else along its longest edge.
+ */
+export function drawRows(
+  ctx: CanvasRenderingContext2D,
+  points: readonly Point[],
+  spacing: number,
+  angleDeg?: number,
+) {
+  // Map-style angles turn anticlockwise; on screen (y down) that is a negative angle.
+  const angle = angleDeg === undefined ? longestEdgeAngle(points) : (-angleDeg * Math.PI) / 180
   const cos = Math.cos(angle)
   const sin = Math.sin(angle)
   // Coordinates along (u) and across (v) the rows.
@@ -145,7 +154,7 @@ export function drawPattern(
     case 'rows':
       // Rows closer than a few pixels would only make the bed look grey.
       if (pattern.spacingM * pxPerM < PATTERN_MIN_SPACING_PX) return
-      drawRows(ctx, points, pattern.spacingM)
+      drawRows(ctx, points, pattern.spacingM, pattern.angleDeg)
       break
     case 'hatch':
       drawHatch(ctx, box, readableSpacing(pattern.spacingM, pxPerM), pattern.angleDeg)

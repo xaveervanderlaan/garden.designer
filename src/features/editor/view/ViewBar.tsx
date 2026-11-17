@@ -21,7 +21,7 @@ export function ViewBar({ project }: { project: Project }) {
   const { t } = useTranslation()
   const stop = useUiStore((s) => s.growthStop)
   const month = useUiStore((s) => s.month)
-  const { setGrowthStop, setMonth, setBloomChartOpen } = useUiStore.getState()
+  const { setGrowthStop, setMonth, setBloomChartOpen, openVegCalendar } = useUiStore.getState()
   const yearId = useId()
   const ticksId = useId()
   const monthId = useId()
@@ -121,6 +121,14 @@ export function ViewBar({ project }: { project: Project }) {
       >
         <ChartGantt {...icon} />
         {t('editor.view.bloomChart')}
+      </button>
+      <button
+        type="button"
+        className={cx(controls.button, controls.small, controls.quiet, styles.chartButton)}
+        onClick={() => openVegCalendar()}
+      >
+        <CalendarDays {...icon} />
+        {t('editor.view.vegCalendar')}
       </button>
 
       <SunControls project={project} />

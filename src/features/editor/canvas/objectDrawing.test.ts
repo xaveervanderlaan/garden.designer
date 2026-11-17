@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { symbolFor } from '../../../model/objectKinds'
 import { MATERIAL_STYLES, OBJECT_STYLES } from '../../../styles/elementStyles'
-import { drawBoundary, drawPattern, drawSymbol, postPositions } from './objectDrawing'
+import { drawBoundary, drawPattern, drawRows, drawSymbol, postPositions } from './objectDrawing'
 
 /** A canvas context that only counts the calls made on it. */
 function recordingContext() {
@@ -27,7 +27,35 @@ const square = (size: number) => [
   { x: 0, y: size },
 ]
 
+/** Records the lines drawn (moveTo → lineTo pairs). */
+function lineContext() {
+  const lines: { from: [number, number]; to: [number, number] }[] = []
+  let from: [number, number] = [0, 0]
+  const ctx = {
+    moveTo: (x: number, y: number) => (from = [x, y]),
+    lineTo: (x: number, y: number) => lines.push({ from, to: [x, y] }),
+  } as unknown as CanvasRenderingContext2D
+  return { ctx, lines }
+}
+
 describe('objectDrawing', () => {
+  it('draws row lines in the given direction, else along the longest edge', () => {
+    const bed = [
+      { x: 0, y: 0 },
+      { x: 4, y: 0 },
+      { x: 4, y: 2 },
+      { x: 0, y: 2 },
+    ]
+    const along = lineContext()
+    drawRows(along.ctx, bed, 0.5)
+    expect(along.lines).toHaveLength(4)
+    for (const { from, to } of along.lines) expect(to[1]).toBeCloseTo(from[1])
+    const across = lineContext()
+    drawRows(across.ctx, bed, 0.5, 90)
+    expect(across.lines).toHaveLength(8)
+    for (const { from, to } of across.lines) expect(to[0]).toBeCloseTo(from[0])
+  })
+
   it('puts fence posts at the ends and at most 2.4 m apart', () => {
     const posts = postPositions(
       [

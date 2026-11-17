@@ -70,12 +70,15 @@ import {
   shapeForKind,
 } from '../../model/objects'
 import { findPlant, plantingLayer } from '../../model/plants'
+import { addPlantings, defaultRowSpacingM, swapSpecies } from '../../model/plantings'
 import {
-  addPlantings,
-  defaultRowSpacingM,
-  fillBedPositions,
-  swapSpecies,
-} from '../../model/plantings'
+  bedFill,
+  bedRowAngle,
+  fillDefaults,
+  isRowBed,
+  isRowFill,
+  setBedRowAngle,
+} from '../../model/vegRows'
 import {
   MIN_PLOT_CORNERS,
   PLOT_ID,
@@ -92,7 +95,13 @@ import type {
   Settings,
 } from '../../model/schema'
 import { useProjectStore } from '../../store/projectStore'
-import { type DrawTarget, type LabelMode, type Tool, useUiStore } from '../../store/uiStore'
+import {
+  type DrawTarget,
+  type Fill,
+  type LabelMode,
+  type Tool,
+  useUiStore,
+} from '../../store/uiStore'
 import { pickSitePlanFile } from './siteplan/picker'
 import { defaultSunMoment, normaliseAngle } from './view/sunView'
 
@@ -203,10 +212,20 @@ export function drawsRectangles(target: DrawTarget): boolean {
 /** Rectangles dragged smaller than this (either side) count as a click. */
 export const MIN_RECTANGLE_M = 0.05
 
-/** The bed to fill when filling starts: the selected bed, or the design's only bed. */
+/**
+ * The bed to fill when filling starts: the selected bed, the bed all selected plants are in (so
+ * the next crop goes into the bed just filled), or the design's only bed.
+ */
 function bedToFill(project: Project): string | null {
   const selected = validSelection(project, ui().selection)
   if (selected.length === 1 && findBed(project, selected[0]!)) return selected[0]!
+  const ids = new Set(selected)
+  const plants = project.plantings.filter((p) => ids.has(p.id))
+  const bedIds = new Set(plants.map((p) => p.bedId))
+  const [only] = bedIds
+  if (plants.length > 0 && plants.length === selected.length && bedIds.size === 1 && only) {
+    if (findBed(project, only)) return only
+  }
   const beds = bedsOf(project)
   return beds.length === 1 ? beds[0]!.id : null
 }
@@ -607,6 +626,17 @@ export const editorActions = {
   setHedgePlant(id: string, plantId: string | null) {
     useProjectStore.getState().update((p) => setHedgePlant(p, id, plantId))
   },
+  /** A vegetable or raised bed's row direction (map-style degrees). */
+  setBedRowAngle(id: string, angleDeg: number) {
+    useProjectStore
+      .getState()
+      .update((p) => setBedRowAngle(p, id, angleDeg), { coalesce: `row-angle:${id}` })
+  },
+  /** Turns a vegetable or raised bed's rows by 90°. */
+  turnBedRows(id: string) {
+    const bed = currentProject() && findBed(currentProject()!, id)
+    if (bed && isRowBed(bed)) editorActions.setBedRowAngle(id, bedRowAngle(bed) + 90)
+  },
   setObjectHeight(id: string, heightM: number) {
     if (!(heightM > 0)) return
     useProjectStore.getState().update((p) => updateObject(p, id, { heightM }))
@@ -662,7 +692,7 @@ export const editorActions = {
     if (!project || !plantData) return
     showLayer(layerOfPlant(project, plantId))
     const bedId = bedToFill(project)
-    ui().startFill({ plantId, bedId, spacingM: plantData.spreadM })
+    ui().startFill({ plantId, bedId, ...fillDefaults(project, plantId, bedId) })
     if (bedId) ui().setSelection([bedId])
   },
   /** Picks the bed under a point (a click while filling). */
@@ -672,19 +702,41 @@ export const editorActions = {
     if (!project || !fill) return
     const bed = bedAt(project, at)
     if (!bed) return
-    ui().setFill({ ...fill, bedId: bed.id })
+    const sameMode =
+      isRowFill(project, fill.plantId, fill.bedId) === isRowFill(project, fill.plantId, bed.id)
+    // Rows and the staggered fill have their own spacings: switching resets them.
+    ui().setFill(
+      sameMode
+        ? { ...fill, bedId: bed.id }
+        : { plantId: fill.plantId, bedId: bed.id, ...fillDefaults(project, fill.plantId, bed.id) },
+    )
     ui().setSelection([bed.id])
   },
+  /** The distance between plants (in a row, in rows mode). */
   setFillSpacing(spacingM: number) {
     const fill = ui().fill
     if (fill && spacingM > 0) ui().setFill({ ...fill, spacingM })
+  },
+  /** Rows mode: the distance between rows. */
+  setFillRowSpacing(rowSpacingM: number) {
+    const fill = ui().fill
+    if (fill && rowSpacingM > 0) ui().setFill({ ...fill, rowSpacingM })
+  },
+  /** Rows mode: how many rows to plant; undefined = all that fit. */
+  setFillRows(rows: number | undefined) {
+    const fill = ui().fill
+    if (!fill) return
+    const next: Fill = { ...fill }
+    if (rows !== undefined && rows >= 1) next.rows = Math.floor(rows)
+    else delete next.rows
+    ui().setFill(next)
   },
   /** Plants the previewed pattern (one undo step) and selects the new plants. */
   applyFill(): number {
     const project = currentProject()
     const fill = ui().fill
     if (!project || !fill?.bedId) return 0
-    const { positions } = fillBedPositions(project, fill.bedId, fill.plantId, fill.spacingM)
+    const { positions } = bedFill(project, fill)
     const ids = plant(fill.plantId, positions)
     ui().setTool('select')
     ui().setSelection(ids)

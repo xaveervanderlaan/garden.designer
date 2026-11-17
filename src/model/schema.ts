@@ -7,7 +7,7 @@ import { z } from 'zod'
  *
  * Changing the shape of stored data? Bump SCHEMA_VERSION and add a migration (see migrations.ts).
  */
-export const SCHEMA_VERSION = 8
+export const SCHEMA_VERSION = 9
 
 export const idSchema = z.string().min(1).max(100)
 
@@ -238,6 +238,8 @@ export const gardenObjectSchema = z.object({
   material: z.string().max(100).optional(),
   /** Symbols: which variant (size and look) of the kind, see objectKinds SYMBOL_VARIANTS. */
   variant: z.string().max(50).optional(),
+  /** Vegetable and raised beds: row direction, map-style degrees in [0, 180). Absent = along the longest edge. */
+  rowAngleDeg: z.number().min(0).lt(180).optional(),
   /** Hedges: the hedging species it is made of. */
   plantId: idSchema.optional(),
   label: z.string().max(200).optional(),

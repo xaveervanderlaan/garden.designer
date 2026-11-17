@@ -162,3 +162,20 @@ describe('row direction', () => {
     expect(normaliseRowAngle(179.99999999)).toBe(0)
   })
 })
+
+describe('packing and limiting rows', () => {
+  const base = { angleDeg: 0, rowSpacingM: 0.5, inRowSpacingM: 0.5 }
+
+  it('packs rows from a start line', () => {
+    const pieces = layoutRows(rect(4, 2), { ...base, startAcrossM: 1 })
+    expect([...new Set(pieces.map((p) => p.row))]).toEqual([0, 1])
+    expect(pieces[0]?.positions[0]?.y).toBeCloseTo(1.25)
+    const nearEdge = layoutRows(rect(4, 2), { ...base, startAcrossM: -Infinity })
+    expect(nearEdge[0]?.positions[0]?.y).toBeCloseTo(0.25)
+  })
+
+  it('stops after maxRows', () => {
+    const pieces = layoutRows(rect(4, 2), { ...base, maxRows: 2 })
+    expect([...new Set(pieces.map((p) => p.row))]).toEqual([0, 1])
+  })
+})

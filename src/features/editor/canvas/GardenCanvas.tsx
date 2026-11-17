@@ -31,7 +31,8 @@ import { BACKGROUND_ID, BACKGROUND_LAYER } from '../../../model/background'
 import { editedByCorners } from '../../../model/objectKinds'
 import { findObject } from '../../../model/objects'
 import { findPlant } from '../../../model/plants'
-import { fillBedPositions, plantingLabels } from '../../../model/plantings'
+import { plantingLabels } from '../../../model/plantings'
+import { type BedFill, bedFill } from '../../../model/vegRows'
 import { PLOT_ID, PLOT_LAYER, hasPlot } from '../../../model/plot'
 import type { Point } from '../../../model/schema'
 import { useSunMapStore } from '../../../store/sunMapStore'
@@ -154,13 +155,14 @@ export default function GardenCanvas() {
         : null,
     [project, labelsVisible, areasVisible, areaLabels, lang],
   )
-  const fillPositions = useMemo(
+  const fillResult = useMemo<BedFill>(
     () =>
       project && fill?.bedId
-        ? fillBedPositions(project, fill.bedId, fill.plantId, fill.spacingM).positions
-        : [],
+        ? bedFill(project, fill)
+        : { positions: [], tooMany: false, rowMode: false, rowCount: 0 },
     [project, fill],
   )
+  const fillPositions = fillResult.positions
 
   useEffect(() => {
     if (size) useUiStore.getState().setCanvasSize(size)
@@ -656,7 +658,13 @@ export default function GardenCanvas() {
       )}
       {calibration && <CalibrationPanel />}
       {stamp && <StampPanel project={project} />}
-      {fill && <FillPanel key={fill.plantId} project={project} count={fillPositions.length} />}
+      {fill && (
+        <FillPanel
+          key={`${fill.plantId}:${fillResult.rowMode}`}
+          project={project}
+          result={fillResult}
+        />
+      )}
     </div>
   )
 }

@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import { samplePlant } from '../test/fixtures'
+import { addBed } from './beds'
 import { newProject } from './defaults'
+import { addPlantings } from './plantings'
 import type { Plant, Planting, Project } from './schema'
 import {
   designWarnings,
@@ -82,6 +84,30 @@ describe('findOverlaps', () => {
 })
 
 describe('plantingWarnings', () => {
+  it('crops in the same vegetable bed may overlap; the same crops in an ornamental bed warn', () => {
+    const outline = [
+      { x: 1, y: 1 },
+      { x: 5, y: 1 },
+      { x: 5, y: 3 },
+      { x: 1, y: 3 },
+    ]
+    const overlapsIn = (kind: 'bed-vegetable' | 'bed-ornamental') => {
+      const bed = addBed(design([]), kind, outline)
+      const { project } = addPlantings(
+        bed.project,
+        'lactuca-sativa',
+        [
+          { x: 2, y: 2 },
+          { x: 2.05, y: 2 },
+        ],
+        2027,
+      )
+      return plantingWarnings(project).filter((w) => w.kind === 'overlap')
+    }
+    expect(overlapsIn('bed-vegetable')).toHaveLength(0)
+    expect(overlapsIn('bed-ornamental')).toHaveLength(1)
+  })
+
   it('warns about overlaps beyond the threshold only', () => {
     // Shrubs 1 m wide: 0.85 m apart = 15 % overlap, 0.7 m apart = 30 %.
     const warnings = plantingWarnings(

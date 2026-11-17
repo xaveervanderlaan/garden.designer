@@ -6,6 +6,7 @@ import { shapeFrameBox } from '../../../geometry/frame'
 import { isSelfIntersecting, perimeter, polygonArea } from '../../../geometry/polygon'
 import { formatArea, formatDecimal, formatLength } from '../../../i18n/units'
 import { isBed, plantingsInBed } from '../../../model/beds'
+import { isRowBed } from '../../../model/vegRows'
 import { updateObject } from '../../../model/edit'
 import {
   SYMBOL_VARIANTS,
@@ -43,6 +44,7 @@ import { shortcutLabel } from '../shortcuts'
 import { useBedName } from './bedName'
 import { EdgeList } from './EdgeList'
 import { NumberField } from './NumberField'
+import { RowDirection } from './RowDirection'
 import styles from './panels.module.css'
 
 const MAX_SIZE_M = 1000
@@ -406,6 +408,8 @@ export function ObjectProperties({ project, object }: { project: Project; object
           {t('editor.plot.selfIntersecting')}
         </p>
       )}
+
+      {isRowBed(object) && <RowDirection bed={object} />}
 
       {shape.type !== 'point' && (
         <CornerEditing

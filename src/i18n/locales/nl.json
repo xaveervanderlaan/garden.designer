@@ -454,6 +454,10 @@
       "plants": "Planten erin",
       "selfIntersecting": "De omtrek kruist zichzelf, dus de oppervlakte klopt niet. Verplaats een hoek om dat op te lossen.",
       "fillHint": "Om dit bed te vullen: open een plant in de bibliotheek en kies ‘Bed vullen’.",
+      "rowDirection": "Rijrichting (°)",
+      "turnRows": "90° draaien",
+      "rowHint": "Groenten, kruiden en fruit komen in rijen in deze richting (0° = van links naar rechts). ‘Bed vullen’ begint elk nieuw gewas na de rijen die al in het bed staan.",
+      "vegCalendar": "Moestuinkalender",
       "cornerHint": "Sleep een hoek om hem te verplaatsen, of klik erop om hem te selecteren (Delete verwijdert hem). Sleep of klik op het bolletje op een zijde om een hoek toe te voegen."
     },
     "measure": {
@@ -483,7 +487,14 @@
       "spacing": "Plantafstand",
       "plantCount_one": "{{count}} plant",
       "plantCount_other": "{{count}} planten",
-      "invalidSpacing": "Vul een plantafstand in tussen 0,05 en 50 m.",
+      "invalidSpacing": "Vul een plantafstand in tussen 0,01 en 50 m.",
+      "inRowSpacing": "Afstand in de rij",
+      "rowSpacing": "Rijafstand",
+      "rows": "Rijen",
+      "rowsAll": "alle",
+      "rowCount_one": "{{count}} rij",
+      "rowCount_other": "{{count}} rijen",
+      "invalidRows": "Vul een heel aantal rijen in (1 of meer), of laat het leeg voor alle rijen die passen.",
       "tooMany": "Dat worden meer dan {{max}} planten. Kies een grotere plantafstand.",
       "noRoom": "Geen plek voor deze plant met deze plantafstand (of het bed is vol).",
       "row": "Rij planten",
@@ -554,7 +565,8 @@
       "noMonth": "Geen maand",
       "previousMonth": "Vorige maand",
       "nextMonth": "Volgende maand",
-      "bloomChart": "Bloeikalender"
+      "bloomChart": "Bloeikalender",
+      "vegCalendar": "Moestuinkalender"
     },
     "bloomChart": {
       "title": "Bloeikalender",
@@ -758,6 +770,24 @@
       "label": "Noordrichting",
       "hint": "Sleep of gebruik de pijltoetsen om het noorden te draaien (Shift: stappen van 15°)",
       "letter": "N"
+    },
+    "vegCalendar": {
+      "title": "Moestuinkalender",
+      "close": "Sluiten",
+      "scope": "Gewassen in",
+      "whole": "Hele ontwerp",
+      "month": "Maand",
+      "activity": {
+        "sowIndoors": "Binnen zaaien",
+        "sowOutdoors": "Buiten zaaien",
+        "plantOut": "Uitplanten",
+        "harvest": "Oogsten"
+      },
+      "quiet": "Niets te doen",
+      "empty": "Nog geen groenten, kruiden of fruit in dit ontwerp.",
+      "emptyBed": "Nog geen groenten, kruiden of fruit in deze border.",
+      "showMonth": "Toon {{month}} op het plan",
+      "caption": "Wat je per maand zaait, uitplant en oogst"
     }
   },
   "plants": {

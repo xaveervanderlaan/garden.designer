@@ -454,6 +454,10 @@
       "plants": "Plants in it",
       "selfIntersecting": "The outline crosses itself, so the area is not reliable. Move a corner to fix it.",
       "fillHint": "To fill this bed, open a plant in the library and choose “Fill bed”.",
+      "rowDirection": "Row direction (°)",
+      "turnRows": "Turn 90°",
+      "rowHint": "Vegetables, herbs and fruit are planted in rows in this direction (0° = left to right). “Fill bed” starts each new crop after the rows already in the bed.",
+      "vegCalendar": "Vegetable calendar",
       "cornerHint": "Drag a corner to move it, or click it to select it (Delete removes it). Drag or click the dot on an edge to add a corner."
     },
     "measure": {
@@ -483,7 +487,14 @@
       "spacing": "Spacing",
       "plantCount_one": "{{count}} plant",
       "plantCount_other": "{{count}} plants",
-      "invalidSpacing": "Enter a spacing between 0,05 and 50 m.",
+      "invalidSpacing": "Enter a spacing between 0.01 and 50 m.",
+      "inRowSpacing": "In-row spacing",
+      "rowSpacing": "Row spacing",
+      "rows": "Rows",
+      "rowsAll": "all",
+      "rowCount_one": "{{count}} row",
+      "rowCount_other": "{{count}} rows",
+      "invalidRows": "Enter a whole number of rows (1 or more), or leave it empty for all rows that fit.",
       "tooMany": "That would be more than {{max}} plants. Use a larger spacing.",
       "noRoom": "No room for this plant at this spacing (or the bed is full).",
       "row": "Plant a row",
@@ -554,7 +565,8 @@
       "noMonth": "No month",
       "previousMonth": "Previous month",
       "nextMonth": "Next month",
-      "bloomChart": "Bloom chart"
+      "bloomChart": "Bloom chart",
+      "vegCalendar": "Vegetable calendar"
     },
     "bloomChart": {
       "title": "Bloom chart",
@@ -758,6 +770,24 @@
       "label": "North direction",
       "hint": "Drag or use the arrow keys to turn north (Shift: steps of 15°)",
       "letter": "N"
+    },
+    "vegCalendar": {
+      "title": "Vegetable calendar",
+      "close": "Close",
+      "scope": "Crops in",
+      "whole": "Whole design",
+      "month": "Month",
+      "activity": {
+        "sowIndoors": "Sow indoors",
+        "sowOutdoors": "Sow outdoors",
+        "plantOut": "Plant out",
+        "harvest": "Harvest"
+      },
+      "quiet": "Nothing to do",
+      "empty": "No vegetables, herbs or fruit in this design yet.",
+      "emptyBed": "No vegetables, herbs or fruit in this bed yet.",
+      "showMonth": "Show {{month}} on the plan",
+      "caption": "What to sow, plant out and harvest per month"
     }
   },
   "plants": {

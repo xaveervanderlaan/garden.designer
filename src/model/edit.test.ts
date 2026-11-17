@@ -85,6 +85,18 @@ describe('transformObjects', () => {
   })
 })
 
+describe('transformObjects and row direction', () => {
+  it('rotating a bed turns its row direction', () => {
+    const project = sample()
+    const bed = { ...project.objects[0]!, rowAngleDeg: 0 }
+    const withBed = { ...project, objects: [bed, ...project.objects.slice(1)] }
+    const turned = transformObjects(withBed, new Map([[bed.id, rotation(30)]]))
+    expect(turned.objects[0]!.rowAngleDeg).toBeCloseTo(150)
+    const noAngle = transformObjects(project, new Map([[bed.id, rotation(30)]]))
+    expect(noAngle.objects[0]!.rowAngleDeg).toBeUndefined()
+  })
+})
+
 describe('deleteItems', () => {
   it('removes items and unlinks plantings from deleted beds', () => {
     const result = deleteItems(sample(), new Set(['bed-1', 'bench']))

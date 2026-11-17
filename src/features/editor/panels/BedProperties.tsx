@@ -16,6 +16,7 @@ import { updateObject } from '../../../model/edit'
 import { editedByCorners } from '../../../model/objectKinds'
 import { MIN_PLOT_CORNERS, cornerLabel, hasPlot } from '../../../model/plot'
 import type { Project } from '../../../model/schema'
+import { isRowBed } from '../../../model/vegRows'
 import { useProjectStore } from '../../../store/projectStore'
 import { useUiStore } from '../../../store/uiStore'
 import controls from '../../../styles/controls.module.css'
@@ -24,6 +25,7 @@ import { editorActions } from '../actions'
 import { shortcutLabel } from '../shortcuts'
 import { EdgeList } from './EdgeList'
 import { StatusField } from './ObjectProperties'
+import { RowDirection } from './RowDirection'
 import styles from './panels.module.css'
 
 /** Bed types drawn and edited like M6's beds (a raised bed is edited like a structure). */
@@ -104,6 +106,7 @@ export function BedProperties({ project, bed }: { project: Project; bed: Bed }) 
       />
 
       <p className={styles.hint}>{t('editor.beds.fillHint')}</p>
+      {isRowBed(bed) && <RowDirection bed={bed} />}
 
       <EdgeList
         outline={points}

@@ -1,10 +1,12 @@
 import type Konva from 'konva'
 import { Line, Shape } from 'react-konva'
 import { boundsOfPoints } from '../../../geometry/bounds'
+import { defaultRowAngle } from '../../../geometry/rows'
 import { formatLength } from '../../../i18n/units'
 import { symbolFor } from '../../../model/objectKinds'
 import type { GardenObject, Point } from '../../../model/schema'
-import { objectStyle } from '../../../styles/elementStyles'
+import { isRowBed } from '../../../model/vegRows'
+import { type ElementStyle, objectStyle } from '../../../styles/elementStyles'
 import {
   drawBoundary,
   drawDimension,
@@ -54,9 +56,18 @@ export function ObjectShape({ object, points, selected }: Props) {
   }
 }
 
+/** The object's style; a vegetable or raised bed's row lines follow its row direction. */
+function rowStyle(object: GardenObject, points: readonly Point[]): ElementStyle {
+  const style = objectStyle(object)
+  if (!isRowBed(object) || style.pattern?.kind !== 'rows') return style
+  // From the drawn points, so the default direction follows a corner being dragged.
+  const angleDeg = object.rowAngleDeg ?? defaultRowAngle(points)
+  return { ...style, pattern: { ...style.pattern, angleDeg } }
+}
+
 /** A bed, building or surface: fill, pattern and outline, muted when it is already there. */
 function OutlineShape({ object, points, selected }: Props) {
-  const style = objectStyle(object)
+  const style = rowStyle(object, points)
   const existing = object.status === 'existing'
   const bounds = boundsOfPoints(points)
   return (

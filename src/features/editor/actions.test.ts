@@ -320,6 +320,75 @@ describe('editorActions', () => {
       expect(useUiStore.getState().fill?.bedId).toBe(second)
     })
 
+    it("fills a vegetable bed in rows with the crop's spacing; rows limits it", () => {
+      editorActions.drawBed('bed-vegetable')
+      for (const p of [
+        { x: 10, y: 10 },
+        { x: 14, y: 10 },
+        { x: 14, y: 12 },
+        { x: 10, y: 12 },
+      ])
+        editorActions.addDrawingPoint(p)
+      editorActions.finishDrawing()
+      const veg = selection()[0]!
+      editorActions.startFill('lactuca-sativa')
+      expect(useUiStore.getState().fill).toEqual({
+        plantId: 'lactuca-sativa',
+        bedId: veg,
+        spacingM: 0.3,
+        rowSpacingM: 0.3,
+      })
+      editorActions.setFillRows(2)
+      expect(useUiStore.getState().fill?.rows).toBe(2)
+      expect(editorActions.applyFill()).toBe(26)
+      const lettuce = plantings().filter((p) => p.bedId === veg)
+      expect(lettuce).toHaveLength(26)
+      // Two rows along the long edge, from the top.
+      expect(new Set(lettuce.map((p) => p.position.y)).size).toBe(2)
+      expect(Math.min(...lettuce.map((p) => p.position.y))).toBeCloseTo(10.15)
+
+      editorActions.startFill('solanum-lycopersicum')
+      editorActions.setFillRows(1)
+      editorActions.setFillRowSpacing(0.8)
+      expect(editorActions.applyFill()).toBe(8)
+      editorActions.undo() // one undo step: the tomatoes go, the lettuce stays
+      expect(plantings().filter((p) => p.bedId === veg)).toHaveLength(26)
+
+      // An ornamental bed: back to the staggered fill and its spacing.
+      editorActions.startFill('lactuca-sativa')
+      editorActions.chooseFillBed({ x: 11, y: 11 })
+      editorActions.setFillRows(3)
+      expect(useUiStore.getState().fill).toMatchObject({ bedId: veg, rowSpacingM: 0.3, rows: 3 })
+      editorActions.chooseFillBed({ x: 4, y: 1.5 })
+      expect(useUiStore.getState().fill).toEqual({
+        plantId: 'lactuca-sativa',
+        bedId: 'bed-1',
+        spacingM: 0.3,
+      })
+    })
+
+    it("turns a vegetable bed's rows by 90° (undoable)", () => {
+      editorActions.drawBed('bed-vegetable')
+      for (const p of [
+        { x: 10, y: 10 },
+        { x: 14, y: 10 },
+        { x: 14, y: 12 },
+        { x: 10, y: 12 },
+      ])
+        editorActions.addDrawingPoint(p)
+      editorActions.finishDrawing()
+      const veg = selection()[0]!
+      const rowAngle = () => project().objects.find((o) => o.id === veg)?.rowAngleDeg
+      editorActions.turnBedRows(veg)
+      expect(rowAngle()).toBe(90)
+      editorActions.turnBedRows(veg)
+      expect(rowAngle()).toBe(0)
+      editorActions.setBedRowAngle(veg, -30)
+      expect(rowAngle()).toBe(150)
+      editorActions.turnBedRows('bed-1') // an ornamental bed has no rows
+      expect(project().objects.find((o) => o.id === 'bed-1')?.rowAngleDeg).toBeUndefined()
+    })
+
     it('plants a row along a drawn line', () => {
       editorActions.drawRow('carpinus-betulus')
       expect(useUiStore.getState().drawing?.target).toEqual({
