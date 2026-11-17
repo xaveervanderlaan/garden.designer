@@ -336,7 +336,10 @@
       "bringForward": "Bring forward",
       "sendBackward": "Send backward",
       "bringToFront": "Bring to front",
-      "sendToBack": "Send to back"
+      "sendToBack": "Send to back",
+      "addSurface": "Add a surface",
+      "addBoundary": "Add a boundary",
+      "addExtra": "Add water or an extra"
     },
     "drawing": {
       "hintStart": "Click on the plan to place the first corner.",
@@ -569,8 +572,34 @@
       "overlapHint": "Two plants get a warning when, at full size, they overlap by more than this share of the smaller plant’s width."
     },
     "objects": {
-      "add": "Add a structure",
-      "menu": "Structures",
+      "groups": {
+        "structures": {
+          "add": "Add a structure",
+          "menu": "Structures"
+        },
+        "surfaces": {
+          "add": "Add a surface",
+          "menu": "Surfaces"
+        },
+        "boundaries": {
+          "add": "Add a boundary",
+          "menu": "Boundaries"
+        },
+        "extras": {
+          "add": "Add water or an extra",
+          "menu": "Water & extras"
+        }
+      },
+      "material": "Material",
+      "variant": "Type",
+      "hedgePlant": "Hedging plant",
+      "noHedgePlant": "None",
+      "hedgePlantsValue_one": "{{count}} plant, {{spacing}} apart",
+      "hedgePlantsValue_other": "{{count}} plants, {{spacing}} apart",
+      "hedgePlantCount": "Plants needed",
+      "grossArea": "Area (gross)",
+      "netArea": "Area (net)",
+      "diameterValue": "Ø {{diameter}} m",
       "drawing": {
         "title": "{{kind}}:",
         "hintStartOutline": "drag to draw a rectangle, or click the corners one by one.",
@@ -612,6 +641,30 @@
         "front": "Bring to front",
         "back": "Send to back"
       }
+    },
+    "materials": {
+      "tiles": "Tiles",
+      "natural-stone": "Natural stone",
+      "wood": "Wood",
+      "concrete": "Concrete",
+      "bricks": "Bricks",
+      "gravel": "Gravel",
+      "bark": "Bark",
+      "grass": "Grass",
+      "meadow": "Meadow"
+    },
+    "symbolVariants": {
+      "dining-set": "Dining set",
+      "bench": "Bench",
+      "lounger": "Lounger",
+      "parasol": "Parasol",
+      "lamp": "Lamp",
+      "swing": "Swing set",
+      "sandbox": "Sandbox",
+      "trampoline": "Trampoline",
+      "playhouse": "Playhouse",
+      "compost-bin": "Compost bin",
+      "rain-barrel": "Rain barrel"
     }
   },
   "plants": {

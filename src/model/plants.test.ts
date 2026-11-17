@@ -16,6 +16,7 @@ import {
   saveCustomPlant,
   soilSuitability,
 } from './plants'
+import { addObject, findObject, setHedgePlant } from './objects'
 import { plantSchema } from './schema'
 
 const project = () => sampleProjectWithAsset().project
@@ -98,5 +99,22 @@ describe('custom plants', () => {
     expect(result.customPlants).toEqual([])
     expect(result.plantings).toEqual([])
     expect(deleteCustomPlant(p, 'betula-pendula')).toBe(p)
+  })
+
+  it('unlinks hedges when their custom plant is deleted', () => {
+    const hedgePlant = { ...samplePlant, category: 'hedge' as const }
+    const { project: withHedge, id } = addObject(saveCustomPlant(project(), hedgePlant), 'hedge', {
+      type: 'polyline',
+      points: [
+        { x: 0, y: 0 },
+        { x: 5, y: 0 },
+      ],
+      thicknessM: 0.6,
+    })
+    const linked = setHedgePlant(withHedge, id, hedgePlant.id)
+    expect(findObject(linked, id)?.plantId).toBe(hedgePlant.id)
+    const result = deleteCustomPlant(linked, hedgePlant.id)
+    expect(findObject(result, id)).toBeDefined()
+    expect(findObject(result, id)?.plantId).toBeUndefined()
   })
 })

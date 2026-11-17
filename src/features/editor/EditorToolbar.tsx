@@ -176,7 +176,10 @@ export function EditorToolbar({ project }: { project: Project }) {
           >
             <Carrot {...icon} />
           </ToolButton>
-          <ObjectMenu />
+          <ObjectMenu group="structures" />
+          <ObjectMenu group="surfaces" />
+          <ObjectMenu group="boundaries" />
+          <ObjectMenu group="extras" />
           <ToolButton
             label={t('editor.placing.labelCodes')}
             pressed={labelMode === 'code'}

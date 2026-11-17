@@ -131,4 +131,17 @@ describe('migration steps', () => {
     const migrated = projectSchema.parse(migrateProject(v4))
     expect(migrated.objects.map((o) => o.status)).toEqual(['new', 'existing'])
   })
+
+  it('5 → 6: keeps objects as they are', () => {
+    const shape = { type: 'point', position: { x: 1, y: 1 }, rotationDeg: 0 }
+    const v5 = {
+      ...newProject('Old', 1_700_000_000_000),
+      schemaVersion: 5,
+      objects: [{ id: 'a', kind: 'shed', shape, status: 'new', layer: 'hardscape' }],
+    }
+    const migrated = migrateProject(v5, 6) as { objects: unknown[]; schemaVersion: number }
+    expect(migrated.schemaVersion).toBe(6)
+    expect(migrated.objects).toEqual(v5.objects)
+    expect(projectSchema.parse(migrateProject(v5)).objects).toHaveLength(1)
+  })
 })

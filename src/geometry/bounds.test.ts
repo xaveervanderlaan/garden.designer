@@ -1,11 +1,12 @@
+import { symbolRadiusM } from '../model/objectKinds'
 import { describe, expect, it } from 'vitest'
 import { newProject } from '../model/defaults'
 import { sampleProjectWithAsset } from '../test/fixtures'
 import {
-  POINT_OBJECT_RADIUS_M,
   boundsCentre,
   boundsOfPoints,
   projectBounds,
+  objectBounds,
   shapeBounds,
   unionBounds,
 } from './bounds'
@@ -32,7 +33,7 @@ describe('bounds', () => {
         thicknessM: 0.2,
       }),
     ).toEqual({ minX: -0.1, minY: -0.1, maxX: 10.1, maxY: 0.1 })
-    const r = POINT_OBJECT_RADIUS_M
+    const r = symbolRadiusM('furniture')
     expect(shapeBounds({ type: 'point', position: { x: 1, y: 1 }, rotationDeg: 0 })).toEqual({
       minX: 1 - r,
       minY: 1 - r,
@@ -58,5 +59,21 @@ describe('bounds', () => {
       maxX: 20,
       maxY: 15,
     })
+  })
+
+  it('sizes a symbol by its variant', () => {
+    const at = { x: 2, y: 3 }
+    const object = (variant: string) => ({
+      id: 'a',
+      kind: 'furniture' as const,
+      variant,
+      shape: { type: 'point' as const, position: at, rotationDeg: 0 },
+      status: 'new' as const,
+      layer: 'hardscape' as const,
+    })
+    expect(objectBounds(object('parasol'))).toEqual({ minX: 0.5, minY: 1.5, maxX: 3.5, maxY: 4.5 })
+    const r = Math.hypot(1.5, 0.6) / 2
+    expect(objectBounds(object('bench')).maxX).toBeCloseTo(2 + r)
+    expect(symbolRadiusM('lighting')).toBe(0.15)
   })
 })

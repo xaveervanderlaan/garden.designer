@@ -1,13 +1,25 @@
 import { Check, Spline, Trash2 } from 'lucide-react'
-import { useId } from 'react'
+import { useId, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
-import { boundsCentre, shapeBounds } from '../../../geometry/bounds'
+import { boundsCentre, objectBounds } from '../../../geometry/bounds'
 import { shapeFrameBox } from '../../../geometry/frame'
 import { isSelfIntersecting, perimeter, polygonArea } from '../../../geometry/polygon'
-import { formatArea, formatLength } from '../../../i18n/units'
+import { formatArea, formatDecimal, formatLength } from '../../../i18n/units'
 import { isBed, plantingsInBed } from '../../../model/beds'
 import { updateObject } from '../../../model/edit'
-import { hasHeight, kindsLike } from '../../../model/objectKinds'
+import {
+  SYMBOL_VARIANTS,
+  type MaterialId,
+  hasHeight,
+  kindsLike,
+  materialOf,
+  materialsFor,
+  symbolFor,
+  type SymbolVariantId,
+} from '../../../model/objectKinds'
+import { surfaceAreas } from '../../../model/netArea'
+import { allPlants, findPlant, plantName } from '../../../model/plants'
+import { defaultRowSpacingM, hedgePlantCount } from '../../../model/plantings'
 import {
   MIN_POINTS,
   MIN_THICKNESS_M,
@@ -115,7 +127,8 @@ function InlineNumber({
  * and rotation, area, its corners on request, and notes.
  */
 export function ObjectProperties({ project, object }: { project: Project; object: GardenObject }) {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
+  const lang = i18n.language.startsWith('nl') ? 'nl' : 'en'
   const update = useProjectStore((s) => s.update)
   const editingCorners = useUiStore((s) => s.editingCorners === object.id)
   const activeCorner = useUiStore((s) => s.activeCorner)
@@ -123,6 +136,27 @@ export function ObjectProperties({ project, object }: { project: Project; object
   const kindId = useId()
   const labelId = useId()
   const notesId = useId()
+  const materialId = useId()
+  const variantId = useId()
+  const hedgeId = useId()
+  const areas = useMemo(
+    () => (object.shape.type === 'polygon' ? surfaceAreas(project, object.id) : null),
+    [project, object.id, object.shape.type],
+  )
+  const materials = materialsFor(object.kind)
+  const variants = SYMBOL_VARIANTS[object.kind] ?? []
+  const symbol = symbolFor(object.kind, object.variant)
+  const hedgePlant =
+    object.kind === 'hedge' && object.plantId ? findPlant(project, object.plantId) : undefined
+  const hedgeOptions = useMemo(
+    () =>
+      object.kind === 'hedge'
+        ? allPlants(project)
+            .filter((plant) => plant.category === 'hedge')
+            .sort((a, b) => plantName(a, lang).localeCompare(plantName(b, lang), lang))
+        : [],
+    [project, object.kind, lang],
+  )
   const set = (field: 'label' | 'notes', value: string) =>
     update((p) => updateObject(p, object.id, { [field]: value }), {
       coalesce: `${field}:${object.id}`,
@@ -171,9 +205,83 @@ export function ObjectProperties({ project, object }: { project: Project; object
         className={cx(controls.input, styles.field)}
         value={object.label ?? ''}
         maxLength={200}
-        placeholder={isBed(object) ? bedName(object) : t(`editor.objectKinds.${object.kind}`)}
+        placeholder={
+          isBed(object)
+            ? bedName(object)
+            : hedgePlant
+              ? plantName(hedgePlant, lang)
+              : t(`editor.objectKinds.${object.kind}`)
+        }
         onChange={(e) => set('label', e.target.value)}
       />
+
+      {materials.length > 1 && (
+        <>
+          <label className={controls.label} htmlFor={materialId}>
+            {t('editor.objects.material')}
+          </label>
+          <select
+            id={materialId}
+            className={cx(controls.input, styles.field)}
+            value={materialOf(object) ?? ''}
+            data-testid="object-material"
+            onChange={(e) =>
+              editorActions.setObjectMaterial(object.id, e.target.value as MaterialId)
+            }
+          >
+            {materials.map((material) => (
+              <option key={material} value={material}>
+                {t(`editor.materials.${material}`)}
+              </option>
+            ))}
+          </select>
+        </>
+      )}
+
+      {variants.length > 1 && (
+        <>
+          <label className={controls.label} htmlFor={variantId}>
+            {t('editor.objects.variant')}
+          </label>
+          <select
+            id={variantId}
+            className={cx(controls.input, styles.field)}
+            value={symbol?.id ?? ''}
+            data-testid="object-variant"
+            onChange={(e) =>
+              editorActions.setObjectVariant(object.id, e.target.value as SymbolVariantId)
+            }
+          >
+            {variants.map((v) => (
+              <option key={v.id} value={v.id}>
+                {t(`editor.symbolVariants.${v.id}`)}
+              </option>
+            ))}
+          </select>
+        </>
+      )}
+
+      {object.kind === 'hedge' && (
+        <>
+          <label className={controls.label} htmlFor={hedgeId}>
+            {t('editor.objects.hedgePlant')}
+          </label>
+          <select
+            id={hedgeId}
+            className={cx(controls.input, styles.field)}
+            value={hedgePlant?.id ?? ''}
+            data-testid="hedge-plant"
+            onChange={(e) => editorActions.setHedgePlant(object.id, e.target.value || null)}
+          >
+            <option value="">{t('editor.objects.noHedgePlant')}</option>
+            {hedgeOptions.map((plant) => (
+              <option key={plant.id} value={plant.id}>
+                {plantName(plant, lang)}
+              </option>
+            ))}
+          </select>
+        </>
+      )}
 
       {hasHeight(object.kind) && (
         <InlineNumber
@@ -228,8 +336,16 @@ export function ObjectProperties({ project, object }: { project: Project; object
       <dl className={styles.facts}>
         {shape.type === 'polygon' && (
           <>
-            <dt>{t('editor.plot.area')}</dt>
-            <dd data-testid="object-area">{formatArea(polygonArea(shape.points))}</dd>
+            <dt>{areas ? t('editor.objects.grossArea') : t('editor.plot.area')}</dt>
+            <dd data-testid="object-area">
+              {formatArea(areas?.grossM2 ?? polygonArea(shape.points))}
+            </dd>
+            {areas && (
+              <>
+                <dt>{t('editor.objects.netArea')}</dt>
+                <dd data-testid="object-net-area">{formatArea(areas.netM2)}</dd>
+              </>
+            )}
             <dt>{t('editor.plot.perimeter')}</dt>
             <dd>{formatLength(perimeter(shape.points))}</dd>
           </>
@@ -238,6 +354,30 @@ export function ObjectProperties({ project, object }: { project: Project; object
           <>
             <dt>{t('editor.objects.length')}</dt>
             <dd data-testid="object-length">{formatLength(perimeter(shape.points, false))}</dd>
+            {hedgePlant && (
+              <>
+                <dt>{t('editor.objects.hedgePlantCount')}</dt>
+                <dd data-testid="hedge-plant-count">
+                  {t('editor.objects.hedgePlantsValue', {
+                    count: hedgePlantCount(perimeter(shape.points, false), hedgePlant),
+                    spacing: formatLength(defaultRowSpacingM(hedgePlant)),
+                  })}
+                </dd>
+              </>
+            )}
+          </>
+        )}
+        {shape.type === 'point' && symbol && (
+          <>
+            <dt>{t('editor.objects.size')}</dt>
+            <dd data-testid="object-size">
+              {symbol.round
+                ? t('editor.objects.diameterValue', { diameter: formatDecimal(symbol.widthM, 1) })
+                : t('editor.objects.sizeValue', {
+                    width: formatDecimal(symbol.widthM, 1),
+                    depth: formatDecimal(symbol.depthM, 1),
+                  })}
+            </dd>
           </>
         )}
         {isBed(object) && (
@@ -249,8 +389,8 @@ export function ObjectProperties({ project, object }: { project: Project; object
         <dt>{t('editor.properties.position')}</dt>
         <dd data-testid="item-position">
           {t('editor.properties.positionValue', {
-            x: formatLength(boundsCentre(shapeBounds(shape)).x),
-            y: formatLength(boundsCentre(shapeBounds(shape)).y),
+            x: formatLength(boundsCentre(objectBounds(object)).x),
+            y: formatLength(boundsCentre(objectBounds(object)).y),
           })}
         </dd>
       </dl>

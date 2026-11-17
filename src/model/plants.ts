@@ -137,5 +137,9 @@ export function deleteCustomPlant(project: Project, plantId: string): Project {
     ...project,
     customPlants: project.customPlants.filter((p) => p.id !== plantId),
     plantings: project.plantings.filter((p) => p.plantId !== plantId),
+    // Hedges made of this plant lose the link.
+    objects: project.objects.map(({ plantId: linked, ...o }) =>
+      linked === plantId ? o : { ...o, ...(linked === undefined ? {} : { plantId: linked }) },
+    ),
   }
 }

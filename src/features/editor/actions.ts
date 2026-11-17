@@ -46,7 +46,13 @@ import {
   updatePlanting,
   validSelection,
 } from '../../model/edit'
-import { OBJECT_PRESETS, editedByCorners, objectLayer } from '../../model/objectKinds'
+import {
+  type MaterialId,
+  OBJECT_PRESETS,
+  type SymbolVariantId,
+  editedByCorners,
+  objectLayer,
+} from '../../model/objectKinds'
 import {
   MIN_POINTS,
   addObject,
@@ -55,8 +61,11 @@ import {
   removeObjectCorner,
   resizeObject,
   rotateObjectTo,
+  setHedgePlant,
   setObjectKind,
+  setObjectMaterial,
   setObjectStatus,
+  setObjectVariant,
   setPolylineThickness,
   shapeForKind,
 } from '../../model/objects'
@@ -400,8 +409,12 @@ export const editorActions = {
     editorActions.startDrawing({ kind: 'bed', bedKind: kind })
   },
   /** Starts drawing an object of a kind (an outline, a line or a symbol, per its preset). */
-  drawObject(kind: ObjectKind) {
-    editorActions.startDrawing({ kind: 'object', objectKind: kind })
+  drawObject(kind: ObjectKind, variant?: SymbolVariantId) {
+    editorActions.startDrawing({
+      kind: 'object',
+      objectKind: kind,
+      ...(variant ? { variant } : {}),
+    })
   },
   /** Starts drawing the line for a row of a plant (a hedge, an edging). */
   drawRow(plantId: string) {
@@ -522,7 +535,7 @@ export const editorActions = {
         if (!shape) return false
         let id = ''
         useProjectStore.getState().update((p) => {
-          const result = addObject(p, target.objectKind, shape)
+          const result = addObject(p, target.objectKind, shape, { variant: target.variant })
           id = result.id
           return result.project
         })
@@ -565,6 +578,15 @@ export const editorActions = {
     if (!object) return
     showLayer(objectLayer(kind, object.status))
     useProjectStore.getState().update((p) => setObjectKind(p, id, kind))
+  },
+  setObjectMaterial(id: string, material: MaterialId) {
+    useProjectStore.getState().update((p) => setObjectMaterial(p, id, material))
+  },
+  setObjectVariant(id: string, variant: SymbolVariantId) {
+    useProjectStore.getState().update((p) => setObjectVariant(p, id, variant))
+  },
+  setHedgePlant(id: string, plantId: string | null) {
+    useProjectStore.getState().update((p) => setHedgePlant(p, id, plantId))
   },
   setObjectHeight(id: string, heightM: number) {
     if (!(heightM > 0)) return

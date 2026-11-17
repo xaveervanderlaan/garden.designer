@@ -8,9 +8,14 @@ import {
   objectRotation,
   resizeObject,
   rotateObjectTo,
+  setHedgePlant,
+  setObjectKind,
+  setObjectMaterial,
   setObjectStatus,
+  setObjectVariant,
   shapeForKind,
 } from './objects'
+import { symbolFor } from './objectKinds'
 import type { Point, Project } from './schema'
 import { designWarnings } from './warnings'
 
@@ -106,5 +111,69 @@ describe('objects', () => {
     const again = setObjectStatus(existing, new Set([id]), 'new')
     expect(findObject(again, id)).toMatchObject({ status: 'new', layer: 'hardscape' })
     expect(setObjectStatus(again, new Set([id]), 'new')).toBe(again)
+  })
+
+  const line = {
+    type: 'polyline' as const,
+    points: [
+      { x: 0, y: 0 },
+      { x: 5, y: 0 },
+    ],
+    thicknessM: 0.6,
+  }
+
+  it("sets a material only from the kind's list", () => {
+    const { project, id } = addObject(newProject('x', 0), 'terrace', poly(rect(0, 0, 4, 3)))
+    expect(findObject(setObjectMaterial(project, id, 'wood'), id)?.material).toBe('wood')
+    expect(setObjectMaterial(project, id, 'grass')).toBe(project)
+  })
+
+  it('stores a symbol variant and falls back to the first', () => {
+    const at = { type: 'point' as const, position: { x: 1, y: 1 }, rotationDeg: 0 }
+    const { project, id } = addObject(newProject('x', 0), 'furniture', at, { variant: 'bench' })
+    expect(findObject(project, id)?.variant).toBe('bench')
+    expect(findObject(setObjectVariant(project, id, 'lounger'), id)?.variant).toBe('lounger')
+    expect(setObjectVariant(project, id, 'swing')).toBe(project)
+    expect(symbolFor('furniture', 'nope')?.id).toBe('dining-set')
+    expect(symbolFor('furniture')?.id).toBe('dining-set')
+    expect(symbolFor('terrace')).toBeNull()
+    const terrace = addObject(newProject('x', 0), 'terrace', poly(rect(0, 0, 4, 3)), {
+      variant: 'bench',
+    })
+    expect(findObject(terrace.project, terrace.id)?.variant).toBeUndefined()
+  })
+
+  it('links a hedge to a hedging species only', () => {
+    const { project, id } = addObject(newProject('x', 0), 'hedge', line)
+    const linked = setHedgePlant(project, id, 'carpinus-betulus')
+    expect(findObject(linked, id)?.plantId).toBe('carpinus-betulus')
+    expect(setHedgePlant(project, id, 'betula-pendula')).toBe(project)
+    expect(setHedgePlant(project, id, 'unknown')).toBe(project)
+    expect(findObject(setHedgePlant(linked, id, null), id)).not.toHaveProperty('plantId')
+    const fence = addObject(newProject('x', 0), 'fence', line)
+    expect(setHedgePlant(fence.project, fence.id, 'carpinus-betulus')).toBe(fence.project)
+  })
+
+  it('drops material, variant and hedge plant that the new kind lacks', () => {
+    const hedge = addObject(newProject('x', 0), 'hedge', line)
+    const linked = setHedgePlant(hedge.project, hedge.id, 'carpinus-betulus')
+    const fence = setObjectKind(linked, hedge.id, 'fence')
+    expect(findObject(fence, hedge.id)).not.toHaveProperty('plantId')
+    expect(setObjectKind(fence, hedge.id, 'hedge')).toBeDefined()
+
+    const t = addObject(newProject('x', 0), 'terrace', poly(rect(0, 0, 4, 3)))
+    const wood = setObjectMaterial(t.project, t.id, 'natural-stone')
+    expect(findObject(setObjectKind(wood, t.id, 'path'), t.id)?.material).toBe('natural-stone')
+    expect(findObject(setObjectKind(wood, t.id, 'lawn'), t.id)).not.toHaveProperty('material')
+
+    const f = addObject(
+      newProject('x', 0),
+      'furniture',
+      { type: 'point', position: { x: 1, y: 1 }, rotationDeg: 0 },
+      { variant: 'parasol' },
+    )
+    expect(findObject(setObjectKind(f.project, f.id, 'lighting'), f.id)).not.toHaveProperty(
+      'variant',
+    )
   })
 })

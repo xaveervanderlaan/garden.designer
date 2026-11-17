@@ -97,7 +97,7 @@ test.describe('editor', () => {
     const position = page.getByTestId('item-position')
 
     await page.mouse.click(centre.x, centre.y)
-    await expect(kind).toHaveText('Terrace')
+    await expect(kind).toHaveValue('terrace') // a surface: the kind is a select (M9)
     await expect(position).toHaveText('x 10.00 m · y 7.50 m')
 
     // Drag 2 m to the right: one undo step.
@@ -165,10 +165,10 @@ test.describe('editor', () => {
         await page.mouse.click(centre.x, centre.y)
         return page
           .getByTestId('item-kind')
-          .textContent({ timeout: 200 })
+          .inputValue({ timeout: 200 })
           .catch(() => null)
       })
-      .toBe('Terrace')
+      .toBe('terrace')
   })
 
   test('saves edits automatically', async ({ page }) => {

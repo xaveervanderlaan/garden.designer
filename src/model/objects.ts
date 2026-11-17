@@ -5,7 +5,16 @@ import { normaliseDegrees, rotation } from '../geometry/transform'
 import { isBed, isBedKind, relinkBeds } from './beds'
 import { transformObjects } from './edit'
 import { newId } from './ids'
-import { OBJECT_PRESETS, hasHeight, objectLayer } from './objectKinds'
+import {
+  OBJECT_PRESETS,
+  type MaterialId,
+  type SymbolVariantId,
+  hasHeight,
+  materialsFor,
+  objectLayer,
+  symbolFor,
+} from './objectKinds'
+import { findPlant } from './plants'
 import type { GardenObject, ObjectKind, ObjectStatus, Point, Project, Shape } from './schema'
 
 /**
@@ -54,14 +63,16 @@ export function addObject(
   project: Project,
   kind: ObjectKind,
   shape: Shape,
-  options: { status?: ObjectStatus } = {},
+  options: { status?: ObjectStatus; variant?: SymbolVariantId } = {},
 ): { project: Project; id: string } {
   const preset = OBJECT_PRESETS[kind]
   const status = options.status ?? preset.status
+  const symbol = symbolFor(kind, options.variant)
   const object: GardenObject = {
     id: newId(),
     kind,
     shape,
+    ...(symbol && options.variant ? { variant: symbol.id } : {}),
     ...(preset.heightM === undefined ? {} : { heightM: preset.heightM }),
     status,
     layer: objectLayer(kind, status),
@@ -106,17 +117,58 @@ export function setObjectKind(project: Project, id: string, kind: ObjectKind): P
   if (!object || object.kind === kind || OBJECT_PRESETS[kind].shape !== object.shape.type) {
     return project
   }
-  const { heightM, ...rest } = object
+  const { heightM, material, variant, plantId, ...rest } = object
   const height = hasHeight(kind) ? (heightM ?? OBJECT_PRESETS[kind].heightM) : undefined
   const changed: GardenObject = {
     ...rest,
     kind,
+    ...(material !== undefined && materialsFor(kind).includes(material as MaterialId)
+      ? { material }
+      : {}),
+    ...(variant !== undefined && symbolFor(kind) && symbolFor(kind, variant)?.id === variant
+      ? { variant }
+      : {}),
+    ...(plantId !== undefined && kind === 'hedge' ? { plantId } : {}),
     ...(height === undefined ? {} : { heightM: height }),
     layer: objectLayer(kind, object.status),
   }
   const next = updateObjects(project, new Set([id]), () => changed)
   // Whether it holds plants may have changed (e.g. a raised bed became a shed).
   return isBedKind(kind) || isBedKind(object.kind) ? relinkBeds(next) : next
+}
+
+/** Sets a surface's material; refused if it isn't in the kind's list. */
+export function setObjectMaterial(project: Project, id: string, material: MaterialId): Project {
+  const object = findObject(project, id)
+  if (!object || !materialsFor(object.kind).includes(material) || object.material === material) {
+    return project
+  }
+  return updateObjects(project, new Set([id]), (o) => ({ ...o, material }))
+}
+
+/** Sets a symbol's variant; refused if the kind has no such variant. */
+export function setObjectVariant(project: Project, id: string, variant: SymbolVariantId): Project {
+  const object = findObject(project, id)
+  const symbol = object ? symbolFor(object.kind, variant) : null
+  if (!object || !symbol || symbol.id !== variant || object.variant === variant) return project
+  return updateObjects(project, new Set([id]), (o) => ({ ...o, variant }))
+}
+
+/** Links a hedge to a hedging species (null: unlink). Other kinds and other plants are refused. */
+export function setHedgePlant(project: Project, id: string, plantId: string | null): Project {
+  const object = findObject(project, id)
+  if (!object || object.kind !== 'hedge') return project
+  if (plantId === null) {
+    if (object.plantId === undefined) return project
+    return updateObjects(project, new Set([id]), (o) => {
+      const { plantId: _removed, ...rest } = o
+      return rest
+    })
+  }
+  if (findPlant(project, plantId)?.category !== 'hedge' || object.plantId === plantId) {
+    return project
+  }
+  return updateObjects(project, new Set([id]), (o) => ({ ...o, plantId }))
 }
 
 /**

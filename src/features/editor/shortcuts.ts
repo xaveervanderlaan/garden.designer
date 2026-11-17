@@ -25,6 +25,9 @@ export type ShortcutId =
   | 'rectanglePlot'
   | 'drawBed'
   | 'addStructure'
+  | 'addSurface'
+  | 'addBoundary'
+  | 'addExtra'
   | 'editCorners'
   | 'bringForward'
   | 'sendBackward'
@@ -64,6 +67,9 @@ export const SHORTCUTS: readonly Shortcut[] = [
   { id: 'rectanglePlot', combos: [{ key: 'r' }] },
   { id: 'drawBed', combos: [{ key: 'b' }] },
   { id: 'addStructure', combos: [{ key: 's' }] },
+  { id: 'addSurface', combos: [{ key: 't' }] },
+  { id: 'addBoundary', combos: [{ key: 'f' }] },
+  { id: 'addExtra', combos: [{ key: 'w' }] },
   { id: 'editCorners', combos: [{ key: 'e' }] },
   {
     id: 'bringForward',
@@ -175,7 +181,10 @@ const HANDLERS: Record<ShortcutId, (event: KeyboardEvent) => void> = {
   drawPlot: () => editorActions.setTool('draw'),
   rectanglePlot: () => useUiStore.getState().setRectangleDialogOpen(true),
   drawBed: () => editorActions.drawBed('bed-ornamental'),
-  addStructure: () => useUiStore.getState().setObjectMenuOpen(true),
+  addStructure: () => useUiStore.getState().setObjectMenuOpen('structures'),
+  addSurface: () => useUiStore.getState().setObjectMenuOpen('surfaces'),
+  addBoundary: () => useUiStore.getState().setObjectMenuOpen('boundaries'),
+  addExtra: () => useUiStore.getState().setObjectMenuOpen('extras'),
   editCorners: () => editorActions.toggleCornerEditing(),
   bringForward: () => editorActions.reorder('forward'),
   sendBackward: () => editorActions.reorder('backward'),
@@ -200,7 +209,13 @@ export function useEditorShortcuts(): void {
         calibration,
       } = useUiStore.getState()
       // Dialogs (and the structures menu) handle their own keys.
-      if (helpOpen || rectangleDialogOpen || sitePlanDialogOpen || settingsOpen || objectMenuOpen) {
+      if (
+        helpOpen ||
+        rectangleDialogOpen ||
+        sitePlanDialogOpen ||
+        settingsOpen ||
+        objectMenuOpen !== null
+      ) {
         return
       }
       // While drawing or calibrating, digits are lengths for the panel below the plan, not

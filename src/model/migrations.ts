@@ -56,6 +56,12 @@ export const MIGRATIONS: Readonly<Record<number, Migration>> = {
         )
       : project.objects,
   }),
+  /**
+   * v6 (M9): objects may have a `variant` (symbols) and a `plantId` (hedges). Both are optional,
+   * so old data stays valid; the bump makes an older cached app refuse newer files instead of
+   * silently dropping the fields.
+   */
+  5: (project) => project,
 }
 
 const isOneOf = <T extends string>(list: readonly T[], value: unknown): value is T =>

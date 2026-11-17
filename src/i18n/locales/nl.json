@@ -336,7 +336,10 @@
       "bringForward": "Naar voren",
       "sendBackward": "Naar achteren",
       "bringToFront": "Helemaal naar voren",
-      "sendToBack": "Helemaal naar achteren"
+      "sendToBack": "Helemaal naar achteren",
+      "addSurface": "Oppervlak toevoegen",
+      "addBoundary": "Erfafscheiding toevoegen",
+      "addExtra": "Water of extra toevoegen"
     },
     "drawing": {
       "hintStart": "Klik op de plattegrond om de eerste hoek te plaatsen.",
@@ -569,8 +572,34 @@
       "overlapHint": "Twee planten krijgen een waarschuwing als ze volgroeid meer dan dit deel van de breedte van de kleinste plant overlappen."
     },
     "objects": {
-      "add": "Bouwwerk toevoegen",
-      "menu": "Bouwwerken",
+      "groups": {
+        "structures": {
+          "add": "Bouwwerk toevoegen",
+          "menu": "Bouwwerken"
+        },
+        "surfaces": {
+          "add": "Oppervlak toevoegen",
+          "menu": "Oppervlakken"
+        },
+        "boundaries": {
+          "add": "Erfafscheiding toevoegen",
+          "menu": "Erfafscheidingen"
+        },
+        "extras": {
+          "add": "Water of extra toevoegen",
+          "menu": "Water & extra's"
+        }
+      },
+      "material": "Materiaal",
+      "variant": "Soort",
+      "hedgePlant": "Haagplant",
+      "noHedgePlant": "Geen",
+      "hedgePlantsValue_one": "{{count}} plant, {{spacing}} uit elkaar",
+      "hedgePlantsValue_other": "{{count}} planten, {{spacing}} uit elkaar",
+      "hedgePlantCount": "Benodigde planten",
+      "grossArea": "Oppervlak (bruto)",
+      "netArea": "Oppervlak (netto)",
+      "diameterValue": "Ø {{diameter}} m",
       "drawing": {
         "title": "{{kind}}:",
         "hintStartOutline": "sleep om een rechthoek te tekenen, of klik de hoeken één voor één.",
@@ -612,6 +641,30 @@
         "front": "Helemaal naar voren",
         "back": "Helemaal naar achteren"
       }
+    },
+    "materials": {
+      "tiles": "Tegels",
+      "natural-stone": "Natuursteen",
+      "wood": "Hout",
+      "concrete": "Beton",
+      "bricks": "Klinkers",
+      "gravel": "Grind",
+      "bark": "Boomschors",
+      "grass": "Gras",
+      "meadow": "Bloemenweide"
+    },
+    "symbolVariants": {
+      "dining-set": "Tuinset",
+      "bench": "Bank",
+      "lounger": "Ligbed",
+      "parasol": "Parasol",
+      "lamp": "Lamp",
+      "swing": "Schommel",
+      "sandbox": "Zandbak",
+      "trampoline": "Trampoline",
+      "playhouse": "Speelhuisje",
+      "compost-bin": "Compostbak",
+      "rain-barrel": "Regenton"
     }
   },
   "plants": {

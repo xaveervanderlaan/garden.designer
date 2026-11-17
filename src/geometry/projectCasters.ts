@@ -1,3 +1,4 @@
+import { symbolRadiusM } from '../model/objectKinds'
 import { findPlant } from '../model/plants'
 import type {
   GardenObject,
@@ -7,7 +8,6 @@ import type {
   Planting,
   Project,
 } from '../model/schema'
-import { POINT_OBJECT_RADIUS_M } from './bounds'
 import {
   type Caster,
   prismFromPolygon,
@@ -20,7 +20,7 @@ import {
  * worker doesn't pull in the plant library: the UI builds the casters and hands them over.
  *
  * - Every object with a height casts a shadow, wherever it is (also outside the plot): polygons
- *   and thick polylines as prisms, point objects as posts (cylinders of POINT_OBJECT_RADIUS_M).
+ *   and thick polylines as prisms, point objects as posts (cylinders of their symbol's radius).
  *   Pergolas and carports are roofs on posts: a ROOF_THICKNESS_M slab at the top.
  * - Plantings of trees, shrubs, hedging plants and fruit that are at least `minPlantHeightM` tall
  *   cast a canopy shadow (radius = spread / 2). Trees and fruit trees (fruit ≥ 3 m) have their
@@ -79,7 +79,7 @@ export function objectCaster(object: GardenObject): Caster | null {
       return {
         kind: 'canopy',
         centre: shape.position,
-        radiusM: POINT_OBJECT_RADIUS_M,
+        radiusM: symbolRadiusM(object.kind, object.variant),
         baseM,
         topM: heightM,
         sourceId: object.id,

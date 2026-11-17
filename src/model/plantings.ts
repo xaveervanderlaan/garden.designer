@@ -98,6 +98,11 @@ export function defaultRowSpacingM(plant: Plant): number {
   return plant.veg?.inRowSpacingM ?? plant.spreadM
 }
 
+/** How many plants a hedge of this length needs: one per spacing, at least two (both ends). */
+export function hedgePlantCount(lengthM: number, plant: Plant): number {
+  return Math.max(2, Math.round(lengthM / defaultRowSpacingM(plant)) + 1)
+}
+
 /** Fills with more plants than this are refused (the spacing is probably a typo). */
 export const MAX_FILL_PLANTS = 2000
 

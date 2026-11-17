@@ -7,7 +7,7 @@ import { z } from 'zod'
  *
  * Changing the shape of stored data? Bump SCHEMA_VERSION and add a migration (see migrations.ts).
  */
-export const SCHEMA_VERSION = 5
+export const SCHEMA_VERSION = 6
 
 export const idSchema = z.string().min(1).max(100)
 
@@ -228,6 +228,10 @@ export const gardenObjectSchema = z.object({
   shape: shapeSchema,
   heightM: positiveLength.optional(),
   material: z.string().max(100).optional(),
+  /** Symbols: which variant (size and look) of the kind, see objectKinds SYMBOL_VARIANTS. */
+  variant: z.string().max(50).optional(),
+  /** Hedges: the hedging species it is made of. */
+  plantId: idSchema.optional(),
   label: z.string().max(200).optional(),
   notes: z.string().max(5000).optional(),
   /** Existing objects are on the "existing" layer; new ones on their kind's layer (objectLayer). */

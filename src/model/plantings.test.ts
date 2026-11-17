@@ -8,6 +8,7 @@ import {
   addPlantings,
   defaultRowSpacingM,
   fillBedPositions,
+  hedgePlantCount,
   plantingLabels,
   speciesCodes,
   swapSpecies,
@@ -98,5 +99,12 @@ describe('plantings', () => {
     const lettuce = builtInPlant('lactuca-sativa')!
     expect(defaultRowSpacingM(lettuce)).toBe(lettuce.veg!.inRowSpacingM)
     expect(defaultRowSpacingM(samplePlant)).toBe(samplePlant.spreadM)
+  })
+
+  it('counts the plants a hedge needs', () => {
+    const hornbeam = builtInPlant('carpinus-betulus')!
+    expect(hedgePlantCount(10, hornbeam)).toBe(31)
+    expect(hedgePlantCount(0.1, hornbeam)).toBe(2)
+    expect(hedgePlantCount(3, samplePlant)).toBe(Math.round(3 / samplePlant.spreadM) + 1)
   })
 })

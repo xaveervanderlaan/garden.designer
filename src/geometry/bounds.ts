@@ -1,13 +1,11 @@
 import { plantingRadiusM } from '../model/plants'
-import type { Point, Project, Shape } from '../model/schema'
+import { symbolRadiusM } from '../model/objectKinds'
+import type { GardenObject, Point, Project, Shape } from '../model/schema'
 
 export type Bounds = { minX: number; minY: number; maxX: number; maxY: number }
 
 /** What an empty design shows: a 30 × 20 m area. */
 export const DEFAULT_VIEW_BOUNDS: Bounds = { minX: 0, minY: 0, maxX: 30, maxY: 20 }
-
-/** Point-shaped objects (furniture, lights, …) are drawn with this radius until they get sizes. */
-export const POINT_OBJECT_RADIUS_M = 0.3
 
 export function boundsOfPoints(points: readonly Point[]): Bounds | null {
   if (points.length === 0) return null
@@ -43,8 +41,16 @@ export function shapeBounds(shape: Shape): Bounds {
       return { minX: b.minX - half, minY: b.minY - half, maxX: b.maxX + half, maxY: b.maxY + half }
     }
     case 'point':
-      return circleBounds(shape.position, POINT_OBJECT_RADIUS_M)
+      return circleBounds(shape.position, symbolRadiusM('furniture'))
   }
+}
+
+/** An object's bounds: like its shape's, but a symbol is as large as its variant. */
+export function objectBounds(object: GardenObject): Bounds {
+  const { shape } = object
+  return shape.type === 'point'
+    ? circleBounds(shape.position, symbolRadiusM(object.kind, object.variant))
+    : shapeBounds(shape)
 }
 
 export function unionBounds(a: Bounds | null, b: Bounds | null): Bounds | null {
@@ -65,7 +71,7 @@ export function boundsCentre(b: Bounds): Point {
 /** Everything in the design: plot, objects and plantings. Null for an empty design. */
 export function projectBounds(project: Project): Bounds | null {
   let bounds = boundsOfPoints(project.plot.outline)
-  for (const object of project.objects) bounds = unionBounds(bounds, shapeBounds(object.shape))
+  for (const object of project.objects) bounds = unionBounds(bounds, objectBounds(object))
   for (const planting of project.plantings) {
     bounds = unionBounds(
       bounds,

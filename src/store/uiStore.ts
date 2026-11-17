@@ -3,6 +3,7 @@ import type { Bounds } from '../geometry/bounds'
 import type { Size, Viewport } from '../geometry/viewport'
 import type { BedKind } from '../model/beds'
 import type { GrowthStopId } from '../model/growth'
+import type { PaletteGroup, SymbolVariantId } from '../model/objectKinds'
 import type { ObjectKind, Point } from '../model/schema'
 
 /**
@@ -19,7 +20,7 @@ export type DrawTarget =
   | { kind: 'plot' }
   | { kind: 'bed'; bedKind: BedKind }
   | { kind: 'row'; plantId: string; spacingM: number }
-  | { kind: 'object'; objectKind: ObjectKind }
+  | { kind: 'object'; objectKind: ObjectKind; variant?: SymbolVariantId }
 
 /** An outline or line being drawn: what it's for and the corners placed so far (world metres). */
 export type Drawing = { target: DrawTarget; points: Point[] }
@@ -83,7 +84,7 @@ type UiStore = {
   /** The site-plan import dialog (progress, page choice or error) is showing. */
   sitePlanDialogOpen: boolean
   /** The toolbar's menu for adding a structure is open. */
-  objectMenuOpen: boolean
+  objectMenuOpen: PaletteGroup | null
   setViewport: (viewport: Viewport | ((current: Viewport) => Viewport)) => void
   setCanvasSize: (size: Size) => void
   setFit: (fit: { bounds: Bounds; viewport: Viewport } | null) => void
@@ -117,7 +118,7 @@ type UiStore = {
   setHelpOpen: (open: boolean) => void
   setRectangleDialogOpen: (open: boolean) => void
   setSitePlanDialogOpen: (open: boolean) => void
-  setObjectMenuOpen: (open: boolean) => void
+  setObjectMenuOpen: (group: PaletteGroup | null) => void
   /** Back to a clean state, e.g. when another project is opened. */
   reset: () => void
 }
@@ -144,7 +145,7 @@ const initial = {
   helpOpen: false,
   rectangleDialogOpen: false,
   sitePlanDialogOpen: false,
-  objectMenuOpen: false,
+  objectMenuOpen: null,
 }
 
 /** The state of every tool that has one, cleared when another tool starts. */

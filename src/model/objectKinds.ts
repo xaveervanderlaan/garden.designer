@@ -1,4 +1,4 @@
-import type { LayerId, ObjectKind, ObjectStatus } from './schema'
+import type { GardenObject, LayerId, ObjectKind, ObjectStatus } from './schema'
 
 /**
  * What every kind of garden object is: its shape, where it sits in the drawing order, its layer,
@@ -134,19 +134,133 @@ export const OBJECT_PRESETS: Record<ObjectKind, ObjectPreset> = {
   },
 }
 
-/** The palette groups for adding objects. M9 adds surfaces, boundaries and water & extras. */
+/** The palette groups for adding objects (M9: surfaces, boundaries, water & extras). */
 export const OBJECT_PALETTE = [
   {
     group: 'structures',
     kinds: ['house', 'shed', 'greenhouse', 'pergola', 'carport', 'raised-bed'],
   },
+  { group: 'surfaces', kinds: ['terrace', 'path', 'driveway', 'gravel', 'lawn'] },
+  { group: 'boundaries', kinds: ['fence', 'wall', 'hedge', 'gate'] },
+  {
+    group: 'extras',
+    kinds: ['pond', 'furniture', 'lighting', 'play', 'compost', 'rain-barrel'],
+  },
 ] as const satisfies ReadonlyArray<{ group: string; kinds: readonly ObjectKind[] }>
 export type PaletteGroup = (typeof OBJECT_PALETTE)[number]['group']
 
-/** The kinds in the same palette group as `kind` (what its type can be switched to). */
+/** The kinds in the same palette group (and of the same shape) as `kind`: what it can switch to. */
 export function kindsLike(kind: ObjectKind): readonly ObjectKind[] {
   const group = OBJECT_PALETTE.find((g) => (g.kinds as readonly ObjectKind[]).includes(kind))
-  return group ? group.kinds : [kind]
+  if (!group) return [kind]
+  const shape = OBJECT_PRESETS[kind].shape
+  return (group.kinds as readonly ObjectKind[]).filter((k) => OBJECT_PRESETS[k].shape === shape)
+}
+
+// --- Materials ------------------------------------------------------------------------------
+
+export const MATERIAL_IDS = [
+  'tiles',
+  'natural-stone',
+  'wood',
+  'concrete',
+  'bricks',
+  'gravel',
+  'bark',
+  'grass',
+  'meadow',
+] as const
+export type MaterialId = (typeof MATERIAL_IDS)[number]
+
+/** The materials of a surface kind; the first one is the default. */
+export const MATERIALS_BY_KIND: Partial<Record<ObjectKind, readonly MaterialId[]>> = {
+  terrace: ['tiles', 'natural-stone', 'wood', 'concrete'],
+  path: ['tiles', 'gravel', 'bark', 'natural-stone'],
+  driveway: ['bricks', 'concrete', 'gravel'],
+  gravel: ['gravel', 'bark'],
+  lawn: ['grass', 'meadow'],
+}
+
+export function materialsFor(kind: ObjectKind): readonly MaterialId[] {
+  return MATERIALS_BY_KIND[kind] ?? []
+}
+
+/** The material of an object: its own if valid for its kind, else the kind's first (or null). */
+export function materialOf(object: Pick<GardenObject, 'kind' | 'material'>): MaterialId | null {
+  const list = materialsFor(object.kind)
+  const own = list.find((m) => m === object.material)
+  return own ?? list[0] ?? null
+}
+
+// --- Symbols --------------------------------------------------------------------------------
+
+export const SYMBOL_VARIANT_IDS = [
+  'dining-set',
+  'bench',
+  'lounger',
+  'parasol',
+  'lamp',
+  'swing',
+  'sandbox',
+  'trampoline',
+  'playhouse',
+  'compost-bin',
+  'rain-barrel',
+] as const
+export type SymbolVariantId = (typeof SYMBOL_VARIANT_IDS)[number]
+
+/** A symbol's real size: width (x) × depth (y), or a circle of diameter `widthM`. */
+export type SymbolVariant = {
+  id: SymbolVariantId
+  widthM: number
+  depthM: number
+  round: boolean
+}
+
+const box = (id: SymbolVariantId, widthM: number, depthM: number): SymbolVariant => ({
+  id,
+  widthM,
+  depthM,
+  round: false,
+})
+const disc = (id: SymbolVariantId, diameterM: number): SymbolVariant => ({
+  id,
+  widthM: diameterM,
+  depthM: diameterM,
+  round: true,
+})
+
+/** The variants per point kind; the first is the default. */
+export const SYMBOL_VARIANTS: Partial<Record<ObjectKind, readonly SymbolVariant[]>> = {
+  furniture: [
+    box('dining-set', 2, 1.8),
+    box('bench', 1.5, 0.6),
+    box('lounger', 2, 0.7),
+    disc('parasol', 3),
+  ],
+  lighting: [disc('lamp', 0.3)],
+  play: [
+    box('swing', 3.5, 2),
+    box('sandbox', 1.5, 1.5),
+    disc('trampoline', 3),
+    box('playhouse', 1.5, 1.5),
+  ],
+  compost: [box('compost-bin', 1, 1)],
+  'rain-barrel': [disc('rain-barrel', 0.6)],
+}
+
+/** The symbol of a point kind with the given variant (unknown or none: the first). */
+export function symbolFor(kind: ObjectKind, variant?: string): SymbolVariant | null {
+  const list = SYMBOL_VARIANTS[kind]
+  if (!list) return null
+  return list.find((v) => v.id === variant) ?? list[0] ?? null
+}
+
+/** Radius of the circle around a symbol: half the width if round, else half the diagonal. */
+export function symbolRadiusM(kind: ObjectKind, variant?: string): number {
+  const symbol = symbolFor(kind, variant)
+  if (!symbol) return 0.3
+  return symbol.round ? symbol.widthM / 2 : Math.hypot(symbol.widthM, symbol.depthM) / 2
 }
 
 /** Existing things are on the "existing situation" layer; new ones on their kind's layer. */
