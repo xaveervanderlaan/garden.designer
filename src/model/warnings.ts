@@ -1,8 +1,10 @@
 import { pointInPolygon } from '../geometry/polygon'
-import { type GrowthView, isPlanted, plantingRadiusAtM } from './growth'
+import { MIN_SHADOW_PLANT_HEIGHT_M, SHADOW_PLANT_CATEGORIES } from '../geometry/projectCasters'
+import { dominantSunLevel, type SunHoursResult } from '../geometry/sunHours'
+import { type GrowthView, isPlanted, plantingRadiusAtM, plantSizeAt } from './growth'
 import { findPlant, soilSuitability } from './plants'
 import { hasPlot } from './plot'
-import type { Plant, Planting, Project } from './schema'
+import type { Plant, Planting, Project, SunLevel } from './schema'
 
 /**
  * Planting warnings, computed from the design (never stored). Overlaps are checked at the size the
@@ -17,6 +19,11 @@ export type Warning =
   | { kind: 'outside-plot'; plantingId: string }
   /** The plant doesn't suit the design's soil, or the soil (sand) is too dry for it. */
   | { kind: 'soil'; plantingId: string; suitability: 'dry' | 'unsuited' }
+  /**
+   * The plant's canopy stands mostly in a sun level it doesn't accept, on the sun-hours map (M12).
+   * `far`: two steps off (a full-sun plant in shade, or the reverse).
+   */
+  | { kind: 'sun'; plantingId: string; level: SunLevel; far: boolean }
 
 export type WarningKind = Warning['kind']
 
@@ -27,7 +34,9 @@ export type WarningKind = Warning['kind']
 export type Severity = 'warning' | 'notice'
 
 export function warningSeverity(warning: Warning): Severity {
-  return warning.kind === 'soil' && warning.suitability === 'dry' ? 'notice' : 'warning'
+  if (warning.kind === 'soil') return warning.suitability === 'dry' ? 'notice' : 'warning'
+  if (warning.kind === 'sun') return warning.far ? 'warning' : 'notice'
+  return 'warning'
 }
 
 /** The most serious severity among some warnings. */
@@ -43,6 +52,17 @@ export type WarningOptions = {
   view?: GrowthView
   /** Radius (m) each planting is checked at; default: half its spread in `view`. */
   radiusM?: (planting: Planting) => number
+  /** The latest sun-hours map (M12); without one there are no sun warnings. */
+  sunMap?: SunMapLike | null
+}
+
+export type SunMapLike = Pick<SunHoursResult, 'grid' | 'hours'>
+
+const SUN_RANK: Record<SunLevel, number> = { 'full-sun': 0, 'part-shade': 1, shade: 2 }
+
+/** True when `level` is two steps from every level the plant accepts. */
+function farFromSun(plant: Pick<Plant, 'sun'>, level: SunLevel): boolean {
+  return plant.sun.every((accepted) => Math.abs(SUN_RANK[accepted] - SUN_RANK[level]) >= 2)
 }
 
 export type Circle = { id: string; x: number; y: number; r: number }
@@ -91,6 +111,7 @@ export function plantingWarnings(project: Project, options: WarningOptions = {})
     }
     return plants.get(planting.plantId)
   }
+  const sunMap = options.sunMap ?? null
   const warnings: Warning[] = []
 
   // Overlaps, between the plants in the ground in the viewed year. A hedge is planted to close up,
@@ -134,29 +155,60 @@ export function plantingWarnings(project: Project, options: WarningOptions = {})
     if (suitability !== 'suited') {
       warnings.push({ kind: 'soil', plantingId: planting.id, suitability })
     }
+    if (sunMap && plant && isPlanted(planting.plantedYear, view)) {
+      const size = plantSizeAt(plant, planting.plantedYear, view)
+      // The ground map includes a tall plant's own shade, so it would always look shaded.
+      const castsShade =
+        (SHADOW_PLANT_CATEGORIES as readonly string[]).includes(plant.category) &&
+        size.heightM >= MIN_SHADOW_PLANT_HEIGHT_M
+      if (!castsShade) {
+        const level = dominantSunLevel(
+          sunMap,
+          planting.position,
+          size.spreadM / 2,
+          project.settings.sunThresholds,
+        )
+        if (level && !plant.sun.includes(level)) {
+          warnings.push({
+            kind: 'sun',
+            plantingId: planting.id,
+            level,
+            far: farFromSun(plant, level),
+          })
+        }
+      }
+    }
   }
 
   return warnings.sort((a, b) => order.get(a.plantingId)! - order.get(b.plantingId)!)
 }
 
-const cache = new WeakMap<Project, Map<GrowthView, Warning[]>>()
+const cache = new WeakMap<
+  Project,
+  Map<GrowthView, { sunMap: SunMapLike | null; warnings: Warning[] }>
+>()
 
 /**
- * plantingWarnings for a growth view (default: mature), remembered per project version (projects
- * are never changed in place) and view, so the plan and the warnings list share the work.
+ * plantingWarnings for a growth view (default: mature) and sun map, remembered per project
+ * version (projects are never changed in place) and view, so the plan and the warnings list share
+ * the work. A different map object recomputes.
  */
-export function designWarnings(project: Project, view: GrowthView = 'mature'): Warning[] {
+export function designWarnings(
+  project: Project,
+  view: GrowthView = 'mature',
+  sunMap: SunMapLike | null = null,
+): Warning[] {
   let perView = cache.get(project)
   if (!perView) {
     perView = new Map()
     cache.set(project, perView)
   }
-  let warnings = perView.get(view)
-  if (!warnings) {
-    warnings = plantingWarnings(project, { view })
-    perView.set(view, warnings)
+  let entry = perView.get(view)
+  if (!entry || entry.sunMap !== sunMap) {
+    entry = { sunMap, warnings: plantingWarnings(project, { view, sunMap }) }
+    perView.set(view, entry)
   }
-  return warnings
+  return entry.warnings
 }
 
 /** Warnings per planting id; an overlap is listed under both plants. */
@@ -184,6 +236,8 @@ export type WarningGroup = {
   /** The species involved: one, or two for an overlap between different species. */
   plantIds: string[]
   suitability?: 'dry' | 'unsuited'
+  /** Sun warnings: the level the plants stand in. */
+  level?: SunLevel
   /** Number of warnings in the group. */
   count: number
   plantingIds: string[]
@@ -204,7 +258,8 @@ export function groupWarnings(project: Project, warnings: readonly Warning[]): W
       ids.push(warning.otherId)
     } else {
       plantIds = [plantId]
-      key = `${warning.kind}:${plantId}`
+      key =
+        warning.kind === 'sun' ? `sun:${warning.level}:${plantId}` : `${warning.kind}:${plantId}`
     }
     let group = groups.get(key)
     if (!group) {
@@ -213,6 +268,7 @@ export function groupWarnings(project: Project, warnings: readonly Warning[]): W
         kind: warning.kind,
         plantIds,
         ...(warning.kind === 'soil' ? { suitability: warning.suitability } : {}),
+        ...(warning.kind === 'sun' ? { level: warning.level } : {}),
         count: 0,
         plantingIds: [],
         ids: new Set(),

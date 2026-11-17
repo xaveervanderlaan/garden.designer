@@ -7,7 +7,7 @@ import { z } from 'zod'
  *
  * Changing the shape of stored data? Bump SCHEMA_VERSION and add a migration (see migrations.ts).
  */
-export const SCHEMA_VERSION = 7
+export const SCHEMA_VERSION = 8
 
 export const idSchema = z.string().min(1).max(100)
 
@@ -182,6 +182,10 @@ export const settingsSchema = z.object({
    * of the smaller plant's diameter. 0.2 = 20 %.
    */
   overlapThreshold: z.number().min(0).max(1),
+  /** Sun hours per day for the sun-hours map classes: full sun from, part shade from (M12). */
+  sunThresholds: z
+    .object({ fullSunHours: z.number().min(0).max(24), partShadeHours: z.number().min(0).max(24) })
+    .refine((t) => t.partShadeHours < t.fullSunHours),
   /** Show area labels on the plan (while the measurements layer is visible). */
   areaLabels: z.boolean(),
 })

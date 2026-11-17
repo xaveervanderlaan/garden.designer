@@ -1,3 +1,4 @@
+import { DEFAULT_SUN_THRESHOLDS } from '../geometry/sunHours'
 import { newId } from './ids'
 import {
   LAYER_IDS,
@@ -21,6 +22,7 @@ export const DEFAULT_SETTINGS: Settings = {
   gridSizeM: 0.5,
   soil: 'sand',
   overlapThreshold: DEFAULT_OVERLAP_THRESHOLD,
+  sunThresholds: { ...DEFAULT_SUN_THRESHOLDS },
   areaLabels: false,
 }
 

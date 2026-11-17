@@ -1,3 +1,4 @@
+import { DEFAULT_SUN_THRESHOLDS } from '../geometry/sunHours'
 import { AUTUMN_COLORS, FLOWER_COLORS, FOLIAGE_COLORS, SCHEMA_VERSION } from './schema'
 
 type ProjectData = Record<string, unknown>
@@ -66,6 +67,14 @@ export const MIGRATIONS: Readonly<Record<number, Migration>> = {
   6: (project) => ({
     ...project,
     settings: { ...(isRecord(project.settings) ? project.settings : {}), areaLabels: false },
+  }),
+  /** v8 (M12): `settings.sunThresholds` for the sun-hours classes (6 h / 3 h by default). */
+  7: (project) => ({
+    ...project,
+    settings: {
+      ...(isRecord(project.settings) ? project.settings : {}),
+      sunThresholds: { ...DEFAULT_SUN_THRESHOLDS },
+    },
   }),
 }
 

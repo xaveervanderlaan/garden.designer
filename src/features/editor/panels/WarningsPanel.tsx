@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { formatPercent } from '../../../i18n/units'
 import { validSelection } from '../../../model/edit'
 import type { Project } from '../../../model/schema'
+import { useSunMapStore } from '../../../store/sunMapStore'
 import { designWarnings, groupWarnings } from '../../../model/warnings'
 import { useUiStore } from '../../../store/uiStore'
 import { usePlantView } from '../view/plantView'
@@ -18,7 +19,8 @@ import styles from './panels.module.css'
 export function WarningsPanel({ project }: { project: Project }) {
   const { t } = useTranslation()
   const { year } = usePlantView(project)
-  const warnings = designWarnings(project, year)
+  const sunMap = useSunMapStore((s) => s.result)
+  const warnings = designWarnings(project, year, sunMap)
   const groups = useMemo(() => groupWarnings(project, warnings), [project, warnings])
   const text = useWarningGroupText(project)
 

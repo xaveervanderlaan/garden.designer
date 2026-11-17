@@ -15,6 +15,7 @@ describe('newProject', () => {
       gridSizeM: 0.5,
       soil: 'sand',
       overlapThreshold: 0.2,
+      sunThresholds: { fullSunHours: 6, partShadeHours: 3 },
       areaLabels: false,
     })
     expect(Object.keys(project.layers).sort()).toEqual([...LAYER_IDS].sort())

@@ -141,6 +141,29 @@ describe('warnings', () => {
     })
     expect(within(region(/^Warnings/)).getByTestId('no-warnings')).toBeInTheDocument()
   })
+  it('saves the sun thresholds; rejects part shade ≥ full sun', async () => {
+    const user = await openEditor()
+    await user.click(screen.getByRole('button', { name: 'Design settings' }))
+    const dialog = screen.getByRole('dialog', { name: 'Design settings' })
+    const full = within(dialog).getByLabelText('Full sun from (h)')
+    const part = within(dialog).getByLabelText('Part shade from (h)')
+    await user.clear(part)
+    await user.type(part, '7')
+    await user.click(within(dialog).getByRole('button', { name: 'Save' }))
+    expect(within(dialog).getByRole('alert')).toHaveTextContent('Part shade must start below')
+
+    await user.clear(full)
+    await user.type(full, '5,5')
+    await user.clear(part)
+    await user.type(part, '2')
+    await user.click(within(dialog).getByRole('button', { name: 'Save' }))
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    expect(useProjectStore.getState().project!.settings.sunThresholds).toEqual({
+      fullSunHours: 5.5,
+      partShadeHours: 2,
+    })
+  })
+
   it('saves the location and north angle; rejects an out-of-range latitude', async () => {
     const user = await openEditor()
     await user.click(screen.getByRole('button', { name: 'Design settings' }))

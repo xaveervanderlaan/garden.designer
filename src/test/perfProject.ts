@@ -317,6 +317,7 @@ export function perfProject(plants: readonly Plant[], options: PerfProjectOption
       soil: 'sand',
       overlapThreshold: 0.2,
       areaLabels: false,
+      sunThresholds: { fullSunHours: 6, partShadeHours: 3 },
     },
     plot: { outline: PERF_PLOT.map((p) => ({ ...p })) },
     objects: beds,

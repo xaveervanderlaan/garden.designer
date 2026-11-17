@@ -6,6 +6,7 @@ import type { BedKind } from '../model/beds'
 import type { GrowthStopId } from '../model/growth'
 import type { PaletteGroup, SymbolVariantId } from '../model/objectKinds'
 import type { ObjectKind, Point } from '../model/schema'
+import { resetSunMap } from './sunMapStore'
 
 /**
  * select/pan: the usual. draw: drawing an outline or line (see DrawTarget). calibrate: measuring
@@ -239,5 +240,8 @@ export const useUiStore = create<UiStore>()((set) => ({
   setRectangleDialogOpen: (rectangleDialogOpen) => set({ rectangleDialogOpen }),
   setSitePlanDialogOpen: (sitePlanDialogOpen) => set({ sitePlanDialogOpen }),
   setObjectMenuOpen: (objectMenuOpen) => set({ objectMenuOpen }),
-  reset: () => set({ ...initial }),
+  reset: () => {
+    resetSunMap()
+    set({ ...initial })
+  },
 }))

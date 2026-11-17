@@ -27,6 +27,7 @@ type Errors = {
   name?: boolean
   grid?: boolean
   overlap?: boolean
+  sun?: boolean
   lat?: boolean
   lng?: boolean
   north?: boolean
@@ -42,6 +43,12 @@ function SettingsForm() {
   const [overlap, setOverlap] = useState(() =>
     formatDecimal(project.settings.overlapThreshold * 100, 1),
   )
+  const [fullSun, setFullSun] = useState(() =>
+    formatDecimal(project.settings.sunThresholds.fullSunHours, 1),
+  )
+  const [partShade, setPartShade] = useState(() =>
+    formatDecimal(project.settings.sunThresholds.partShadeHours, 1),
+  )
   const [lat, setLat] = useState(() => formatDecimal(project.settings.location.lat, 4))
   const [lng, setLng] = useState(() => formatDecimal(project.settings.location.lng, 4))
   const [north, setNorth] = useState(() => formatDecimal(project.settings.northAngleDeg, 0))
@@ -51,6 +58,8 @@ function SettingsForm() {
   const soilId = useId()
   const gridId = useId()
   const overlapId = useId()
+  const fullSunId = useId()
+  const partShadeId = useId()
   const latId = useId()
   const lngId = useId()
   const northId = useId()
@@ -73,6 +82,8 @@ function SettingsForm() {
     const cleanName = normaliseName(name)
     const gridM = parseNumber(grid)
     const overlapPercent = parseNumber(overlap)
+    const fullSunH = parseNumber(fullSun)
+    const partShadeH = parseNumber(partShade)
     const latDeg = parseNumber(lat)
     const lngDeg = parseNumber(lng)
     const northDeg = parseNumber(north)
@@ -80,6 +91,12 @@ function SettingsForm() {
       name: !cleanName,
       grid: gridM === undefined || gridM < MIN_GRID_M || gridM > MAX_GRID_M,
       overlap: overlapPercent === undefined || overlapPercent < 0 || overlapPercent > 100,
+      sun:
+        fullSunH === undefined ||
+        partShadeH === undefined ||
+        partShadeH < 0 ||
+        fullSunH > 24 ||
+        partShadeH >= fullSunH,
       lat: latDeg === undefined || latDeg < -90 || latDeg > 90,
       lng: lngDeg === undefined || lngDeg < -180 || lngDeg > 180,
       north: northDeg === undefined,
@@ -94,6 +111,7 @@ function SettingsForm() {
       soil,
       gridSizeM: gridM!,
       overlapThreshold: Math.round(overlapPercent! * 10) / 1000,
+      sunThresholds: { fullSunHours: fullSunH!, partShadeHours: partShadeH! },
       location: { lat: latDeg!, lng: lngDeg! },
       northAngleDeg: normaliseAngle(northDeg!),
     })
@@ -206,6 +224,47 @@ function SettingsForm() {
           </p>
         )}
         <p className={styles.smallHint}>{t('editor.settings.overlapHint')}</p>
+
+        <div className={styles.fieldRow}>
+          <div>
+            <label className={controls.label} htmlFor={fullSunId}>
+              {t('editor.settings.fullSunHours')}
+            </label>
+            <input
+              id={fullSunId}
+              className={cx(controls.input, styles.field)}
+              inputMode="decimal"
+              value={fullSun}
+              aria-invalid={!!errors.sun}
+              onChange={(e) => {
+                setFullSun(e.target.value)
+                setErrors({ ...errors, sun: false })
+              }}
+            />
+          </div>
+          <div>
+            <label className={controls.label} htmlFor={partShadeId}>
+              {t('editor.settings.partShadeHours')}
+            </label>
+            <input
+              id={partShadeId}
+              className={cx(controls.input, styles.field)}
+              inputMode="decimal"
+              value={partShade}
+              aria-invalid={!!errors.sun}
+              onChange={(e) => {
+                setPartShade(e.target.value)
+                setErrors({ ...errors, sun: false })
+              }}
+            />
+          </div>
+        </div>
+        {errors.sun && (
+          <p className={cx(controls.fieldError, styles.fieldErrorTight)} role="alert">
+            {t('editor.settings.sunThresholdsError')}
+          </p>
+        )}
+        <p className={styles.smallHint}>{t('editor.settings.sunThresholdsHint')}</p>
 
         <div className={styles.fieldRow}>
           <div>

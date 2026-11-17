@@ -12,6 +12,7 @@ import { EditorToolbar } from './EditorToolbar'
 import styles from './EditorPage.module.css'
 import { AreasPanel } from './panels/AreasPanel'
 import { LegendPanel } from './panels/LegendPanel'
+import { SunMapPanel } from './sunmap/SunMapPanel'
 import { LayersPanel } from './panels/LayersPanel'
 import { PlantingListPanel } from './panels/PlantingListPanel'
 import { PropertiesPanel } from './panels/PropertiesPanel'
@@ -111,6 +112,7 @@ function Workspace({ project }: { project: Project }) {
         <PlantingListPanel project={project} />
         <AreasPanel project={project} />
         <LegendPanel project={project} />
+        <SunMapPanel project={project} />
         <LayersPanel project={project} />
       </aside>
       <div className={styles.status}>

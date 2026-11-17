@@ -96,14 +96,17 @@ export function northAngleFromPointer(centre: Point, pointer: Point, snap = fals
   return normaliseAngle(snap ? Math.round(deg / SNAP_DEG) * SNAP_DEG : deg)
 }
 
+/** Plant sizes for projectCasters in a growth year (not yet planted: no size). */
+export const growthPlantSize =
+  (year: GrowthView): NonNullable<Parameters<typeof projectCasters>[1]>['plantSize'] =>
+  (planting, plant) =>
+    isPlanted(planting.plantedYear, year)
+      ? plantSizeAt(plant, planting.plantedYear, year)
+      : { heightM: 0, spreadM: 0 }
+
 /** The merged shadow of everything that casts one, at the plant sizes of the viewed year. */
 export function designShadow(project: Project, year: GrowthView, sun: SunPosition): MultiPolygon {
-  const casters = projectCasters(project, {
-    plantSize: (planting, plant) =>
-      isPlanted(planting.plantedYear, year)
-        ? plantSizeAt(plant, planting.plantedYear, year)
-        : { heightM: 0, spreadM: 0 },
-  })
+  const casters = projectCasters(project, { plantSize: growthPlantSize(year) })
   return shadowAt(casters, sun, project.settings.northAngleDeg)
 }
 

@@ -34,6 +34,7 @@ import { findPlant } from '../../../model/plants'
 import { fillBedPositions, plantingLabels } from '../../../model/plantings'
 import { PLOT_ID, PLOT_LAYER, hasPlot } from '../../../model/plot'
 import type { Point } from '../../../model/schema'
+import { useSunMapStore } from '../../../store/sunMapStore'
 import { designWarnings, warningsByPlanting, worstSeverity } from '../../../model/warnings'
 import { useProjectStore } from '../../../store/projectStore'
 import { useUiStore } from '../../../store/uiStore'
@@ -65,6 +66,7 @@ import { PlotOverlay, PlotShape } from './Plot'
 import { useRectangleDrag } from './rectangleDrag'
 import { NorthArrow } from './NorthArrow'
 import { ShadowLayer } from './ShadowLayer'
+import { SunMapLayer } from './SunMapLayer'
 import { SitePlanLayer } from './SitePlan'
 import { snapContext } from './snapTargets'
 import { StampPanel } from './StampPanel'
@@ -126,17 +128,17 @@ export default function GardenCanvas() {
   const selection = useMemo(() => new Set(selectionIds), [selectionIds])
   const lang = currentLanguage()
 
+  const sunMap = useSunMapStore((s) => s.result)
   const warned = useMemo(
     () =>
       new Map(
         project
-          ? [...warningsByPlanting(designWarnings(project, view.year))].map(([id, list]) => [
-              id,
-              worstSeverity(list),
-            ])
+          ? [...warningsByPlanting(designWarnings(project, view.year, sunMap))].map(
+              ([id, list]) => [id, worstSeverity(list)],
+            )
           : [],
       ),
-    [project, view.year],
+    [project, view.year, sunMap],
   )
   const labelsVisible = !!project && isLayerVisible(project, 'labels')
   const labels = useMemo(
@@ -574,6 +576,7 @@ export default function GardenCanvas() {
                 onTransformEnd={onTransformEnd}
               />
             </Layer>
+            <SunMapLayer project={project} viewport={viewport} />
             <ShadowLayer project={project} viewport={viewport} year={view.year} />
             <Layer>
               {plotVisible && (

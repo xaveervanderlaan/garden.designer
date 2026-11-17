@@ -8,6 +8,7 @@ import { updatePlanting } from '../../../model/edit'
 import { allPlants, findPlant, plantName } from '../../../model/plants'
 import { MAX_PLANTED_YEAR, MIN_PLANTED_YEAR } from '../../../model/plantings'
 import { PLANT_CATEGORIES, type Planting, type Project } from '../../../model/schema'
+import { useSunMapStore } from '../../../store/sunMapStore'
 import { designWarnings, warningsByPlanting } from '../../../model/warnings'
 import { useProjectStore } from '../../../store/projectStore'
 import controls from '../../../styles/controls.module.css'
@@ -43,8 +44,9 @@ export function PlantingProperties({
   const years = new Set(plantings.map((p) => p.plantedYear))
   const year = years.size === 1 ? plantings[0]!.plantedYear : undefined
   const bed = single?.bedId ? findBed(project, single.bedId) : undefined
+  const sunMap = useSunMapStore((s) => s.result)
   const warnings = single
-    ? (warningsByPlanting(designWarnings(project, view)).get(single.id) ?? [])
+    ? (warningsByPlanting(designWarnings(project, view, sunMap)).get(single.id) ?? [])
     : []
 
   return (

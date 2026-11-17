@@ -1,6 +1,6 @@
 import { readFileSync, readdirSync } from 'node:fs'
 import { writeFile } from 'node:fs/promises'
-import { type Page, expect, test } from '@playwright/test'
+import { type Page, type TestInfo, expect, test } from '@playwright/test'
 import { type Plant, SCHEMA_VERSION } from '../../src/model/schema.ts'
 import { perfProject } from '../../src/test/perfProject.ts'
 
@@ -128,11 +128,8 @@ async function measure(
   }
 }
 
-test('a design with 1000 plantings opens quickly and pans and zooms smoothly', async ({
-  page,
-}, testInfo) => {
-  test.slow()
-  const errors = collectErrors(page)
+/** Imports the perf design (1000 plantings) on the project list; returns it. */
+async function importPerfDesign(page: Page, testInfo: TestInfo) {
   const project = perfProject(builtInPlants(), { plantings: PLANTINGS })
   const file = testInfo.outputPath('perf.garden.json')
   await writeFile(
@@ -149,6 +146,15 @@ test('a design with 1000 plantings opens quickly and pans and zooms smoothly', a
   await page.goto('./')
   await page.getByTestId('import-input').setInputFiles(file)
   await expect(page.getByRole('status')).toContainText(`Imported “${project.name}”.`)
+  return project
+}
+
+test('a design with 1000 plantings opens quickly and pans and zooms smoothly', async ({
+  page,
+}, testInfo) => {
+  test.slow()
+  const errors = collectErrors(page)
+  const project = await importPerfDesign(page, testInfo)
 
   // Open it: until the plan and the planting list show the whole design.
   const opening = Date.now()
@@ -186,5 +192,74 @@ test('a design with 1000 plantings opens quickly and pans and zooms smoothly', a
   for (const stats of [zoom, pan]) {
     expect(stats.busyMsPerStep ?? stats.drawMsPerStep).toBeLessThan(MAX_BUSY_MS_PER_STEP)
   }
+  expect(errors).toEqual([])
+})
+
+/** Limits for the sun-hours map of the whole perf plot (about 1000 m², growing season). */
+const MAX_SUN_MAP_MS = 5000
+const MAX_SUN_MAP_FRAME_GAP_MS = 200
+
+test('the sun-hours map of a 1000 m² design computes in the background and can be cancelled', async ({
+  page,
+}, testInfo) => {
+  test.slow()
+  const errors = collectErrors(page)
+  const project = await importPerfDesign(page, testInfo)
+  await page.getByRole('link', { name: project.name, exact: true }).click()
+  await expect(page.getByTestId('planting-total')).toHaveText(`${PLANTINGS} plants in total`)
+
+  await page.getByRole('button', { name: 'Sun hours', exact: true }).click()
+  const panel = page.getByTestId('sun-map-panel')
+  await panel.getByRole('radio', { name: 'Growing season' }).check()
+
+  // Start and cancel: no map. The whole map takes well under a second, so the worker's script is
+  // held back until Cancel has been clicked, to cancel a computation that is surely running.
+  let release = () => {}
+  const held = new Promise<void>((resolve) => (release = resolve))
+  await page.context().route('**/sunHours.worker-*.js', async (route) => {
+    await held
+    await route.continue()
+  })
+  await panel.getByTestId('sun-map-compute').click()
+  const progress = panel.getByTestId('sun-map-progress')
+  await expect(progress).toBeVisible()
+  await panel.getByTestId('sun-map-cancel').click()
+  release()
+  await expect(progress).toBeHidden()
+  await expect(panel.locator('[data-testid^="sun-share-"]')).toHaveCount(0)
+
+  // Compute again, timed in the page: until the legend shows, and the longest gap between frames.
+  await page.evaluate(() => {
+    const w = window as unknown as { sunMapTiming: { start: number; ms?: number; maxGap: number } }
+    const timing = { start: performance.now(), maxGap: 0 } as typeof w.sunMapTiming
+    w.sunMapTiming = timing
+    let last = timing.start
+    const tick = (time: number) => {
+      timing.maxGap = Math.max(timing.maxGap, time - last)
+      last = time
+      if (document.querySelector('[data-testid="sun-share-full-sun"]')) {
+        timing.ms = time - timing.start
+        return
+      }
+      requestAnimationFrame(tick)
+    }
+    requestAnimationFrame(tick)
+    document.querySelector<HTMLButtonElement>('[data-testid="sun-map-compute"]')!.click()
+  })
+  const timing = await page.waitForFunction(
+    () => {
+      const t = (window as unknown as { sunMapTiming: { ms?: number; maxGap: number } })
+        .sunMapTiming
+      return t.ms === undefined ? null : { ms: Math.round(t.ms), maxGapMs: Math.round(t.maxGap) }
+    },
+    null,
+    { timeout: 60_000 },
+  )
+  const results = (await timing.jsonValue())!
+  console.log(`Sun-hours map: ${JSON.stringify(results)}`)
+  testInfo.annotations.push({ type: 'performance', description: JSON.stringify(results) })
+
+  expect(results.ms).toBeLessThan(MAX_SUN_MAP_MS)
+  expect(results.maxGapMs).toBeLessThan(MAX_SUN_MAP_FRAME_GAP_MS)
   expect(errors).toEqual([])
 })

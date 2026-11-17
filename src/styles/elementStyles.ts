@@ -226,3 +226,9 @@ export const GRID_COLORS = { minor: '#e6ebe1', major: '#cdd6c6', background: '#f
 
 /** The shadow layer (M11): semi-transparent over the items. */
 export const SHADOW_STYLE = { color: '#1f2a44', opacity: 0.3 }
+
+/** The sun-hours heatmap (M12): one colour per sun level, drawn see-through over the plan. */
+export const SUN_MAP_STYLE = {
+  colors: { 'full-sun': '#f5c518', 'part-shade': '#9b8fd0', shade: '#3f3d8f' },
+  opacity: 0.55,
+} as const

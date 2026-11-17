@@ -149,7 +149,15 @@ describe('migration steps', () => {
     const { areaLabels: _, ...settings } = newProject('Old', 1_700_000_000_000).settings
     const v6 = { ...newProject('Old', 1_700_000_000_000), schemaVersion: 6, settings }
     const migrated = projectSchema.parse(migrateProject(v6))
-    expect(migrated.schemaVersion).toBe(7)
+    expect(migrated.schemaVersion).toBe(8)
     expect(migrated.settings.areaLabels).toBe(false)
+  })
+
+  it('v7 → v8 adds the default sun thresholds', () => {
+    const { sunThresholds: _, ...settings } = newProject('Old', 1_700_000_000_000).settings
+    const v7 = { ...newProject('Old', 1_700_000_000_000), schemaVersion: 7, settings }
+    const migrated = projectSchema.parse(migrateProject(v7))
+    expect(migrated.schemaVersion).toBe(8)
+    expect(migrated.settings.sunThresholds).toEqual({ fullSunHours: 6, partShadeHours: 3 })
   })
 })

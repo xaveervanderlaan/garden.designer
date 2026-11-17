@@ -7,6 +7,7 @@ import {
   findOverlaps,
   groupWarnings,
   overlapFraction,
+  warningSeverity,
   plantingWarnings,
   warningsByPlanting,
 } from './warnings'
@@ -206,5 +207,72 @@ describe('warnings per planting and grouped', () => {
       ['outside-plot', [big.id], 1, ['f']],
     ])
     expect(groups[1]!.suitability).toBe('unsuited')
+  })
+})
+
+describe('sun warnings', () => {
+  const grid = { originX: 0, originY: 0, cellM: 1, cols: 20, rows: 10 }
+  /** Hours per cell: `hoursAt(x, y)`. */
+  const mapOf = (hoursAt: (x: number, y: number) => number) => ({
+    grid,
+    hours: Float32Array.from({ length: 200 }, (_, i) => hoursAt(i % 20, Math.floor(i / 20))),
+  })
+  const herb: Plant = {
+    ...samplePlant,
+    id: 'custom-herb',
+    category: 'perennial',
+    sun: ['full-sun'],
+  }
+  const lover: Plant = { ...herb, id: 'custom-lover', sun: ['part-shade', 'shade'] }
+  const sunny = (plantings: Planting[]) => ({
+    ...design(plantings),
+    customPlants: [herb, lover, samplePlant],
+  })
+
+  it('a full-sun plant on a shaded spot gets a sun warning', () => {
+    const project = sunny([at('a', 'custom-herb', 2.5)])
+    const warnings = plantingWarnings(project, { sunMap: mapOf(() => 1) })
+    expect(warnings).toEqual([{ kind: 'sun', plantingId: 'a', level: 'shade', far: true }])
+    expect(warningSeverity(warnings[0]!)).toBe('warning')
+    const groups = groupWarnings(project, warnings)
+    expect(groups[0]).toMatchObject({ key: 'sun:shade:custom-herb', level: 'shade' })
+  })
+
+  it('a one-step mismatch is a notice', () => {
+    const project = sunny([at('a', 'custom-herb', 2.5)])
+    const [warning] = plantingWarnings(project, { sunMap: mapOf(() => 4) })
+    expect(warning).toMatchObject({ kind: 'sun', level: 'part-shade', far: false })
+    expect(warningSeverity(warning!)).toBe('notice')
+    // The thresholds are a design setting.
+    const strict = {
+      ...project,
+      settings: { ...project.settings, sunThresholds: { fullSunHours: 4, partShadeHours: 1 } },
+    }
+    expect(plantingWarnings(strict, { sunMap: mapOf(() => 4) })).toEqual([])
+    // A shade lover is fine in full sun only when it accepts it.
+    const lov = sunny([at('b', 'custom-lover', 2.5)])
+    expect(plantingWarnings(lov, { sunMap: mapOf(() => 9) })[0]).toMatchObject({
+      level: 'full-sun',
+      far: false,
+    })
+  })
+
+  it('no sun warning without a map, for existing plantings or for plants that cast shade', () => {
+    const shaded = mapOf(() => 1)
+    expect(plantingWarnings(sunny([at('a', 'custom-herb', 2.5)]))).toEqual([])
+    const existing = { ...at('a', 'custom-herb', 2.5), status: 'existing' as const }
+    expect(plantingWarnings(sunny([existing]), { sunMap: shaded })).toEqual([])
+    // samplePlant is a 0.6 m shrub: it shades its own spot.
+    expect(plantingWarnings(sunny([at('a', 'custom-lavender', 2.5)]), { sunMap: shaded })).toEqual(
+      [],
+    )
+    // Not in the ground yet in the viewed year.
+    expect(
+      plantingWarnings(sunny([at('a', 'custom-herb', 2.5)]), { sunMap: shaded, view: 2026 }),
+    ).toEqual([])
+    // designWarnings follows the map it is given.
+    const project = sunny([at('a', 'custom-herb', 2.5)])
+    expect(designWarnings(project, 'mature', shaded)).toHaveLength(1)
+    expect(designWarnings(project, 'mature', null)).toHaveLength(0)
   })
 })

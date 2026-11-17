@@ -514,6 +514,9 @@
       "soilDryOne": "Isn’t drought tolerant, and sand dries out: water it in dry spells.",
       "soilUnsuitedOne": "Doesn’t suit your soil ({{soil}}).",
       "overlapSame": "{{name}} too close together",
+      "sun": "{{name}} stands in {{level}}",
+      "sunOne": "Stands in {{level}} on the sun-hours map; prefers {{needs}}.",
+      "or": " or ",
       "overlapPair": "{{a}} and {{b}} overlap",
       "outside": "{{name}} outside the plot",
       "soilDry": "{{name}}: not drought tolerant",
@@ -582,6 +585,10 @@
       "invalidGrid": "Enter a grid size between 0,01 and 100 m.",
       "invalidOverlap": "Enter a percentage between 0 and 100.",
       "overlapHint": "Two plants get a warning when, at full size, they overlap by more than this share of the smaller plant’s width.",
+      "fullSunHours": "Full sun from (h)",
+      "partShadeHours": "Part shade from (h)",
+      "sunThresholdsHint": "Hours of direct sun a day for the sun-hours map and sun warnings: at least the first is full sun, from the second on part shade, less is shade.",
+      "sunThresholdsError": "Part shade must start below full sun; both between 0 and 24 hours.",
       "latitude": "Latitude (°)",
       "longitude": "Longitude (°)",
       "northAngle": "North (°)",
@@ -699,6 +706,30 @@
         "beds": "Beds",
         "buildings": "Buildings"
       }
+    },
+    "sunMap": {
+      "title": "Sun hours",
+      "day": "Day",
+      "season": "Growing season",
+      "oneDay": "One day",
+      "date": "Date",
+      "cellSize": "Cell size",
+      "compute": "Compute",
+      "recompute": "Recompute",
+      "computing": "Computing the sun hours",
+      "cancel": "Cancel",
+      "clear": "Clear",
+      "show": "Show on plan",
+      "stale": "The design changed since this map was computed.",
+      "noPlot": "Draw the plot first: the map covers the plot.",
+      "daylight": "Daylight",
+      "range": {
+        "full": "≥ {{hours}} h",
+        "part": "{{from}}–{{to}} h",
+        "shade": "< {{hours}} h"
+      },
+      "share": "Share of the plot",
+      "failed": "The sun hours could not be computed."
     },
     "legend": {
       "title": "Legend",

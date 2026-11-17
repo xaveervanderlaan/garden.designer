@@ -514,6 +514,9 @@
       "soilDryOne": "Niet droogtebestendig, en zand droogt snel uit: water geven bij droogte.",
       "soilUnsuitedOne": "Past niet bij je grond ({{soil}}).",
       "overlapSame": "{{name}} staat te dicht op elkaar",
+      "sun": "{{name}} staat in {{level}}",
+      "sunOne": "Staat in {{level}} op de zonuurkaart; houdt van {{needs}}.",
+      "or": " of ",
       "overlapPair": "{{a}} en {{b}} overlappen",
       "outside": "{{name}} buiten het perceel",
       "soilDry": "{{name}}: niet droogtebestendig",
@@ -582,6 +585,10 @@
       "invalidGrid": "Vul een rastermaat in tussen 0,01 en 100 m.",
       "invalidOverlap": "Vul een percentage in tussen 0 en 100.",
       "overlapHint": "Twee planten krijgen een waarschuwing als ze volgroeid meer dan dit deel van de breedte van de kleinste plant overlappen.",
+      "fullSunHours": "Volle zon vanaf (u)",
+      "partShadeHours": "Halfschaduw vanaf (u)",
+      "sunThresholdsHint": "Uren directe zon per dag voor de zonuurkaart en zonwaarschuwingen: minstens het eerste is volle zon, vanaf het tweede halfschaduw, minder is schaduw.",
+      "sunThresholdsError": "Halfschaduw moet onder volle zon beginnen; beide tussen 0 en 24 uur.",
       "latitude": "Breedtegraad (°)",
       "longitude": "Lengtegraad (°)",
       "northAngle": "Noorden (°)",
@@ -699,6 +706,30 @@
         "beds": "Borders",
         "buildings": "Gebouwen"
       }
+    },
+    "sunMap": {
+      "title": "Zonuren",
+      "day": "Dag",
+      "season": "Groeiseizoen",
+      "oneDay": "Eén dag",
+      "date": "Datum",
+      "cellSize": "Celgrootte",
+      "compute": "Berekenen",
+      "recompute": "Opnieuw berekenen",
+      "computing": "Zonuren worden berekend",
+      "cancel": "Annuleren",
+      "clear": "Wissen",
+      "show": "Tonen op plattegrond",
+      "stale": "Het ontwerp is gewijzigd sinds deze kaart is berekend.",
+      "noPlot": "Teken eerst het perceel: de kaart beslaat het perceel.",
+      "daylight": "Daglicht",
+      "range": {
+        "full": "≥ {{hours}} u",
+        "part": "{{from}}–{{to}} u",
+        "shade": "< {{hours}} u"
+      },
+      "share": "Aandeel van het perceel",
+      "failed": "De zonuren konden niet worden berekend."
     },
     "legend": {
       "title": "Legenda",

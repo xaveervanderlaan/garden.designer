@@ -46,6 +46,16 @@ export function useWarningText(
         return warning.suitability === 'dry'
           ? t('editor.warnings.soilDryOne')
           : t('editor.warnings.soilUnsuitedOne', { soil })
+      case 'sun': {
+        const plant = project.plantings.find((p) => p.id === about)
+        const needs = (plant ? (findPlant(project, plant.plantId)?.sun ?? []) : [])
+          .map((level) => t(`plants.sun.${level}`).toLowerCase())
+          .join(t('editor.warnings.or'))
+        return t('editor.warnings.sunOne', {
+          level: t(`plants.sun.${warning.level}`).toLowerCase(),
+          needs,
+        })
+      }
     }
   }
 }
@@ -68,6 +78,11 @@ export function useWarningGroupText(project: Project): (group: WarningGroup) => 
         return group.suitability === 'dry'
           ? t('editor.warnings.soilDry', { name: nameOf(a) })
           : t('editor.warnings.soilUnsuited', { name: nameOf(a), soil })
+      case 'sun':
+        return t('editor.warnings.sun', {
+          name: nameOf(a),
+          level: t(`plants.sun.${group.level ?? 'shade'}`).toLowerCase(),
+        })
     }
   }
 }
