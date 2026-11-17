@@ -62,6 +62,11 @@ export const MIGRATIONS: Readonly<Record<number, Migration>> = {
    * silently dropping the fields.
    */
   5: (project) => project,
+  /** v7 (M10): the `dimension` kind and `settings.areaLabels`. */
+  6: (project) => ({
+    ...project,
+    settings: { ...(isRecord(project.settings) ? project.settings : {}), areaLabels: false },
+  }),
 }
 
 const isOneOf = <T extends string>(list: readonly T[], value: unknown): value is T =>

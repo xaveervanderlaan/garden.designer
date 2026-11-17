@@ -1,8 +1,9 @@
 import { useEffect, useId, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { rowPositions } from '../../../geometry/planting'
+import { perimeter } from '../../../geometry/polygon'
 import { currentLanguage } from '../../../i18n'
-import { formatDecimal, parseNumber } from '../../../i18n/units'
+import { formatDecimal, formatLength, parseNumber } from '../../../i18n/units'
 import { OBJECT_PRESETS } from '../../../model/objectKinds'
 import { findPlant, plantName } from '../../../model/plants'
 import type { Point } from '../../../model/schema'
@@ -23,6 +24,7 @@ type ErrorKey =
   | 'editor.placing.rowNeedsPoints'
   | 'editor.objects.drawing.needMoreCorners'
   | 'editor.objects.drawing.needMorePoints'
+  | 'editor.measure.tooFew'
 
 const NO_POINTS: readonly Point[] = []
 
@@ -35,6 +37,8 @@ function tooFewError(target: DrawTarget): ErrorKey | null {
       return 'editor.beds.needMoreCorners'
     case 'row':
       return 'editor.placing.rowNeedsPoints'
+    case 'measure':
+      return 'editor.measure.tooFew'
     case 'object': {
       const shape = drawingShape(target)
       return shape === 'polygon'
@@ -120,11 +124,13 @@ export function DrawingPanel({ towards }: { towards: Point | null }) {
   }
 
   const shape = drawingShape(target)
+  const measuring = target.kind === 'measure'
   const isObject = target.kind === 'object'
   const defaultSize =
     target.kind === 'object' && corners === 0 ? OBJECT_PRESETS[target.objectKind].sizeM : undefined
-  const hint =
-    corners === 0
+  const hint = measuring
+    ? t('editor.measure.hint')
+    : corners === 0
       ? isObject
         ? t(
             shape === 'polygon'
@@ -184,6 +190,12 @@ export function DrawingPanel({ towards }: { towards: Point | null }) {
             <span>°</span>
           </>
         )}
+        {measuring && (
+          <span className={styles.drawingMeasured}>
+            {t('editor.measure.total')}{' '}
+            <output data-testid="measure-total">{formatLength(perimeter(points, false))}</output>
+          </span>
+        )}
         {target.kind === 'row' && (
           <RowSpacing spacingM={target.spacingM} count={rowCount(points, target.spacingM)} />
         )}
@@ -210,7 +222,11 @@ export function DrawingPanel({ towards }: { towards: Point | null }) {
               disabled={corners < minimum}
               onClick={() => editorActions.finishDrawing()}
             >
-              {target.kind === 'row' ? t('editor.placing.plantRow') : t('editor.drawing.finish')}
+              {target.kind === 'row'
+                ? t('editor.placing.plantRow')
+                : measuring
+                  ? t('editor.measure.keep')
+                  : t('editor.drawing.finish')}
             </button>
           )}
           <button
@@ -218,7 +234,7 @@ export function DrawingPanel({ towards }: { towards: Point | null }) {
             className={cx(controls.button, controls.quiet, controls.small)}
             onClick={() => editorActions.cancelDrawing()}
           >
-            {t('common.cancel')}
+            {measuring ? t('editor.measure.done') : t('common.cancel')}
           </button>
         </span>
       </div>
@@ -252,7 +268,11 @@ function DrawingTitle({ target }: { target: DrawTarget }) {
           ? t('editor.objects.drawing.title', {
               kind: t(`editor.objectKinds.${target.objectKind}`),
             })
-          : t('editor.placing.rowTitle', { name: plant ? plantName(plant, currentLanguage()) : '' })
+          : target.kind === 'measure'
+            ? t('editor.measure.title')
+            : t('editor.placing.rowTitle', {
+                name: plant ? plantName(plant, currentLanguage()) : '',
+              })
   return <span className={styles.drawingTitle}>{title}</span>
 }
 

@@ -21,6 +21,7 @@ export const DEFAULT_SETTINGS: Settings = {
   gridSizeM: 0.5,
   soil: 'sand',
   overlapThreshold: DEFAULT_OVERLAP_THRESHOLD,
+  areaLabels: false,
 }
 
 export function defaultLayers(): Layers {

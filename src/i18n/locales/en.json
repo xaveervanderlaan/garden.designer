@@ -79,6 +79,7 @@
       "redo": "Redo",
       "select": "Select",
       "pan": "Pan",
+      "measure": "Measure",
       "zoomIn": "Zoom in",
       "zoomOut": "Zoom out",
       "zoomFit": "Zoom to fit",
@@ -268,7 +269,8 @@
         "shadows": "Shadows & sun",
         "measurements": "Measurements",
         "labels": "Labels"
-      }
+      },
+      "areaLabels": "Area labels"
     },
     "objectKinds": {
       "house": "House",
@@ -293,7 +295,8 @@
       "compost": "Compost bin",
       "rain-barrel": "Rain barrel",
       "bed-ornamental": "Ornamental bed",
-      "bed-vegetable": "Vegetable bed"
+      "bed-vegetable": "Vegetable bed",
+      "dimension": "Dimension"
     },
     "shortcuts": {
       "title": "Keyboard shortcuts",
@@ -313,6 +316,7 @@
       "zoomFit": "Zoom to fit",
       "toolSelect": "Select tool",
       "toolPan": "Pan tool",
+      "measure": "Measure distances",
       "help": "Show this list",
       "spacePan": "Pan the plan",
       "middlePan": "Pan the plan",
@@ -451,6 +455,14 @@
       "selfIntersecting": "The outline crosses itself, so the area is not reliable. Move a corner to fix it.",
       "fillHint": "To fill this bed, open a plant in the library and choose “Fill bed”.",
       "cornerHint": "Drag a corner to move it, or click it to select it (Delete removes it). Drag or click the dot on an edge to add a corner."
+    },
+    "measure": {
+      "title": "Measure:",
+      "hint": "Click point to point (or type a length and press Enter). Backspace removes the last point.",
+      "total": "Total",
+      "keep": "Keep as dimension",
+      "done": "Done",
+      "tooFew": "Click at least two points to keep a dimension."
     },
     "placing": {
       "title": "Put on the plan",
@@ -665,6 +677,26 @@
       "playhouse": "Playhouse",
       "compost-bin": "Compost bin",
       "rain-barrel": "Rain barrel"
+    },
+    "areas": {
+      "title": "Areas",
+      "plot": "Plot",
+      "total": "Total",
+      "insidePlot": "Only the part inside the plot is counted; surfaces are net of what lies on top of them.",
+      "empty": "No surfaces, beds or buildings yet.",
+      "groups": {
+        "paved": "Paved",
+        "green": "Green",
+        "water": "Water",
+        "beds": "Beds",
+        "buildings": "Buildings"
+      }
+    },
+    "legend": {
+      "title": "Legend",
+      "empty": "Nothing to show yet.",
+      "plot": "Plot",
+      "existing": "Existing (shown muted)"
     }
   },
   "plants": {

@@ -4,6 +4,7 @@ import {
   direction,
   edgeLengths,
   isSelfIntersecting,
+  labelPoint,
   nearestPointOnSegment,
   perimeter,
   pointAt,
@@ -105,5 +106,34 @@ describe('angles', () => {
 
   it('rounds coordinates to a micrometre', () => {
     expect(roundPoint({ x: 11.9999999999998, y: -1e-12 })).toEqual({ x: 12, y: 0 })
+  })
+})
+
+describe('labelPoint', () => {
+  it('is the centroid of a convex polygon', () => {
+    const p = labelPoint([
+      { x: 0, y: 0 },
+      { x: 4, y: 0 },
+      { x: 4, y: 2 },
+      { x: 0, y: 2 },
+    ])
+    expect(p.x).toBeCloseTo(2)
+    expect(p.y).toBeCloseTo(1)
+  })
+
+  it('labelPoint inside a concave polygon', () => {
+    // a U shape whose centroid lies in the notch
+    const u = [
+      { x: 0, y: 0 },
+      { x: 9, y: 0 },
+      { x: 9, y: 10 },
+      { x: 6, y: 10 },
+      { x: 6, y: 2 },
+      { x: 3, y: 2 },
+      { x: 3, y: 10 },
+      { x: 0, y: 10 },
+    ]
+    const p = labelPoint(u)
+    expect(pointInPolygon(p, u)).toBe(true)
   })
 })

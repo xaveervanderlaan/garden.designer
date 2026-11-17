@@ -12,6 +12,7 @@ import {
   RectangleHorizontal,
   Redo2,
   Ruler,
+  RulerDimensionLine,
   Scan,
   Settings,
   Undo2,
@@ -133,6 +134,14 @@ export function EditorToolbar({ project }: { project: Project }) {
             onClick={() => editorActions.setTool('pan')}
           >
             <Hand {...icon} />
+          </ToolButton>
+          <ToolButton
+            label={t('editor.toolbar.measure')}
+            shortcut="measure"
+            pressed={tool === 'draw' && drawTarget === 'measure'}
+            onClick={() => editorActions.startMeasure()}
+          >
+            <RulerDimensionLine {...icon} />
           </ToolButton>
         </div>
         <div className={styles.toolGroup}>

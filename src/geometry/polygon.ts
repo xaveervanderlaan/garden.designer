@@ -132,3 +132,48 @@ export function roundPoint(p: Point): Point {
   const round = (v: number) => Math.round(v * 1e6) / 1e6 || 0
   return { x: round(p.x), y: round(p.y) }
 }
+
+/**
+ * A good spot for a label inside a polygon: the area centroid if that lies inside, else the
+ * midpoint of the widest horizontal chord through the centroid's y.
+ */
+export function labelPoint(points: readonly Point[]): Point {
+  if (points.length === 0) return { x: 0, y: 0 }
+  let a = 0
+  let cx = 0
+  let cy = 0
+  for (let i = 0; i < points.length; i++) {
+    const p = points[i]!
+    const q = points[(i + 1) % points.length]!
+    const cross = p.x * q.y - q.x * p.y
+    a += cross
+    cx += (p.x + q.x) * cross
+    cy += (p.y + q.y) * cross
+  }
+  const mean = {
+    x: points.reduce((s, p) => s + p.x, 0) / points.length,
+    y: points.reduce((s, p) => s + p.y, 0) / points.length,
+  }
+  if (Math.abs(a) < 1e-12) return mean
+  const centroid = { x: cx / (3 * a), y: cy / (3 * a) }
+  if (pointInPolygon(centroid, points)) return centroid
+  const xs: number[] = []
+  for (let i = 0; i < points.length; i++) {
+    const p = points[i]!
+    const q = points[(i + 1) % points.length]!
+    if (p.y > centroid.y !== q.y > centroid.y) {
+      xs.push(p.x + ((centroid.y - p.y) / (q.y - p.y)) * (q.x - p.x))
+    }
+  }
+  xs.sort((m, n) => m - n)
+  let best: Point | null = null
+  let widest = -1
+  for (let i = 0; i + 1 < xs.length; i += 2) {
+    const w = xs[i + 1]! - xs[i]!
+    if (w > widest) {
+      widest = w
+      best = { x: (xs[i]! + xs[i + 1]!) / 2, y: centroid.y }
+    }
+  }
+  return best ?? mean
+}

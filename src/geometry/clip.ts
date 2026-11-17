@@ -44,3 +44,45 @@ export function differenceArea(
     return multiPolygonArea(rest)
   }
 }
+
+/**
+ * Area in m² of `subject` minus `minus`, limited to `within` (null: no limit). Same fallback as
+ * `differenceArea` when polygon-clipping throws on nearly coincident edges.
+ */
+export function areaWithin(
+  subject: readonly Point[],
+  within: readonly Point[] | null,
+  minus: readonly (readonly Point[])[],
+): number {
+  if (subject.length < 3) return 0
+  const box = boundsOfPoints(subject)
+  if (!box) return 0
+  const limit = within && within.length >= 3 ? within : null
+  const near = minus.filter((c) => {
+    const b = boundsOfPoints(c)
+    return b !== null && c.length >= 3 && overlaps(box, b)
+  })
+  if (!limit && near.length === 0) return multiPolygonArea([ring(subject)])
+  let rest: MultiPolygon
+  try {
+    rest =
+      near.length === 0
+        ? [ring(subject)]
+        : (polygonClipping.difference(ring(subject), ...near.map((c) => ring(c))) as MultiPolygon)
+  } catch {
+    rest = [ring(subject)]
+    for (const clip of near) {
+      try {
+        rest = polygonClipping.difference(rest, ring(clip)) as MultiPolygon
+      } catch {
+        // skip a clip that still fails
+      }
+    }
+  }
+  if (!limit) return multiPolygonArea(rest)
+  try {
+    return multiPolygonArea(polygonClipping.intersection(rest, ring(limit)) as MultiPolygon)
+  } catch {
+    return multiPolygonArea(rest)
+  }
+}

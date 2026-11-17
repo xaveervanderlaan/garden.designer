@@ -14,13 +14,15 @@ export type Tool = 'select' | 'pan' | 'draw' | 'calibrate' | 'stamp' | 'fill'
 
 /**
  * What the drawing tool makes: the plot outline, a bed, a row of plants along a line, or an object
- * of any kind (its preset says whether that is an outline, a line or a single point).
+ * of any kind (its preset says whether that is an outline, a line or a single point), or a
+ * measurement (a line whose total length is shown; it can be kept as a dimension).
  */
 export type DrawTarget =
   | { kind: 'plot' }
   | { kind: 'bed'; bedKind: BedKind }
   | { kind: 'row'; plantId: string; spacingM: number }
   | { kind: 'object'; objectKind: ObjectKind; variant?: SymbolVariantId }
+  | { kind: 'measure' }
 
 /** An outline or line being drawn: what it's for and the corners placed so far (world metres). */
 export type Drawing = { target: DrawTarget; points: Point[] }

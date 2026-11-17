@@ -6,6 +6,7 @@ import {
   BOUNDARY_LOOKS,
   type BoundaryKind,
   DEFAULT_STROKE_PX,
+  DIMENSION_STYLE,
   type ElementPattern,
   type ElementStyle,
   EXISTING_STYLE,
@@ -309,6 +310,80 @@ export function drawBoundary(
     }
     ctx.fillStyle = style.stroke
     ctx.fill()
+  }
+  ctx.restore()
+}
+
+/** Unit vector from a to b (zero when they coincide). */
+function unit(a: Point, b: Point): Point {
+  const length = Math.hypot(b.x - a.x, b.y - a.y)
+  return length > 1e-12 ? { x: (b.x - a.x) / length, y: (b.y - a.y) / length } : { x: 0, y: 0 }
+}
+
+/**
+ * A dimension (a kept measurement): a thin line with a perpendicular tick at every vertex and each
+ * segment's length at its middle, reading left to right on screen. A length is left out when its
+ * segment is shorter on screen than the text.
+ */
+export function drawDimension(
+  ctx: CanvasRenderingContext2D,
+  points: readonly Point[],
+  pxPerM: number,
+  look: { selected: boolean },
+  formatLength: (metres: number) => string,
+): void {
+  if (points.length < 2) return
+  const px = 1 / pxPerM
+  const { color, widthPx, tickPx, fontPx } = DIMENSION_STYLE
+  ctx.save()
+  ctx.lineJoin = 'round'
+  ctx.lineCap = 'butt'
+  if (look.selected) {
+    tracePolyline(ctx, points)
+    ctx.strokeStyle = SELECTION_COLOR
+    ctx.lineWidth = (widthPx + 5) * px
+    ctx.stroke()
+  }
+  ctx.beginPath()
+  points.forEach((p, i) => {
+    // Perpendicular to the line there (the average direction at a bend).
+    const into = i > 0 ? unit(points[i - 1]!, p) : { x: 0, y: 0 }
+    const out = i < points.length - 1 ? unit(p, points[i + 1]!) : { x: 0, y: 0 }
+    const along = unit({ x: 0, y: 0 }, { x: into.x + out.x, y: into.y + out.y })
+    const dir = along.x === 0 && along.y === 0 ? (i > 0 ? into : out) : along
+    const half = (tickPx / 2) * px
+    ctx.moveTo(p.x - dir.y * half, p.y + dir.x * half)
+    ctx.lineTo(p.x + dir.y * half, p.y - dir.x * half)
+  })
+  points.forEach((p, i) => (i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y)))
+  ctx.strokeStyle = color
+  ctx.lineWidth = widthPx * px
+  ctx.stroke()
+
+  const matrix = ctx.getTransform()
+  ctx.font = `${fontPx}px system-ui, sans-serif`
+  ctx.textAlign = 'center'
+  ctx.textBaseline = 'bottom'
+  ctx.lineJoin = 'round'
+  for (let i = 1; i < points.length; i++) {
+    const a = points[i - 1]!
+    const b = points[i]!
+    const length = Math.hypot(b.x - a.x, b.y - a.y)
+    const text = formatLength(length)
+    if (length * pxPerM < ctx.measureText(text).width + tickPx * 2) continue
+    // Flip the text when the segment points left on screen, so it never reads upside down.
+    const screenDx = matrix.a * (b.x - a.x) + matrix.c * (b.y - a.y)
+    const angle = Math.atan2(b.y - a.y, b.x - a.x) + (screenDx < -1e-9 ? Math.PI : 0)
+    ctx.save()
+    ctx.translate((a.x + b.x) / 2, (a.y + b.y) / 2)
+    ctx.rotate(angle)
+    ctx.scale(px, px)
+    ctx.lineWidth = 3
+    ctx.strokeStyle = '#ffffff'
+    ctx.strokeText(text, 0, -2)
+    ctx.fillStyle = color
+    ctx.fillText(text, 0, -2)
+    ctx.restore()
   }
   ctx.restore()
 }

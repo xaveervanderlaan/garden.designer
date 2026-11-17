@@ -79,6 +79,7 @@
       "redo": "Opnieuw",
       "select": "Selecteren",
       "pan": "Verschuiven",
+      "measure": "Meten",
       "zoomIn": "Inzoomen",
       "zoomOut": "Uitzoomen",
       "zoomFit": "Alles in beeld",
@@ -268,7 +269,8 @@
         "shadows": "Schaduw & zon",
         "measurements": "Maten",
         "labels": "Labels"
-      }
+      },
+      "areaLabels": "Oppervlaktelabels"
     },
     "objectKinds": {
       "house": "Huis",
@@ -293,7 +295,8 @@
       "compost": "Compostbak",
       "rain-barrel": "Regenton",
       "bed-ornamental": "Border",
-      "bed-vegetable": "Moestuinbed"
+      "bed-vegetable": "Moestuinbed",
+      "dimension": "Maatlijn"
     },
     "shortcuts": {
       "title": "Sneltoetsen",
@@ -313,6 +316,7 @@
       "zoomFit": "Alles in beeld",
       "toolSelect": "Selecteergereedschap",
       "toolPan": "Verschuifgereedschap",
+      "measure": "Afstanden meten",
       "help": "Deze lijst tonen",
       "spacePan": "Plattegrond verschuiven",
       "middlePan": "Plattegrond verschuiven",
@@ -451,6 +455,14 @@
       "selfIntersecting": "De omtrek kruist zichzelf, dus de oppervlakte klopt niet. Verplaats een hoek om dat op te lossen.",
       "fillHint": "Om dit bed te vullen: open een plant in de bibliotheek en kies ‘Bed vullen’.",
       "cornerHint": "Sleep een hoek om hem te verplaatsen, of klik erop om hem te selecteren (Delete verwijdert hem). Sleep of klik op het bolletje op een zijde om een hoek toe te voegen."
+    },
+    "measure": {
+      "title": "Meten:",
+      "hint": "Klik van punt naar punt (of typ een lengte en druk op Enter). Backspace haalt het laatste punt weg.",
+      "total": "Totaal",
+      "keep": "Bewaren als maatlijn",
+      "done": "Klaar",
+      "tooFew": "Klik minstens twee punten om een maatlijn te bewaren."
     },
     "placing": {
       "title": "Op de tekening zetten",
@@ -665,6 +677,26 @@
       "playhouse": "Speelhuisje",
       "compost-bin": "Compostbak",
       "rain-barrel": "Regenton"
+    },
+    "areas": {
+      "title": "Oppervlakten",
+      "plot": "Perceel",
+      "total": "Totaal",
+      "insidePlot": "Alleen het deel binnen het perceel telt mee; verhardingen zijn netto, zonder wat erop ligt.",
+      "empty": "Nog geen verhardingen, borders of gebouwen.",
+      "groups": {
+        "paved": "Verhard",
+        "green": "Groen",
+        "water": "Water",
+        "beds": "Borders",
+        "buildings": "Gebouwen"
+      }
+    },
+    "legend": {
+      "title": "Legenda",
+      "empty": "Nog niets te tonen.",
+      "plot": "Perceel",
+      "existing": "Bestaand (gedempt getoond)"
     }
   },
   "plants": {

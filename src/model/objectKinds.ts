@@ -15,7 +15,7 @@ export type ObjectShapeType = 'polygon' | 'polyline' | 'point'
  * of `project.objects` (or `project.plantings`): later is on top. Bring forward / send back
  * reorders within a band (model/drawOrder.ts), so the order is saved with the design.
  */
-export const DRAW_BANDS = ['surface', 'bed', 'plant', 'structure', 'canopy'] as const
+export const DRAW_BANDS = ['surface', 'bed', 'plant', 'structure', 'canopy', 'annotation'] as const
 export type DrawBand = (typeof DRAW_BANDS)[number]
 
 export type ObjectPreset = {
@@ -131,6 +131,15 @@ export const OBJECT_PRESETS: Record<ObjectKind, ObjectPreset> = {
     status: 'new',
     editing: 'corners',
     sizeM: { width: 3, depth: 1.2 },
+  },
+  // A kept measurement: always on the measurements layer, drawn above everything.
+  dimension: {
+    shape: 'polyline',
+    band: 'annotation',
+    layer: 'measurements',
+    status: 'new',
+    editing: 'transform',
+    thicknessM: 0.05,
   },
 }
 
@@ -265,6 +274,7 @@ export function symbolRadiusM(kind: ObjectKind, variant?: string): number {
 
 /** Existing things are on the "existing situation" layer; new ones on their kind's layer. */
 export function objectLayer(kind: ObjectKind, status: ObjectStatus): LayerId {
+  if (kind === 'dimension') return 'measurements'
   return status === 'existing' ? 'existing' : OBJECT_PRESETS[kind].layer
 }
 

@@ -8,6 +8,7 @@ import { isLayerEditable, isLayerVisible } from '../../../model/edit'
 import { type DrawBand, editedByCorners } from '../../../model/objectKinds'
 import { findPlant, plantingLayer } from '../../../model/plants'
 import type { GardenObject, Point, Project } from '../../../model/schema'
+import type { PlanLabel } from '../../../model/areas'
 import type { Severity } from '../../../model/warnings'
 import type { LabelMode } from '../../../store/uiStore'
 import {
@@ -61,6 +62,8 @@ type ItemsProps = {
   /** Label text per planting, or null when labels are hidden. */
   labels: ReadonlyMap<string, string> | null
   labelMode: LabelMode
+  /** Object names and areas, or null when both are off. */
+  planLabels: readonly PlanLabel[] | null
   objectDraft: ObjectDraft | null
   /** The year and month plants are drawn for (view bar). */
   view: PlantView
@@ -88,6 +91,7 @@ export const Items = memo(function Items({
   warned,
   labels,
   labelMode,
+  planLabels,
   objectDraft,
   view,
 }: ItemsProps) {
@@ -160,6 +164,10 @@ export const Items = memo(function Items({
         labelMode={labelMode}
         offset={handlers.offset}
       />
+      {planLabels && planLabels.length > 0 && (
+        <PlanLabels project={project} labels={planLabels} offset={handlers.offset} />
+      )}
+      {objects('annotation')}
     </>
   )
 })
@@ -285,6 +293,56 @@ function PlantMarks({
             scale,
             mark.warning,
           )
+        }
+      }}
+    />
+  )
+}
+
+const PLAN_LABEL_LINE_PX = 13
+
+/**
+ * Object names and areas, one text block per object, drawn by one shape. A block wider than its
+ * object on screen is skipped. It follows objects that are being dragged.
+ */
+function PlanLabels({
+  project,
+  labels,
+  offset,
+}: {
+  project: Project
+  labels: readonly PlanLabel[]
+  offset: (id: string) => Point
+}) {
+  const boxes = new Map<string, { w: number; h: number }>()
+  for (const object of project.objects) {
+    const pts = shapePoints(object.shape)
+    if (pts.length === 0) continue
+    const xs = pts.map((p) => p.x)
+    const ys = pts.map((p) => p.y)
+    boxes.set(object.id, {
+      w: Math.max(...xs) - Math.min(...xs),
+      h: Math.max(...ys) - Math.min(...ys),
+    })
+  }
+  return (
+    <Shape
+      listening={false}
+      perfectDrawEnabled={false}
+      sceneFunc={(context, shape) => {
+        const ctx = context._context
+        const scale = pxPerM(shape)
+        for (const label of labels) {
+          const box = boxes.get(label.id)
+          const widest = Math.max(...label.lines.map((line) => labelWidthPx(ctx, line)))
+          if (box && widest > box.w * scale + 8) continue
+          const o = offset(label.id)
+          label.lines.forEach((line, i) => {
+            const dy = ((i - (label.lines.length - 1) / 2) * PLAN_LABEL_LINE_PX) / scale
+            drawLabel(ctx, line, { x: label.at.x + o.x, y: label.at.y + o.y + dy }, scale, {
+              baseline: 'middle',
+            })
+          })
         }
       }}
     />

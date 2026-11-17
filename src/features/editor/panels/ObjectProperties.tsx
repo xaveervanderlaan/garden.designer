@@ -162,6 +162,8 @@ export function ObjectProperties({ project, object }: { project: Project; object
       coalesce: `${field}:${object.id}`,
     })
   const shape = object.shape
+  // A dimension is a measurement: no status, label or thickness of its own.
+  const dimension = object.kind === 'dimension'
   const kinds = kindsLike(object.kind)
   const box = shapeFrameBox(shape)
   const rotation = objectRotation(shape)
@@ -195,25 +197,29 @@ export function ObjectProperties({ project, object }: { project: Project; object
         </dl>
       )}
 
-      <StatusField ids={[object.id]} status={object.status} />
+      {!dimension && (
+        <>
+          <StatusField ids={[object.id]} status={object.status} />
 
-      <label className={controls.label} htmlFor={labelId}>
-        {isBed(object) ? t('editor.beds.name') : t('editor.properties.label')}
-      </label>
-      <input
-        id={labelId}
-        className={cx(controls.input, styles.field)}
-        value={object.label ?? ''}
-        maxLength={200}
-        placeholder={
-          isBed(object)
-            ? bedName(object)
-            : hedgePlant
-              ? plantName(hedgePlant, lang)
-              : t(`editor.objectKinds.${object.kind}`)
-        }
-        onChange={(e) => set('label', e.target.value)}
-      />
+          <label className={controls.label} htmlFor={labelId}>
+            {isBed(object) ? t('editor.beds.name') : t('editor.properties.label')}
+          </label>
+          <input
+            id={labelId}
+            className={cx(controls.input, styles.field)}
+            value={object.label ?? ''}
+            maxLength={200}
+            placeholder={
+              isBed(object)
+                ? bedName(object)
+                : hedgePlant
+                  ? plantName(hedgePlant, lang)
+                  : t(`editor.objectKinds.${object.kind}`)
+            }
+            onChange={(e) => set('label', e.target.value)}
+          />
+        </>
+      )}
 
       {materials.length > 1 && (
         <>
@@ -311,7 +317,7 @@ export function ObjectProperties({ project, object }: { project: Project; object
           />
         </>
       )}
-      {shape.type === 'polyline' && (
+      {shape.type === 'polyline' && !dimension && (
         <InlineNumber
           label={t('editor.objects.thickness')}
           value={shape.thicknessM}

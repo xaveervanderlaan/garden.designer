@@ -21,6 +21,7 @@ export type ShortcutId =
   | 'zoomFit'
   | 'toolSelect'
   | 'toolPan'
+  | 'measure'
   | 'drawPlot'
   | 'rectanglePlot'
   | 'drawBed'
@@ -63,6 +64,7 @@ export const SHORTCUTS: readonly Shortcut[] = [
   { id: 'zoomFit', combos: [{ key: '0' }] },
   { id: 'toolSelect', combos: [{ key: 'v' }] },
   { id: 'toolPan', combos: [{ key: 'h' }] },
+  { id: 'measure', combos: [{ key: 'm' }] },
   { id: 'drawPlot', combos: [{ key: 'p' }] },
   { id: 'rectanglePlot', combos: [{ key: 'r' }] },
   { id: 'drawBed', combos: [{ key: 'b' }] },
@@ -178,6 +180,7 @@ const HANDLERS: Record<ShortcutId, (event: KeyboardEvent) => void> = {
   zoomFit: () => editorActions.zoomToFit(),
   toolSelect: () => editorActions.setTool('select'),
   toolPan: () => editorActions.setTool('pan'),
+  measure: () => editorActions.startMeasure(),
   drawPlot: () => editorActions.setTool('draw'),
   rectanglePlot: () => useUiStore.getState().setRectangleDialogOpen(true),
   drawBed: () => editorActions.drawBed('bed-ornamental'),

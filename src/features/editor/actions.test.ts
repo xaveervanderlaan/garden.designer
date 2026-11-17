@@ -349,6 +349,41 @@ describe('editorActions', () => {
     })
   })
 
+  it('keeps a measurement as a dimension on the measurements layer', () => {
+    useProjectStore
+      .getState()
+      .update(
+        (p) => ({ ...p, layers: { ...p.layers, measurements: { visible: false, locked: true } } }),
+        { history: false },
+      )
+    editorActions.startMeasure()
+    expect(useUiStore.getState().drawing?.target).toEqual({ kind: 'measure' })
+    editorActions.addDrawingPoint({ x: 2, y: 5 })
+    expect(editorActions.finishDrawing()).toBe(false) // one point is not a measurement
+    editorActions.addDrawingPoint({ x: 2, y: 12 })
+    editorActions.addDrawingPoint({ x: 6, y: 12 })
+    const before = project().objects.length
+
+    expect(editorActions.finishDrawing()).toBe(true)
+    const dimension = project().objects.at(-1)!
+    expect(project().objects).toHaveLength(before + 1)
+    expect(dimension).toMatchObject({ kind: 'dimension', layer: 'measurements', status: 'new' })
+    expect(dimension.shape).toMatchObject({
+      type: 'polyline',
+      points: [
+        { x: 2, y: 5 },
+        { x: 2, y: 12 },
+        { x: 6, y: 12 },
+      ],
+    })
+    expect(project().layers.measurements).toEqual({ visible: true, locked: false })
+    expect(useUiStore.getState().tool).toBe('select')
+    expect(selection()).toEqual([dimension.id])
+
+    editorActions.undo()
+    expect(project().objects).toHaveLength(before)
+  })
+
   it('saves the design settings as one undo step', () => {
     const settings = { ...project().settings, soil: 'clay' as const, overlapThreshold: 0.3 }
     editorActions.saveSettings('Renamed', settings)

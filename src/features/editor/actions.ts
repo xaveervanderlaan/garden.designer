@@ -184,7 +184,7 @@ function plant(plantId: string, positions: readonly Point[]): string[] {
 
 /** What a drawing makes: a closed outline, an open line or a single point. */
 export function drawingShape(target: DrawTarget): 'polygon' | 'polyline' | 'point' {
-  if (target.kind === 'row') return 'polyline'
+  if (target.kind === 'row' || target.kind === 'measure') return 'polyline'
   if (target.kind === 'object') return OBJECT_PRESETS[target.objectKind].shape
   return 'polygon'
 }
@@ -404,6 +404,10 @@ export const editorActions = {
     }
     ui().startDrawing(target)
   },
+  /** Starts measuring: click point to point; the total can be kept as a dimension. */
+  startMeasure() {
+    editorActions.startDrawing({ kind: 'measure' })
+  },
   /** Starts drawing a bed of the given kind. */
   drawBed(kind: BedKind) {
     editorActions.startDrawing({ kind: 'bed', bedKind: kind })
@@ -539,6 +543,20 @@ export const editorActions = {
           id = result.id
           return result.project
         })
+        ui().setTool('select')
+        ui().setSelection([id])
+        break
+      }
+      case 'measure': {
+        const shape = shapeForKind('dimension', points)
+        if (!shape) return false
+        let id = ''
+        useProjectStore.getState().update((p) => {
+          const result = addObject(p, 'dimension', shape)
+          id = result.id
+          return result.project
+        })
+        showLayer('measurements')
         ui().setTool('select')
         ui().setSelection([id])
         break

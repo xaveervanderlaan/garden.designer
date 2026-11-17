@@ -49,6 +49,30 @@ describe('DrawingPanel', () => {
     expect(useUiStore.getState().selection).toEqual([shed.id])
   })
 
+  it('measure mode shows the total and keeps it', async () => {
+    const user = userEvent.setup()
+    act(() => editorActions.startMeasure())
+    render(<DrawingPanel towards={null} />)
+    expect(screen.getByTestId('drawing-panel')).toHaveTextContent('Measure:')
+    expect(screen.getByTestId('measure-total')).toHaveTextContent(/^0\.00\sm$/)
+    const keep = screen.getByRole('button', { name: 'Keep as dimension' })
+    expect(keep).toBeDisabled()
+
+    act(() => {
+      editorActions.addDrawingPoint({ x: 2, y: 5 })
+      editorActions.addDrawingPoint({ x: 2, y: 12 })
+      editorActions.addDrawingPoint({ x: 6, y: 12 })
+    })
+    expect(screen.getByTestId('measure-total')).toHaveTextContent(/^11\.00\sm$/)
+    expect(screen.getByRole('button', { name: 'Done' })).toBeInTheDocument()
+
+    await user.click(keep)
+    const objects = store().project!.objects
+    expect(objects).toHaveLength(1)
+    expect(objects[0]).toMatchObject({ kind: 'dimension', layer: 'measurements' })
+    expect(useUiStore.getState().selection).toEqual([objects[0]!.id])
+  })
+
   it('explains that an outline needs three corners', async () => {
     const user = userEvent.setup()
     act(() => editorActions.drawObject('house'))

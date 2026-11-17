@@ -58,6 +58,7 @@ import styles from './GardenCanvas.module.css'
 import { FillPanel } from './FillPanel'
 import { Grid } from './Grid'
 import { useDeferredHitGraph } from './hitGraph'
+import { planLabels } from '../../../model/areas'
 import { type ItemHandlers, Items, type ObjectDraft } from './Items'
 import { PlantPreview } from './PlantPreview'
 import { PlotOverlay, PlotShape } from './Plot'
@@ -139,6 +140,15 @@ export default function GardenCanvas() {
   const labels = useMemo(
     () => (project && labelsVisible ? plantingLabels(project, labelMode, lang) : null),
     [project, labelsVisible, labelMode, lang],
+  )
+  const areasVisible = !!project && isLayerVisible(project, 'measurements')
+  const areaLabels = !!project && project.settings.areaLabels
+  const planLabelList = useMemo(
+    () =>
+      project && (labelsVisible || (areasVisible && areaLabels))
+        ? planLabels(project, { names: labelsVisible, areas: areasVisible && areaLabels }, lang)
+        : null,
+    [project, labelsVisible, areasVisible, areaLabels, lang],
   )
   const fillPositions = useMemo(
     () =>
@@ -537,6 +547,7 @@ export default function GardenCanvas() {
                   warned={warned}
                   labels={labels}
                   labelMode={labelMode}
+                  planLabels={planLabelList}
                   objectDraft={objectDraft}
                   view={view}
                 />

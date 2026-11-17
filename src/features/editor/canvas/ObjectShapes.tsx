@@ -1,10 +1,17 @@
 import type Konva from 'konva'
 import { Line, Shape } from 'react-konva'
 import { boundsOfPoints } from '../../../geometry/bounds'
+import { formatLength } from '../../../i18n/units'
 import { symbolFor } from '../../../model/objectKinds'
 import type { GardenObject, Point } from '../../../model/schema'
 import { objectStyle } from '../../../styles/elementStyles'
-import { drawBoundary, drawOutlineObject, drawSymbol, tracePolygon } from './objectDrawing'
+import {
+  drawBoundary,
+  drawDimension,
+  drawOutlineObject,
+  drawSymbol,
+  tracePolygon,
+} from './objectDrawing'
 
 /**
  * How a garden object is drawn on the plan, in its group's coordinates. Objects edited with the
@@ -31,6 +38,9 @@ export function ObjectShape({ object, points, selected }: Props) {
     case 'polygon':
       return <OutlineShape object={object} points={points} selected={selected} />
     case 'polyline':
+      if (object.kind === 'dimension') {
+        return <DimensionShape points={points} selected={selected} />
+      }
       return (
         <LineShape
           object={object}
@@ -109,6 +119,39 @@ function LineShape({
             style,
             { selected, existing },
             pxPerM(shape),
+          )
+        }
+        perfectDrawEnabled={false}
+      />
+    </>
+  )
+}
+
+const DIMENSION_PAD_M = 0.025
+
+/** A kept measurement: a thin line with ticks and lengths (see drawDimension). */
+function DimensionShape({ points, selected }: { points: readonly Point[]; selected: boolean }) {
+  const bounds = boundsOfPoints(points)
+  return (
+    <>
+      {/* Wide invisible line so the thin dimension line is easy to click. */}
+      <Line points={flat(points)} stroke="transparent" strokeWidth={14} {...fixedStroke} />
+      <Shape
+        ref={(node) => {
+          if (node && bounds) {
+            // Padded like a thin line, so a straight dimension's box never has zero height.
+            node.getSelfRect = () => ({
+              x: bounds.minX - DIMENSION_PAD_M,
+              y: bounds.minY - DIMENSION_PAD_M,
+              width: bounds.maxX - bounds.minX + 2 * DIMENSION_PAD_M,
+              height: bounds.maxY - bounds.minY + 2 * DIMENSION_PAD_M,
+            })
+          }
+        }}
+        listening={false}
+        sceneFunc={(context, shape) =>
+          drawDimension(context._context, points, pxPerM(shape), { selected }, (m) =>
+            formatLength(m),
           )
         }
         perfectDrawEnabled={false}

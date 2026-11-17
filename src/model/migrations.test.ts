@@ -108,7 +108,7 @@ describe('migration steps', () => {
     const v4 = migrateProject(v3, 4)
     expect(v4.schemaVersion).toBe(4)
     const migrated = projectSchema.parse(migrateProject(v3))
-    expect(migrated.settings).toEqual({ ...settings, overlapThreshold: 0.2 })
+    expect(migrated.settings).toEqual({ ...settings, overlapThreshold: 0.2, areaLabels: false })
   })
 
   it('3 → 4: keeps a threshold that is already there', () => {
@@ -143,5 +143,13 @@ describe('migration steps', () => {
     expect(migrated.schemaVersion).toBe(6)
     expect(migrated.objects).toEqual(v5.objects)
     expect(projectSchema.parse(migrateProject(v5)).objects).toHaveLength(1)
+  })
+
+  it('6 → 7 adds areaLabels', () => {
+    const { areaLabels: _, ...settings } = newProject('Old', 1_700_000_000_000).settings
+    const v6 = { ...newProject('Old', 1_700_000_000_000), schemaVersion: 6, settings }
+    const migrated = projectSchema.parse(migrateProject(v6))
+    expect(migrated.schemaVersion).toBe(7)
+    expect(migrated.settings.areaLabels).toBe(false)
   })
 })

@@ -1,6 +1,11 @@
 import { OBJECT_PRESETS, symbolFor } from '../../../model/objectKinds'
 import type { ObjectKind } from '../../../model/schema'
-import { type ElementPattern, OBJECT_STYLES, objectStyle } from '../../../styles/elementStyles'
+import {
+  DIMENSION_STYLE,
+  type ElementPattern,
+  OBJECT_STYLES,
+  objectStyle,
+} from '../../../styles/elementStyles'
 
 const W = 28
 const H = 20
@@ -79,6 +84,19 @@ function SymbolSwatch({ kind, variant }: { kind: ObjectKind; variant?: string })
 /** A boundary kind's swatch: a band across, with posts for a fence or gate. */
 function LineSwatch({ kind }: { kind: ObjectKind }) {
   const style = OBJECT_STYLES[kind]
+  if (kind === 'dimension') {
+    const ticks = [3, W - 3]
+    return (
+      <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} aria-hidden>
+        <g stroke={style.stroke} strokeWidth={DIMENSION_STYLE.widthPx}>
+          <line x1={3} y1={H / 2} x2={W - 3} y2={H / 2} />
+          {ticks.map((x) => (
+            <line key={x} x1={x} y1={H / 2 - 4} x2={x} y2={H / 2 + 4} />
+          ))}
+        </g>
+      </svg>
+    )
+  }
   const posts = kind === 'fence' ? [3, W / 2, W - 3] : kind === 'gate' ? [3, W - 3] : []
   return (
     <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} aria-hidden>

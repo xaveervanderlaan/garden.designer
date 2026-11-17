@@ -64,6 +64,18 @@ export function LayersPanel({ project }: { project: Project }) {
           )
         })}
       </ul>
+      <label className={styles.checkRow}>
+        <input
+          type="checkbox"
+          data-testid="area-labels-toggle"
+          checked={project.settings.areaLabels}
+          onChange={(e) => {
+            const areaLabels = e.target.checked
+            update((p) => ({ ...p, settings: { ...p.settings, areaLabels } }), { history: false })
+          }}
+        />
+        {t('editor.layers.areaLabels')}
+      </label>
     </section>
   )
 }

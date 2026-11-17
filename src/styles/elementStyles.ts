@@ -101,6 +101,10 @@ export const MATERIAL_STYLES: Record<MaterialId, ElementStyle> = {
   },
 }
 
+/** A kept measurement: a thin line with end ticks and a length per segment. */
+export const DIMENSION_STYLE = { color: '#3b4a5a', widthPx: 1.5, tickPx: 8, fontPx: 11 }
+export const AREA_LABEL_STYLE = { color: '#253325', fontPx: 11 }
+
 export const OBJECT_STYLES: Record<ObjectKind, ElementStyle> = {
   // Buildings: dark grey with a diagonal hatch. Shed, greenhouse and pergola lighter: the
   // greenhouse with a glass grid, the pergola with open beams over what grows under it; a carport
@@ -170,6 +174,7 @@ export const OBJECT_STYLES: Record<ObjectKind, ElementStyle> = {
     strokeWidthPx: 1.5,
     pattern: { kind: 'rows', spacingM: 0.5, color: 'rgba(92, 61, 30, 0.45)' },
   },
+  dimension: { fill: 'transparent', stroke: '#3b4a5a', strokeWidthPx: 1.5 },
 }
 
 /** How an object looks: a surface by its material, anything else by its kind. */

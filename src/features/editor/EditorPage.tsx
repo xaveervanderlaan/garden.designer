@@ -10,6 +10,8 @@ import { LibraryPanel } from '../library/LibraryPanel'
 import { PlantFormDialog } from '../library/PlantFormDialog'
 import { EditorToolbar } from './EditorToolbar'
 import styles from './EditorPage.module.css'
+import { AreasPanel } from './panels/AreasPanel'
+import { LegendPanel } from './panels/LegendPanel'
 import { LayersPanel } from './panels/LayersPanel'
 import { PlantingListPanel } from './panels/PlantingListPanel'
 import { PropertiesPanel } from './panels/PropertiesPanel'
@@ -107,6 +109,8 @@ function Workspace({ project }: { project: Project }) {
         <PropertiesPanel project={project} />
         <WarningsPanel project={project} />
         <PlantingListPanel project={project} />
+        <AreasPanel project={project} />
+        <LegendPanel project={project} />
         <LayersPanel project={project} />
       </aside>
       <div className={styles.status}>

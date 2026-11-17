@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { Point } from '../model/schema'
-import { differenceArea } from './clip'
+import { areaWithin, differenceArea } from './clip'
 
 const rect = (x: number, y: number, w: number, h: number): Point[] => [
   { x, y },
@@ -21,5 +21,15 @@ describe('differenceArea', () => {
   it('ignores polygons that do not touch', () => {
     expect(differenceArea(rect(0, 0, 10, 10), [rect(20, 0, 4, 4), rect(10, 0, 4, 4)])).toBe(100)
     expect(differenceArea(rect(0, 0, 10, 10), [])).toBe(100)
+  })
+})
+
+describe('areaWithin', () => {
+  it('subtracts clips and limits to the outline', () => {
+    // 10 x 10 subject, plot covers x 0..5: 50, minus a 2 x 2 clip inside it = 46
+    expect(areaWithin(rect(0, 0, 10, 10), rect(0, 0, 5, 10), [rect(1, 1, 2, 2)])).toBeCloseTo(46)
+    expect(areaWithin(rect(0, 0, 10, 10), null, [rect(1, 1, 2, 2)])).toBeCloseTo(96)
+    expect(areaWithin(rect(0, 0, 10, 10), rect(20, 20, 5, 5), [])).toBeCloseTo(0)
+    expect(areaWithin(rect(0, 0, 10, 10), null, [])).toBe(100)
   })
 })

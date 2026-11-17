@@ -7,7 +7,7 @@ import { z } from 'zod'
  *
  * Changing the shape of stored data? Bump SCHEMA_VERSION and add a migration (see migrations.ts).
  */
-export const SCHEMA_VERSION = 6
+export const SCHEMA_VERSION = 7
 
 export const idSchema = z.string().min(1).max(100)
 
@@ -60,6 +60,8 @@ export const OBJECT_KINDS = [
   // planting beds
   'bed-ornamental',
   'bed-vegetable',
+  // annotations
+  'dimension',
 ] as const
 export type ObjectKind = (typeof OBJECT_KINDS)[number]
 
@@ -180,6 +182,8 @@ export const settingsSchema = z.object({
    * of the smaller plant's diameter. 0.2 = 20 %.
    */
   overlapThreshold: z.number().min(0).max(1),
+  /** Show area labels on the plan (while the measurements layer is visible). */
+  areaLabels: z.boolean(),
 })
 export type Settings = z.infer<typeof settingsSchema>
 

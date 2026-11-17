@@ -103,7 +103,9 @@ export function setObjectStatus(
   status: ObjectStatus,
 ): Project {
   return updateObjects(project, ids, (o) =>
-    o.status === status ? o : { ...o, status, layer: objectLayer(o.kind, status) },
+    o.status === status || o.kind === 'dimension'
+      ? o
+      : { ...o, status, layer: objectLayer(o.kind, status) },
   )
 }
 

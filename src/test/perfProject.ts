@@ -316,6 +316,7 @@ export function perfProject(plants: readonly Plant[], options: PerfProjectOption
       gridSizeM: 0.5,
       soil: 'sand',
       overlapThreshold: 0.2,
+      areaLabels: false,
     },
     plot: { outline: PERF_PLOT.map((p) => ({ ...p })) },
     objects: beds,
